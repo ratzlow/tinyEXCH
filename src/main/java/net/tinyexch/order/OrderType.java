@@ -1,7 +1,7 @@
-package net.tinyexch.ob;
+package net.tinyexch.order;
 
 /**
- * // TODO (FRa) : (FRa) : commont
+ * // TODO (FRa) : (FRa) : comment
  *
  * @author ratzlow@gmail.com
  * @since 2014-07-26
@@ -20,5 +20,4 @@ public enum OrderType {
     TRAILING_STOP,
     ONE_CANCELS_OTHER,
     ODERS_ON_EVENT
-
 }

@@ -1,6 +1,7 @@
-package net.tinyexch.ob;
+package net.tinyexch.exchange.market;
 
-import java.util.Collections;
+import net.tinyexch.exchange.trading.model.TradingModel;
+
 import java.util.Set;
 
 /**
@@ -9,7 +10,7 @@ import java.util.Set;
  * This market model is only applicable for equities. Not considered market models are:
  *      - Xetra International Market
  *      - Xetra BEST
- *      - Continuous Auction
+ *      - Continuous AuctionTradingModel
  *
  *
  * For equities it defines principles of
@@ -26,19 +27,24 @@ import java.util.Set;
  * @link chap 1
  */
 public abstract class MarketModel {
-    private final Set<ProductType> productTypes;
-    private final Set<TradingModel> tradingModelTypes;
+    private Set<ProductType> coveredProductTypes;
+    private Set<TradingModel> tradingModels;
 
-    protected MarketModel(Set<ProductType> productTypes, Set<TradingModel> tradingModelTypes) {
-        this.productTypes = Collections.unmodifiableSet( productTypes );
-        this.tradingModelTypes = Collections.unmodifiableSet(tradingModelTypes);
+
+
+    public Set<ProductType> getCoveredProductTypes() {
+        return coveredProductTypes;
     }
 
-    public Set<ProductType> getProductTypes() {
-        return productTypes;
+    public void setCoveredProductTypes(Set<ProductType> coveredProductTypes) {
+        this.coveredProductTypes = coveredProductTypes;
     }
 
     public Set<TradingModel> getTradingModels() {
-        return tradingModelTypes;
+        return tradingModels;
+    }
+
+    public void setTradingModels(Set<TradingModel> tradingModels) {
+        this.tradingModels = tradingModels;
     }
 }

@@ -1,11 +1,17 @@
-package net.tinyexch.ob;
+package net.tinyexch.ob.validator;
 
-import net.tinyexch.ob.validator.NewOrderValidators;
+import net.tinyexch.ob.ErrorCode;
+import net.tinyexch.ob.RejectReason;
+import net.tinyexch.order.Order;
+import net.tinyexch.order.OrderType;
+import net.tinyexch.order.Side;
+import net.tinyexch.order.TimeInForce;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.EnumSet;
 
 /**
  * Test interaction and state of the OB.
@@ -15,9 +21,11 @@ import java.time.temporal.ChronoUnit;
  */
 public class NewOrderValidatorsTest {
 
+    EnumSet<OrderType> acceptedOrderTypes = EnumSet.allOf(OrderType.class);
+
     @Test
     public void testMinSizeCheck() {
-        NewOrderValidators check_1 = new NewOrderValidators(1, 1, 360);
+        NewOrderValidators check_1 = new NewOrderValidators(1, 1, 360, acceptedOrderTypes);
         Assert.assertEquals(
                 ErrorCode.Type.REJECT,
                 check_1.minSizeCheck.validate( newOrder(Side.SELL, 0)).get().type );
@@ -25,13 +33,13 @@ public class NewOrderValidatorsTest {
                 check_1.minSizeCheck.validate(newOrder(Side.SELL, 1)).isPresent());
 
         // no min sizes set, so everything can be submitted
-        NewOrderValidators check_2 = new NewOrderValidators(0, 0, 360);
+        NewOrderValidators check_2 = new NewOrderValidators(0, 0, 360, acceptedOrderTypes);
         Assert.assertFalse(check_2.minSizeCheck.validate(newOrder(Side.SELL, 0)).isPresent());
         Assert.assertFalse(check_2.minSizeCheck.validate(newOrder(Side.SELL, 1)).isPresent());
 
 
         // deal with different min order size and trading unit
-        NewOrderValidators check_3 = new NewOrderValidators(10, 1, 360);
+        NewOrderValidators check_3 = new NewOrderValidators(10, 1, 360, acceptedOrderTypes);
         ErrorCode submit_3_1 = check_3.minSizeCheck.validate(newOrder(Side.SELL, 9)).get();
         Assert.assertEquals( ErrorCode.Type.REJECT, submit_3_1.type );
         Assert.assertEquals(RejectReason.MIN_SIZE, submit_3_1.rejectReason.get());
@@ -41,8 +49,9 @@ public class NewOrderValidatorsTest {
 
     @Test
     public void testGtd() {
-        int maxExpirationDayOffset = 360;
-        NewOrderValidators check = new NewOrderValidators(1, 1, maxExpirationDayOffset);
+        int maxExpirationDayOffset = 359;
+        NewOrderValidators check = new NewOrderValidators(1, 1, maxExpirationDayOffset,
+                acceptedOrderTypes);
         LocalDateTime now = LocalDateTime.now();
 
         Order gtdOrderValidToday = new Order().setTimeInForce(TimeInForce.GTD)

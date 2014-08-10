@@ -1,4 +1,4 @@
-package net.tinyexch.ob;
+package net.tinyexch.order;
 
 /**
  * // TODO (FRa) : (FRa) : link to FIX protocol
@@ -9,5 +9,4 @@ package net.tinyexch.ob;
 public enum TimeInForce {
     DAY,
     GTD
-
 }

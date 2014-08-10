@@ -1,7 +1,7 @@
 package net.tinyexch.ob.validator;
 
 import net.tinyexch.ob.ErrorCode;
-import net.tinyexch.ob.Order;
+import net.tinyexch.order.Order;
 
 import java.util.Optional;
 

@@ -1,4 +1,4 @@
-package net.tinyexch.ob;
+package net.tinyexch.exchange.trading.form.auction;
 
 /**
  * // TODO (FRa) : (FRa) : check how to configure trading cycle: use TradingCalendar?

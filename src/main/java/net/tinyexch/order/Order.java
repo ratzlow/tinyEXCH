@@ -1,4 +1,4 @@
-package net.tinyexch.ob;
+package net.tinyexch.order;
 
 import java.time.LocalDateTime;
 
@@ -28,6 +28,9 @@ public class Order {
      * // TODO (FRa) : (FRa) : check what is a sensible default
      */
     private TimeInForce timeInForce = TimeInForce.DAY;
+
+    /** @link FIX:40 */
+    private OrderType orderType;
 
 
     public Side getSide() {
@@ -63,6 +66,15 @@ public class Order {
 
     public Order setTimeInForce(TimeInForce timeInForce) {
         this.timeInForce = timeInForce;
+        return this;
+    }
+
+    public OrderType getOrderType() {
+        return orderType;
+    }
+
+    public Order setOrderType(OrderType orderType) {
+        this.orderType = orderType;
         return this;
     }
 }

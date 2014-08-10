@@ -1,4 +1,4 @@
-package net.tinyexch.ob;
+package net.tinyexch.exchange.trading;
 
 /**
  * Consists of a specific number of instruments for which trading is organized in the same way. Specifies the trading

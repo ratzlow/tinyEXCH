@@ -1,13 +1,16 @@
 package net.tinyexch.ob.validator;
 
 import net.tinyexch.ob.ErrorCode;
-import net.tinyexch.ob.Order;
 import net.tinyexch.ob.RejectReason;
-import net.tinyexch.ob.TimeInForce;
+import net.tinyexch.order.Order;
+import net.tinyexch.order.OrderType;
+import net.tinyexch.order.TimeInForce;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.EnumSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -15,6 +18,7 @@ import java.util.stream.Stream;
  * // TODO (FRa) : (FRa) : make all classes final static so no recreation of results is needed. Maybe even as enums
  *  * // TODO (FRa) : (FRa) : write collector for list of rule validations
  * // TODO (FRa) : (FRa) : optimize: move validations be
+ *                 // TODO (FRa) : (FRa) : interpolate concrete error msg only lazily: show actual vs. expected valus
  *
  *
  * @author ratzlow@gmail.com
@@ -41,7 +45,6 @@ public final class NewOrderValidators {
      */
     private final int minimumTradableUnit;
 
-
     private final int effectiveMinSize;
 
     /**
@@ -49,20 +52,26 @@ public final class NewOrderValidators {
      */
     private final int maxExpirationDayOffset;
 
+    /**
+     * These order types can be submitted to a given orderbook. This is dependent on the trading model and market model.
+     */
+    private final Set<OrderType> acceptedOrderTypes;
+
 
     //------------------------------------------------------------------------------------------------------------------
     // constructors
     //------------------------------------------------------------------------------------------------------------------
 
     public NewOrderValidators() {
-        this(1, 1, 359);
+        this(1, 1, 359, EnumSet.allOf(OrderType.class));
     }
 
-    public NewOrderValidators(int minimumOrderSize, int minimumTradableUnit, int maxExpirationDayOffset) {
+    public NewOrderValidators(int minimumOrderSize, int minimumTradableUnit, int maxExpirationDayOffset, Set<OrderType> acceptedOrderTypes) {
         this.minimumOrderSize = minimumOrderSize;
         this.minimumTradableUnit = minimumTradableUnit;
         this.effectiveMinSize = Math.max(minimumOrderSize, minimumTradableUnit);
         this.maxExpirationDayOffset = maxExpirationDayOffset;
+        this.acceptedOrderTypes = acceptedOrderTypes;
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -125,5 +134,20 @@ public final class NewOrderValidators {
         }
     };
 
-    public final Stream<NewOrderValidator> newOrderValidators = Stream.of(minSizeCheck, gtdCheck);
+
+    public final NewOrderValidator orderTypeCheck = new NewOrderValidator() {
+        @Override
+        public Optional<ErrorCode> validate(Order order) {
+            Optional<ErrorCode> code = Optional.empty();
+            if ( !acceptedOrderTypes.contains(order.getOrderType()) ) {
+                code = Optional.of(new ErrorCode(ErrorCode.Type.REJECT, order,
+                        "Given order type not support in this trading phase", RejectReason.ORDER_TYPE));
+            }
+            return code;
+        }
+    };
+
+
+
+    public final Stream<NewOrderValidator> newOrderValidators = Stream.of(minSizeCheck, gtdCheck, orderTypeCheck);
 }

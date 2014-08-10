@@ -1,5 +1,7 @@
 package net.tinyexch.ob;
 
+import net.tinyexch.order.Order;
+
 import java.util.Optional;
 
 /**
