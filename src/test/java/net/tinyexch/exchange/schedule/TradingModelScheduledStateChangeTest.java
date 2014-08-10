@@ -16,7 +16,7 @@ import java.util.Arrays;
  * @since 2014-08-10
  */
 public class TradingModelScheduledStateChangeTest {
-    
+
     @Test
     public void testAuctionSchedule() {
         TradingModelProfile profile = new TradingModelProfile();

@@ -47,3 +47,9 @@ Why and where should I use it?
 - grey markets
 - internal crossing networks
 - Create backends for sell side market simulators
+
+Docs
+-----
+
+- http://cdn.batstrading.com/resources/membership/BATS_Auction_Process.pdf
+- http://batstrading.com/support/
