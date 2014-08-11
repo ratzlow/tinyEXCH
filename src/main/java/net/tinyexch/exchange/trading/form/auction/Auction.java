@@ -6,10 +6,7 @@ import net.tinyexch.order.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Collections.singleton;
 import static net.tinyexch.exchange.trading.form.auction.AuctionState.*;
@@ -33,12 +30,12 @@ public class Auction extends TradingForm<AuctionState> {
     // constructors
     //-------------------------------------------------------------------------------------
 
-    public Auction( StateChangeListener<AuctionState> stateChangeListener,
+    public Auction( List<StateChangeListener<AuctionState>> stateChangeListeners,
                     CallPhase callPhase,
                     PriceDeterminationPhase priceDeterminationPhase,
                     OrderbookBalancingPhase orderbookBalancingPhase ) {
 
-        super(stateChangeListener);
+        super(stateChangeListeners);
         this.callPhase = callPhase;
         this.priceDeterminationPhase = priceDeterminationPhase;
         this.orderbookBalancingPhase = orderbookBalancingPhase;
@@ -62,28 +59,27 @@ public class Auction extends TradingForm<AuctionState> {
     // TODO (FRa) : (FRa) : ensure validations are called upfront; maybe add check to auction phase upfront as well
     public void place( Order order ) {
         if ( getCurrentState() != CALL_RUNNING ) {
-            String messagemsg = "Call phase not opened so cannot accept order! Current state is = " +
-                    getCurrentState();
-            throw new AuctionException(messagemsg);
+            String msg = "Call phase not opened so cannot accept order! Current state is = " + getCurrentState();
+            throw new AuctionException(msg);
         }
 
         callPhase.accept( order );
     }
 
     public void stopCallPhase() {
-        transitionTo( INACTIVE );
+        transitionTo( CALL_STOPPED );
     }
 
     public void determinePrice() {
         transitionTo( PRICE_DETERMINATION_RUNNING );
         priceDeterminationPhase.determinePrice();
-        transitionTo(INACTIVE);
+        transitionTo( PRICE_DETERMINATION_STOPPED );
     }
 
     public void balanceOrderbook() {
         transitionTo( ORDERBOOK_BALANCING_RUNNING );
         orderbookBalancingPhase.balance();
-        transitionTo(INACTIVE);
+        transitionTo( ORDERBOOK_BALANCING_STOPPED );
     }
 
 
@@ -91,9 +87,12 @@ public class Auction extends TradingForm<AuctionState> {
     protected Map<AuctionState, Set<AuctionState>> getAllowedTransitions() {
         Map<AuctionState, Set<AuctionState>> transitions = new EnumMap<>(AuctionState.class);
         transitions.put(INACTIVE, EnumSet.of(CALL_RUNNING, PRICE_DETERMINATION_RUNNING, ORDERBOOK_BALANCING_RUNNING) );
-        transitions.put(CALL_RUNNING, singleton(INACTIVE));
-        transitions.put(PRICE_DETERMINATION_RUNNING, singleton(INACTIVE) );
-        transitions.put(ORDERBOOK_BALANCING_RUNNING, singleton(INACTIVE) );
+        transitions.put(CALL_RUNNING, singleton(CALL_STOPPED));
+        transitions.put(CALL_STOPPED, EnumSet.of(INACTIVE, PRICE_DETERMINATION_RUNNING));
+        transitions.put(PRICE_DETERMINATION_RUNNING, singleton(PRICE_DETERMINATION_STOPPED) );
+        transitions.put(PRICE_DETERMINATION_STOPPED, EnumSet.of(INACTIVE, ORDERBOOK_BALANCING_RUNNING));
+        transitions.put(ORDERBOOK_BALANCING_RUNNING, singleton(ORDERBOOK_BALANCING_STOPPED) );
+        transitions.put(ORDERBOOK_BALANCING_STOPPED, singleton(INACTIVE) );
 
         return transitions;
     }

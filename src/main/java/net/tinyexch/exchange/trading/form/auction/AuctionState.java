@@ -15,17 +15,21 @@ public enum AuctionState {
      * their own existing orders and quotes.
      */
     CALL_RUNNING(true),
+    CALL_STOPPED(false),
+
 
     /**
      * The auction price is determined according to the principle of most executable volume on the basis of
      * the order book situation at the end of the call phase.
      */
     PRICE_DETERMINATION_RUNNING(true),
+    PRICE_DETERMINATION_STOPPED(false),
 
     /**
      * Orders are executed at the determined auction price in the order book balancing phase.
      */
     ORDERBOOK_BALANCING_RUNNING(true),
+    ORDERBOOK_BALANCING_STOPPED(false),
 
     /** The auction is currently not running */
     INACTIVE(false);

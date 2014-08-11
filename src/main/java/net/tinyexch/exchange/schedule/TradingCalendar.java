@@ -13,13 +13,13 @@ import java.util.List;
 public class TradingCalendar {
 
     private List<LocalDate> tradingDays = new ArrayList<>();
-    private List<TradingPhaseTrigger<? extends Enum>> triggers = new ArrayList<>();
+    private List<TradingPhaseTrigger> triggers = new ArrayList<>();
 
     public List<LocalDate> getTradingDays() {
         return tradingDays;
     }
 
-    public List<TradingPhaseTrigger<? extends Enum>> getTriggers() {
+    public List<TradingPhaseTrigger> getTriggers() {
         return triggers;
     }
 
