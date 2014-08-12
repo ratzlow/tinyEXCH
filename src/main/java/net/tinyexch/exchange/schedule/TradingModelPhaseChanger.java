@@ -40,10 +40,10 @@ public class TradingModelPhaseChanger {
     // public API
     //
 
-    public void startTrading( List<TradingPhaseTrigger> tradingDayTriggers ) {
+    public void startTrading( TradingCalendar tradingCalendar ) {
         LocalTime now = LocalTime.now();
         final Map<TradingPhaseTrigger.InitiatorType, List<TradingPhaseTrigger>> triggersByType =
-                tradingDayTriggers.stream().collect(groupingBy(TradingPhaseTrigger::getInitiatorType));
+                tradingCalendar.getTriggers().stream().collect(groupingBy(TradingPhaseTrigger::getInitiatorType));
 
         // first register the listeners
         if ( triggersByType.containsKey(WAIT_FOR_STATECHANGE) ) {

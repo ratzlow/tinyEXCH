@@ -10,12 +10,13 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -29,12 +30,10 @@ import static net.tinyexch.exchange.trading.form.auction.AuctionStateChange.*;
  * @author ratzlow@gmail.com
  * @since 2014-08-10
  */
-// TODO (FRa) : (FRa) : test randomness of call end
-// supply a TradingCal for the scheduler
-// add blocking call, PD, OBB strategies and check if life cycle is preserved; call must reject orders after end
+// // TODO (FRa) : (FRa) : add blocking call, PD, OBB strategies and check if life cycle is preserved; call must reject orders after end
 public class TradingModelScheduledStateChangeTest {
     private final Logger LOGGER = LoggerFactory.getLogger(TradingModelScheduledStateChangeTest.class);
-    private final Random random = new Random(LocalTime.now().getNano());
+
 
     /** Defines how many ms after test data is wired the actual auction will be run */
     private final long futureAuctionStartOffsetInMillis = 10;
@@ -73,9 +72,32 @@ public class TradingModelScheduledStateChangeTest {
     }
 
 
-    //-------------------------------------------------------------------------------------------------
-    // helpers to setup the schedule for trading
-    //-------------------------------------------------------------------------------------------------
+    @Test
+    public void testRandomTimeTriggerWithinGivenOffsetRange() {
+        LocalTime now = LocalTime.now();
+        long nowMillis = now.get(ChronoField.MILLI_OF_DAY);
+        int maxDuration = 100;
+
+        for ( int min=0; min < maxDuration; min++ ) {
+            TradingCalendar cal = new TradingCalendar();
+
+            Assert.assertEquals(0, cal.getTriggers().size());
+            cal.addVariantDurationTrigger(AuctionStateChange.START_CALL, now, min, maxDuration, ChronoUnit.MILLIS);
+            Assert.assertEquals(1, cal.getTriggers().size());
+
+            TradingPhaseTrigger trigger = cal.getTriggers().get(0);
+            LocalTime triggerFixedTime = trigger.getFixedTime();
+            int triggerStampMillis = triggerFixedTime.get(ChronoField.MILLI_OF_DAY);
+            LOGGER.debug("now={} range=[{} -{}] triggerTime={}", nowMillis, min, maxDuration, triggerStampMillis);
+            Assert.assertTrue(
+                    String.format("triggerStampMillis=%d nowMillis+min=%d", triggerStampMillis, nowMillis + min),
+                    triggerStampMillis >= nowMillis + min);
+            Assert.assertTrue(
+                    String.format("triggerStampMillis=%d nowMillis+max=%d", triggerStampMillis, nowMillis + maxDuration),
+                    triggerStampMillis <= nowMillis + maxDuration);
+        }
+    }
+
 
     /*
         start at 3:30 with CALL_START | and then
@@ -85,40 +107,17 @@ public class TradingModelScheduledStateChangeTest {
         send immediately OB_Bal_START | and then
         wait for         INACTIVE
     */
-    private List<TradingPhaseTrigger> buildTradingDay() {
+    private TradingCalendar buildTradingDay() {
         LocalTime now = LocalTime.now();
         ChronoUnit unit = ChronoUnit.MILLIS;
+        LocalTime startTradingTime = now.plus(futureAuctionStartOffsetInMillis, unit);
 
-        List<TradingPhaseTrigger> auctionPhases = new ArrayList<>();
-        TradingPhaseTrigger startCallPhase =
-                createFixedTimeTrigger( START_CALL, now.plus(futureAuctionStartOffsetInMillis, unit));
-        TradingPhaseTrigger endCallPhase =
-                createVariantDurationTrigger( STOP_CALL, startCallPhase.getFixedTime(), 3, 10, unit);
-        TradingPhaseTrigger startPriceDetermination =
-                createWaitTrigger( START_PRICEDETERMINATION, CALL_STOPPED);
-        TradingPhaseTrigger startOrderbookBalancing =
-                createWaitTrigger( START_ORDERBOOK_BALANCING, PRICE_DETERMINATION_STOPPED);
+        TradingCalendar tradingCalendar = new TradingCalendar( LocalDate.now() );
+        tradingCalendar.addFixedTimeTrigger(START_CALL, startTradingTime)
+                .addVariantDurationTrigger(STOP_CALL, startTradingTime, 3, 10, unit)
+                .addWaitTrigger(START_PRICEDETERMINATION, CALL_STOPPED)
+                .addWaitTrigger(START_ORDERBOOK_BALANCING, PRICE_DETERMINATION_STOPPED);
 
-        auctionPhases.add(startCallPhase);
-        auctionPhases.add(endCallPhase);
-        auctionPhases.add(startPriceDetermination);
-        auctionPhases.add(startOrderbookBalancing);
-
-        return auctionPhases;
-    }
-
-    private TradingPhaseTrigger createWaitTrigger( AuctionStateChange stateChange, AuctionState waitFor ) {
-        return new TradingPhaseTrigger( stateChange, waitFor );
-    }
-
-    private TradingPhaseTrigger createFixedTimeTrigger(AuctionStateChange stateChange, LocalTime time) {
-        return new TradingPhaseTrigger( stateChange, time );
-    }
-
-    private TradingPhaseTrigger createVariantDurationTrigger(AuctionStateChange stateChange, LocalTime from,
-                                                             int plusMinDuration, int plusMaxDuration, ChronoUnit unit ) {
-        int duration = random.nextInt(plusMaxDuration - plusMinDuration) + plusMaxDuration;
-        LocalTime time = from.plus(duration, unit);
-        return new TradingPhaseTrigger( stateChange, time );
+        return tradingCalendar;
     }
 }
