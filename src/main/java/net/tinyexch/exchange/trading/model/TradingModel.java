@@ -30,7 +30,7 @@ public abstract class TradingModel<P extends TradingFormProvider,
     // pub API
     //--------------------------------------------------------------------------------
 
-    public abstract void transitionTradingForm(C stateChanger);
+    public abstract void moveTo(C stateChanger);
 
     public void enter( Order order) {
         // TODO (FRa) : (FRa) : activate filters and return notifcation ACK/REJ to client

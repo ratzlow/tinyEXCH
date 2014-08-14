@@ -6,6 +6,7 @@ import net.tinyexch.exchange.trading.form.continuous.ContinuousTrading;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static net.tinyexch.exchange.trading.form.auction.AuctionState.*;
@@ -43,12 +44,11 @@ public class ChangeTradingFormStateTest {
     public void testAuctionOK() {
 
         List<AuctionState> states = new ArrayList<>();
-
         Auction auction = new Auction(
-            state -> { states.add(state); },    // state listener
-            order -> {},                        // call phase
-            () -> {},                           // price determination
-            () -> {}                            // OB balancing
+            Collections.singletonList( state -> states.add(state)),     // state listener
+            order -> {},                                                // call phase
+            () -> {},                                                   // price determination
+            () -> {}                                                    // OB balancing
         );
 
         // before anything happened
@@ -58,19 +58,19 @@ public class ChangeTradingFormStateTest {
         auction.startCallPhase();
         assertEquals( CALL_RUNNING, auction.getCurrentState());
         auction.stopCallPhase();
-        assertEquals( INACTIVE, auction.getCurrentState());
+        assertEquals( CALL_STOPPED, auction.getCurrentState());
 
         states.clear();
         auction.determinePrice();
         assertEquals(PRICE_DETERMINATION_RUNNING, states.get(0));
-        assertEquals(INACTIVE, states.get(1));
-        assertEquals(INACTIVE, auction.getCurrentState());
+        assertEquals(PRICE_DETERMINATION_STOPPED, states.get(1));
+        assertEquals(states.get(1), auction.getCurrentState());
 
         states.clear();
         auction.balanceOrderbook();
         assertEquals(ORDERBOOK_BALANCING_RUNNING, states.get(0));
-        assertEquals(INACTIVE, states.get(1) );
-        assertEquals(INACTIVE, auction.getCurrentState());
+        assertEquals(ORDERBOOK_BALANCING_STOPPED, states.get(1) );
+        assertEquals(states.get(1), auction.getCurrentState());
     }
 
 

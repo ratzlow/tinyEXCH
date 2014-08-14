@@ -23,7 +23,7 @@ public class ContinuousTradingInterruptedByAuctions
     }
 
     @Override
-    public void transitionTradingForm(ContinuousTradingAuctionsStateChanger stateChanger) {
+    public void moveTo(ContinuousTradingAuctionsStateChanger stateChanger) {
         stateChanger.transition( new ContinuousTradingAuctionsProvider(auction, continuousTrading) );
     }
 }

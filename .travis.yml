@@ -1,3 +1,4 @@
-language: groovy
+language: java
 
-gradle clean check
+jdk:
+  - oraclejdk8
