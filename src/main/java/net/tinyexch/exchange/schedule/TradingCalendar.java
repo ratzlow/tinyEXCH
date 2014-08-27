@@ -12,23 +12,23 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * // TODO (FRa) : (FRa) : comment
+ * The calender defines the trading
+ * - days as day in year,
+ * - the time slots for trading on those particular days
+ * - the kind of trading form scheduled for the a time slot
  *
- *     /**
+ * Please be aware that all trading days share the same trading times and forms.
+ *
+ *
  * Auction:
  *  Start::CALL_RUNNING -> StartTime+Duration
  *  CALL_WITH_RANDOM_END -> bound Duration,
  *  PRICE_DETERMINATION_RUNNING -> Duration,
  *  ORDERBOOK_BALANCING_RUNNING -> Duration
- */
-
-
-/**
+ *
  * ContinuousTra
  *  OPEN ->
  *  CLOSE
- *
- *
  *
  *
  * @author ratzlow@gmail.com
@@ -44,7 +44,7 @@ public class TradingCalendar {
     /**
      * @param tradingDays
      */
-    public TradingCalendar( LocalDate ... tradingDays) {
+    public TradingCalendar( LocalDate ... tradingDays ) {
         this.tradingDays = Arrays.asList(tradingDays);
     }
 

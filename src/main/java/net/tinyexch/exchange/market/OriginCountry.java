@@ -3,7 +3,6 @@ package net.tinyexch.exchange.market;
 /**
  * Where is the order submitter coming from.
  *
- * // TODO (FRa) : (FRa) : FIX tag?
  * @author ratzlow@gmail.com
  * @since 2014-08-02
  */
