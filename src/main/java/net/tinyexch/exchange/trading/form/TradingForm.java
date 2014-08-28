@@ -1,5 +1,6 @@
 package net.tinyexch.exchange.trading.form;
 
+import net.tinyexch.ob.Orderbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,7 @@ public abstract class TradingForm<S extends Enum<S>> {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(TradingForm.class);
 
+    protected final Orderbook orderbook = new Orderbook();
     private final List<StateChangeListener<S>> stateChangeListeners = new ArrayList<>();
     private final Map<S, Set<S>> allowedTransitions;
     private S currentState = getDefaultState();

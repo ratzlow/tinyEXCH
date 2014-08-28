@@ -3,6 +3,9 @@ package net.tinyexch.exchange.trading.model;
 import net.tinyexch.exchange.trading.form.auction.Auction;
 import net.tinyexch.exchange.trading.form.auction.AuctionProvider;
 import net.tinyexch.exchange.trading.form.auction.AuctionStateChange;
+import net.tinyexch.ob.OrderReceiver;
+import net.tinyexch.ob.SubmitType;
+import net.tinyexch.order.Order;
 
 /**
  * In this model we execute one or more auctions.
@@ -11,7 +14,8 @@ import net.tinyexch.exchange.trading.form.auction.AuctionStateChange;
  * @since 2014-08-01
  */
 public class AuctionTradingModel
-        extends TradingModel<AuctionProvider, AuctionStateChange> {
+        extends TradingModel<AuctionProvider, AuctionStateChange>
+        implements OrderReceiver {
 
     private final Auction auction;
     private final AuctionProvider auctionProvider;
@@ -25,6 +29,11 @@ public class AuctionTradingModel
     @Override
     public void moveTo(AuctionStateChange stateChange) {
         stateChange.transition(auctionProvider);
+    }
+
+    @Override
+    public void submit( Order order, SubmitType submitType ) {
+
     }
 
     public Auction getAuction() {

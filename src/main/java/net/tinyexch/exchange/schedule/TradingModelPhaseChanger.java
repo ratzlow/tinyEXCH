@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,8 @@ public class TradingModelPhaseChanger {
     //
 
     public void startTrading( TradingCalendar tradingCalendar ) {
+        if ( !isTradingAllowedToday(tradingCalendar) ) { return; }
+
         LocalTime now = LocalTime.now();
         final Map<TradingPhaseTrigger.InitiatorType, List<TradingPhaseTrigger>> triggersByType =
                 tradingCalendar.getTriggers().stream().collect(groupingBy(TradingPhaseTrigger::getInitiatorType));
@@ -76,5 +79,11 @@ public class TradingModelPhaseChanger {
                 );
             });
         }
+    }
+
+    private boolean isTradingAllowedToday(TradingCalendar tradingCalendar) {
+        LocalDate today = LocalDate.now();
+        return tradingCalendar.getTradingDays().stream()
+                                        .anyMatch(date -> today.compareTo(date) == 0);
     }
 }

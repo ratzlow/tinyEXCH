@@ -48,6 +48,7 @@ Technical infrastructure
 - implementation of validation rules via rule engine feasible?
 - processing frameworks/methaphers: disruptor, chronicle, Rx, Storm, Akka
 - Authentification: SSL client side
+- couple change of tradingForm to orderbook.state change
 
 
 Setup backlog

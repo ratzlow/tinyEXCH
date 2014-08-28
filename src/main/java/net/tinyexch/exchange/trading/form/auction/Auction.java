@@ -2,6 +2,8 @@ package net.tinyexch.exchange.trading.form.auction;
 
 import net.tinyexch.exchange.trading.form.StateChangeListener;
 import net.tinyexch.exchange.trading.form.TradingForm;
+import net.tinyexch.ob.OrderReceiver;
+import net.tinyexch.ob.SubmitType;
 import net.tinyexch.order.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +20,7 @@ import static net.tinyexch.exchange.trading.form.auction.AuctionState.*;
  * @author ratzlow@gmail.com
  * @since 2014-08-02
  */
-public class Auction extends TradingForm<AuctionState> {
+public class Auction extends TradingForm<AuctionState> implements OrderReceiver {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Auction.class);
 
@@ -52,18 +54,20 @@ public class Auction extends TradingForm<AuctionState> {
     // different auction phases
     //-------------------------------------------------------------------------------------
 
-    public void startCallPhase() {
-        transitionTo( CALL_RUNNING );
-    }
 
     // TODO (FRa) : (FRa) : ensure validations are called upfront; maybe add check to auction phase upfront as well
-    public void place( Order order ) {
+    @Override
+    public void submit( Order order, SubmitType submitType ) {
         if ( getCurrentState() != CALL_RUNNING ) {
             String msg = "Call phase not opened so cannot accept order! Current state is = " + getCurrentState();
             throw new AuctionException(msg);
         }
 
         callPhase.accept( order );
+    }
+    public void startCallPhase() {
+        transitionTo( CALL_RUNNING );
+        orderbook.closePartially();
     }
 
     public void stopCallPhase() {
@@ -72,12 +76,14 @@ public class Auction extends TradingForm<AuctionState> {
 
     public void determinePrice() {
         transitionTo( PRICE_DETERMINATION_RUNNING );
+        orderbook.close();
         priceDeterminationPhase.determinePrice();
         transitionTo( PRICE_DETERMINATION_STOPPED );
     }
 
     public void balanceOrderbook() {
         transitionTo( ORDERBOOK_BALANCING_RUNNING );
+        orderbook.close();
         orderbookBalancingPhase.balance();
         transitionTo( ORDERBOOK_BALANCING_STOPPED );
     }

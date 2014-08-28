@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.tinyexch.exchange.trading.form.auction.AuctionState.*;
 import static net.tinyexch.exchange.trading.form.auction.AuctionStateChange.*;
@@ -62,13 +63,28 @@ public class TradingModelScheduledStateChangeTest {
         AuctionTradingModel auctionModel = new AuctionTradingModel(new TradingModelProfile(), auction);
         TradingModelPhaseChanger tradingModelPhaseChanger = new TradingModelPhaseChanger( auctionModel );
 
-        tradingModelPhaseChanger.startTrading( buildTradingDay() );
+        tradingModelPhaseChanger.startTrading( oneSingleAuction() );
         AuctionState[] expectedFlippedStates = {CALL_RUNNING, CALL_STOPPED,
                 PRICE_DETERMINATION_RUNNING, PRICE_DETERMINATION_STOPPED,
                 ORDERBOOK_BALANCING_RUNNING, ORDERBOOK_BALANCING_STOPPED};
         latch.await(50, TimeUnit.MILLISECONDS);
         Assert.assertArrayEquals("Recorded state changes: " + actualFlippedStates,
                 expectedFlippedStates, actualFlippedStates.toArray());
+    }
+
+
+    @Test
+    public void testScheduledPhasesForTomorrow_NoTradingExpected() throws InterruptedException {
+        Auction auction = new Auction();
+        AtomicInteger stateChanges = new AtomicInteger(0);
+        auction.register( state -> stateChanges.incrementAndGet() );
+
+        AuctionTradingModel tradingModel = new AuctionTradingModel( new TradingModelProfile(), auction );
+        TradingModelPhaseChanger phaseChanger = new TradingModelPhaseChanger( tradingModel );
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        phaseChanger.startTrading( new TradingCalendar(yesterday) );
+        Thread.sleep(20);
+        Assert.assertEquals("No trading scheduled for today!", 0, stateChanges.get());
     }
 
 
@@ -107,7 +123,7 @@ public class TradingModelScheduledStateChangeTest {
         send immediately OB_Bal_START | and then
         wait for         INACTIVE
     */
-    private TradingCalendar buildTradingDay() {
+    private TradingCalendar oneSingleAuction() {
         LocalTime now = LocalTime.now();
         ChronoUnit unit = ChronoUnit.MILLIS;
         LocalTime startTradingTime = now.plus(futureAuctionStartOffsetInMillis, unit);
@@ -119,5 +135,21 @@ public class TradingModelScheduledStateChangeTest {
                 .addWaitTrigger(START_ORDERBOOK_BALANCING, PRICE_DETERMINATION_STOPPED);
 
         return tradingCalendar;
+    }
+
+    private TradingCalendar continuousTradingInConnectionWithAuctions_IntradayClosingAuctionNotScheduled() {
+        // opening auction
+        // continuous trading (interrupted by auction)
+        // closing auction
+        return null;
+    }
+
+    private TradingCalendar continuousTradingInConnectionWithAuctions_IntradayClosingAuctionScheduled() {
+        // opening auction
+        // continuous trading (interrupted by auction)
+        // intraday closing auction
+        // continuous trading (interrupted by auction)
+        // EOD auction
+        return null;
     }
 }
