@@ -1,7 +1,6 @@
 package net.tinyexch.exchange.schedule;
 
-import net.tinyexch.exchange.trading.form.auction.AuctionState;
-import net.tinyexch.exchange.trading.form.auction.AuctionStateChange;
+import net.tinyexch.exchange.trading.form.TradingModelStateChanger;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -40,6 +39,7 @@ public class TradingCalendar {
 
     private List<LocalDate> tradingDays = new ArrayList<>();
     private List<TradingPhaseTrigger> triggers = new ArrayList<>();
+    private List<TradingFormSchedule> tradingFormSchedules = new ArrayList<>();
 
     /**
      * @param tradingDays
@@ -52,15 +52,7 @@ public class TradingCalendar {
     // helpers to setup the schedule for trading
     //-------------------------------------------------------------------------------------------------
 
-    public TradingCalendar addWaitTrigger(AuctionStateChange stateChange, AuctionState waitFor) {
-        return add( new TradingPhaseTrigger(stateChange, waitFor) );
-    }
-
-    public TradingCalendar addFixedTimeTrigger(AuctionStateChange stateChange, LocalTime time) {
-        return add( new TradingPhaseTrigger(stateChange, time) );
-    }
-
-    public TradingCalendar addVariantDurationTrigger( AuctionStateChange stateChange, LocalTime from,
+    public TradingCalendar addVariantDurationTrigger( TradingModelStateChanger stateChange, LocalTime from,
                                                       int plusMinDuration, int plusMaxDuration, ChronoUnit unit ) {
         int duration = random.nextInt(plusMaxDuration - plusMinDuration) + plusMinDuration;
         LocalTime time = from.plus(duration, unit);
@@ -75,6 +67,22 @@ public class TradingCalendar {
         return triggers;
     }
 
+    @Override
+    public String toString() {
+        return "TradingCalendar{" +
+                "tradingDays=" + tradingDays +
+                ", triggers=" + triggers +
+                '}';
+    }
+
+    public void addAuction(AuctionSchedule auctionSchedule) {
+        addTriggers(auctionSchedule);
+    }
+
+    public void addContinuousTrading(ContinuousTradingSchedule continuousTradingSchedule) {
+        addTriggers(continuousTradingSchedule);
+    }
+
     //
     // internal API
     //
@@ -82,5 +90,19 @@ public class TradingCalendar {
     private TradingCalendar add(final TradingPhaseTrigger trigger) {
         triggers.add( trigger );
         return this;
+    }
+
+    private void addTriggers(TradingFormSchedule schedule) {
+        if ( triggers.isEmpty() &&
+             schedule.getTriggers().get(0).getInitiatorType() != TradingPhaseTrigger.InitiatorType.FIXED_TIME) {
+            throw new SchedulerException("A trading day must start at a concrete predefined time!");
+        }
+
+        triggers.addAll(schedule.getTriggers());
+        tradingFormSchedules.add(schedule);
+    }
+
+    public List<TradingFormSchedule> getTradingFormSchedules() {
+        return tradingFormSchedules;
     }
 }

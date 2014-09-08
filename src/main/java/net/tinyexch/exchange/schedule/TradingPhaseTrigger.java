@@ -1,8 +1,6 @@
 package net.tinyexch.exchange.schedule;
 
-import net.tinyexch.exchange.trading.form.auction.AuctionException;
-import net.tinyexch.exchange.trading.form.auction.AuctionState;
-import net.tinyexch.exchange.trading.form.auction.AuctionStateChange;
+import net.tinyexch.exchange.trading.form.TradingModelStateChanger;
 
 import java.time.Duration;
 import java.time.LocalTime;
@@ -32,23 +30,23 @@ public final class TradingPhaseTrigger {
     // instance vars
     //
 
-    private final AuctionStateChange stateChange;
+    private final TradingModelStateChanger stateChanger;
     private final InitiatorType initiatorType;
     private Optional<LocalTime> fixedTime = Optional.empty();
-    private Optional<AuctionState> waitFor = Optional.empty();
+    private Optional<Enum> waitFor = Optional.empty();
 
     //
     // constructor
     //
 
-    public TradingPhaseTrigger(AuctionStateChange stateChange, LocalTime time ) {
-        this.stateChange = stateChange;
+    public TradingPhaseTrigger(TradingModelStateChanger stateChanger, LocalTime time ) {
+        this.stateChanger = stateChanger;
         this.initiatorType = InitiatorType.FIXED_TIME;
         this.fixedTime = Optional.of(time);
     }
 
-    public TradingPhaseTrigger(AuctionStateChange stateChange, AuctionState waitFor) {
-        this.stateChange = stateChange;
+    public TradingPhaseTrigger(TradingModelStateChanger stateChanger, Enum waitFor) {
+        this.stateChanger = stateChanger;
         this.initiatorType = InitiatorType.WAIT_FOR_STATECHANGE;
         this.waitFor = Optional.of(waitFor);
     }
@@ -57,16 +55,16 @@ public final class TradingPhaseTrigger {
     // public API
     //
 
-    public AuctionStateChange getStateChange() {
-        return stateChange;
+    public TradingModelStateChanger getStateChanger() {
+        return stateChanger;
     }
 
     public LocalTime getFixedTime() {
-        return fixedTime.orElseThrow( () -> new AuctionException("You are dealing with a WaitFor trigger!") );
+        return fixedTime.orElseThrow( () -> new SchedulerException("You are dealing with a WaitFor trigger!") );
     }
 
-    public AuctionState getWaitFor() {
-        return waitFor.orElseThrow( () -> new AuctionException("You are dealing with a FixedTime trigger!") );
+    public Enum getWaitFor() {
+        return waitFor.orElseThrow( () -> new SchedulerException("You are dealing with a FixedTime trigger!") );
     }
 
     public InitiatorType getInitiatorType() {
@@ -75,11 +73,23 @@ public final class TradingPhaseTrigger {
 
     public Duration getDurationToFire(LocalTime from) {
         if ( !fixedTime.isPresent() || fixedTime.get().isBefore(from) ) {
-            throw new AuctionException("Cannot start auction in the past!");
+            String msg = String.format("Cannot start auction in the past! from=%s fixedTime=%s",
+                    from.toString(), fixedTime.toString());
+            throw new SchedulerException(msg + " " + toString());
         }
         long offsetMillis = fixedTime.get().getLong(ChronoField.MILLI_OF_DAY) - from.getLong(ChronoField.MILLI_OF_DAY);
 
-        assert (offsetMillis > 0);
+        assert (offsetMillis >= 0);
         return Duration.ofMillis( offsetMillis );
+    }
+
+    @Override
+    public String toString() {
+        return "TradingPhaseTrigger{" +
+                "stateChanger=" + stateChanger +
+                ", initiatorType=" + initiatorType +
+                ", fixedTime=" + fixedTime +
+                ", waitFor=" + waitFor +
+                '}';
     }
 }

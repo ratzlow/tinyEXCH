@@ -1,5 +1,7 @@
 package net.tinyexch.exchange.trading.form;
 
+import org.slf4j.Logger;
+
 /**
  * OTC
  *
@@ -16,6 +18,16 @@ public class OverTheCounter extends TradingForm {
 
     @Override
     protected Enum getDefaultState() {
+        throw new IllegalStateException("// TODO (FRa) : (FRa) : not yet implemented");
+    }
+
+    @Override
+    public void close() {
+        throw new IllegalStateException("// TODO (FRa) : (FRa) : not yet implemented");
+    }
+
+    @Override
+    protected Logger getLogger() {
         throw new IllegalStateException("// TODO (FRa) : (FRa) : not yet implemented");
     }
 }

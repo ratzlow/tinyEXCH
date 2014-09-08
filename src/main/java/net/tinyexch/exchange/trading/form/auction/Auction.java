@@ -2,6 +2,7 @@ package net.tinyexch.exchange.trading.form.auction;
 
 import net.tinyexch.exchange.trading.form.StateChangeListener;
 import net.tinyexch.exchange.trading.form.TradingForm;
+import net.tinyexch.exchange.trading.model.TradingFormRunType;
 import net.tinyexch.ob.OrderReceiver;
 import net.tinyexch.ob.SubmitType;
 import net.tinyexch.order.Order;
@@ -27,6 +28,7 @@ public class Auction extends TradingForm<AuctionState> implements OrderReceiver 
     private final CallPhase callPhase;
     private final PriceDeterminationPhase priceDeterminationPhase;
     private final OrderbookBalancingPhase orderbookBalancingPhase;
+
 
     //-------------------------------------------------------------------------------------
     // constructors
@@ -63,7 +65,7 @@ public class Auction extends TradingForm<AuctionState> implements OrderReceiver 
             throw new AuctionException(msg);
         }
 
-        callPhase.accept( order );
+        callPhase.accept(order);
     }
     public void startCallPhase() {
         transitionTo( CALL_RUNNING );
@@ -105,4 +107,12 @@ public class Auction extends TradingForm<AuctionState> implements OrderReceiver 
 
     @Override
     public AuctionState getDefaultState() { return INACTIVE; }
+
+    @Override
+    public void close() {
+        transitionTo( AuctionState.close() );
+    }
+
+    @Override
+    protected Logger getLogger() { return LOGGER; }
 }

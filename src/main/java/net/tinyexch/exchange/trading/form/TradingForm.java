@@ -2,7 +2,6 @@ package net.tinyexch.exchange.trading.form;
 
 import net.tinyexch.ob.Orderbook;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -16,8 +15,6 @@ import java.util.*;
  * @param <S> state type of the concrete trading form
  */
 public abstract class TradingForm<S extends Enum<S>> {
-
-    private final static Logger LOGGER = LoggerFactory.getLogger(TradingForm.class);
 
     protected final Orderbook orderbook = new Orderbook();
     private final List<StateChangeListener<S>> stateChangeListeners = new ArrayList<>();
@@ -43,7 +40,7 @@ public abstract class TradingForm<S extends Enum<S>> {
     //--------------------------------------------------------------------------------------------------
 
     /**
-     * Callback to switch through the life cycle of a trading form. Used to start, stop a given
+     * Callback to switch through the life cycle of a trading form. Used to start, close a given
      * TradingForm or flip into intermediate state.
      * If the trading model is already in the specified target state this request ignored.
      *
@@ -52,7 +49,7 @@ public abstract class TradingForm<S extends Enum<S>> {
     protected void transitionTo( S targetState ) {
 
         if ( targetState == currentState ) {
-            LOGGER.info("Ignore transition request as this {} is already in state {}",
+            getLogger().info("Ignore transition request as this {} is already in state {}",
                     getClass().getSimpleName(), targetState);
             return;
         }
@@ -61,7 +58,7 @@ public abstract class TradingForm<S extends Enum<S>> {
                 allowedTransitions.get(currentState) :
                 Collections.EMPTY_SET;
         if ( nextAllowedStates.contains(targetState) ) {
-            LOGGER.info("Change state from {} -> {}", currentState, targetState);
+            getLogger().info("Change state from {} -> {}", currentState, targetState);
             currentState = targetState;
 
         } else {
@@ -89,6 +86,16 @@ public abstract class TradingForm<S extends Enum<S>> {
      *  some sort of inactive state
      */
     protected abstract S getDefaultState();
+
+    /**
+     * Stop the current trading form no matter in what current state it is.
+     */
+    public abstract void close();
+
+    /**
+     * @return from concrete class intialized
+     */
+    protected abstract Logger getLogger();
 
     /**
      * @param listener another listener which will fire if the state of the current trading form changes

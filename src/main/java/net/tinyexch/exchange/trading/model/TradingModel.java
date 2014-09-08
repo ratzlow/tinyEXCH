@@ -1,8 +1,10 @@
 package net.tinyexch.exchange.trading.model;
 
-import net.tinyexch.exchange.trading.form.TradingFormProvider;
-import net.tinyexch.exchange.trading.form.TradingFormStateChanger;
-import net.tinyexch.order.Order;
+import net.tinyexch.exchange.schedule.TradingFormInitializer;
+import net.tinyexch.exchange.trading.form.StateChangeListener;
+import org.slf4j.Logger;
+
+import java.util.List;
 
 /**
  * Specifies how the trading process for a given security should be executed. It defines the sequence and kind of
@@ -12,10 +14,10 @@ import net.tinyexch.order.Order;
  * @since 2014-07-26
  * @link chap 2, 2.
  */
-public abstract class TradingModel<P extends TradingFormProvider,
-                                   C extends TradingFormStateChanger<P>> {
+public abstract class TradingModel {
 
     private final TradingModelProfile profile;
+    private TradingFormRunType tradingFormRunType;
 
     //--------------------------------------------------------------------------------
     // constructors
@@ -30,30 +32,19 @@ public abstract class TradingModel<P extends TradingFormProvider,
     // pub API
     //--------------------------------------------------------------------------------
 
-    public abstract void moveTo(C stateChanger);
 
-    public void enter( Order order) {
-        // TODO (FRa) : (FRa) : activate filters and return notifcation ACK/REJ to client
-        // Stream<NewOrderValidator> newOrderValidators = profile.getNewOrderValidators().newOrderValidators;
-        //orderbook.submit(order);
+    public TradingFormRunType getTradingFormRunType() {
+        return tradingFormRunType;
     }
 
-    /**
-     * The order in the orderbook keeps the same ID. Only certain attributes are changed in place.
-     *
-     * @param order the order representing with the updated values
-     */
-    public void modify( Order order ) {
-        // TODO (FRa) : (FRa) : implement
+    protected abstract Logger getLogger();
+
+    protected void setTradingFormRunType(TradingFormRunType tradingFormRunType) {
+        getLogger().info("Change tradingFromRunType from {} -> {}", this.tradingFormRunType, tradingFormRunType);
+        this.tradingFormRunType = tradingFormRunType;
     }
 
-
-    /**
-     * Given order should be canceled in the orderbook and removed from it.
-     *
-     * @param order the order representing with the updated values
-     */
-    public void cancel( Order order ) {
-        // TODO (FRa) : (FRa) : implement
+    public void init(TradingFormInitializer initializer, List<StateChangeListener> listeners) {
+        initializer.setup(this, listeners);
     }
 }

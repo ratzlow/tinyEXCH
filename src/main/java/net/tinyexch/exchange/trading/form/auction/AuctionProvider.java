@@ -1,22 +1,11 @@
 package net.tinyexch.exchange.trading.form.auction;
 
-import net.tinyexch.exchange.trading.form.TradingFormProvider;
-
 /**
- * If you are running the trading model {@link net.tinyexch.exchange.trading.model.AuctionTradingModel} this class
- * returns the underlying auction.
+ * Trading models supporting auctions should implement this interface to enable auctions to kick in.
  *
  * @author ratzlow@gmail.com
- * @since 2014-08-03
+ * @since 2014-09-06
  */
-public class AuctionProvider implements TradingFormProvider {
-    private final Auction auction;
-
-    public AuctionProvider(Auction auction) {
-        this.auction = auction;
-    }
-
-    public Auction getAuction() {
-        return auction;
-    }
+public interface AuctionProvider {
+    Auction getAuction();
 }

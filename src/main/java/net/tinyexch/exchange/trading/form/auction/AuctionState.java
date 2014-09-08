@@ -2,7 +2,7 @@ package net.tinyexch.exchange.trading.form.auction;
 
 /**
  * The sequence of states reflects the life cycle of an auction. This is independent of the particular
- * {@link AuctionType}
+ * {@link net.tinyexch.exchange.trading.model.TradingFormRunType}
  *
  * @author ratzlow@gmail.com
  * @since 2014-08-03
