@@ -77,12 +77,13 @@ public class TradingModelScheduledStateChangeTest {
         ContinuousTradingInterruptedByAuctions contTradingWithOpeningAndClosingAuction =
                 new ContinuousTradingInterruptedByAuctions( new TradingModelProfile());
 
-        TradingProcess tradingProcess = new TradingProcess();
+        CountDownLatch latch = new CountDownLatch( 3 * EXPECTED_FLIPPED_AUCTION_STATES.length );
+        TradingProcess tradingProcess = new TradingProcess( state -> latch.countDown() );
         tradingProcess.startTrading(continuousTradingWithOpeningAndClosingAuction(), contTradingWithOpeningAndClosingAuction);
-        Thread.sleep(400);
+        latch.await(1, TimeUnit.SECONDS);
+
         List<Enum> actualFlippedStates = tradingProcess.getFiredStateChanges().stream().map(
                 TradingProcess.FiredStateChange::getNewState).collect(Collectors.toList());
-
         List<Enum> allExpectedStates = new ArrayList<>();
         allExpectedStates.addAll( Arrays.asList(EXPECTED_FLIPPED_AUCTION_STATES));
         allExpectedStates.addAll( Arrays.asList(EXPECTED_CONTINUOUS_TRADING_STATES));
