@@ -1,4 +1,4 @@
-package net.tinyexch.exchange.trading.form.interruption;
+package net.tinyexch.ob.price.safeguard;
 
 /**
  * If the price of an instruments exceeds certain limits defined for an

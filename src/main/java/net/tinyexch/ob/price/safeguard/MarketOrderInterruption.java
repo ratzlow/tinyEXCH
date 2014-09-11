@@ -1,4 +1,4 @@
-package net.tinyexch.exchange.trading.form.interruption;
+package net.tinyexch.ob.price.safeguard;
 
 /**
  * Might be raised within an {@link net.tinyexch.exchange.trading.form.auction.Auction}.

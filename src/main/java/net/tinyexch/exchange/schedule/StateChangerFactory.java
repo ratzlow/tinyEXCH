@@ -83,7 +83,7 @@ public class StateChangerFactory {
     }
 
     /**
-     * Stop everything no matter if continuous trading or an auction interruption is running
+     * Stop everything no matter if continuous trading or an auction safeguard is running
      */
     public static TradingModelStateChanger<ContinuousTradingInterruptedByAuctions> stopContinuousTrading() {
         return model -> model.getContinuousTrading().close();
