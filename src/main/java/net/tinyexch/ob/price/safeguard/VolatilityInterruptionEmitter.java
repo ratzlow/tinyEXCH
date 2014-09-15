@@ -1,11 +1,18 @@
 package net.tinyexch.ob.price.safeguard;
 
 import net.tinyexch.order.OrderType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.function.Consumer;
 
 /**
  * {@link net.tinyexch.ob.price.safeguard.VolatilityInterruption} can be thrown in auctions and
  * continuous trading. As far as designated sponsors (market maker) exists the will enter quotes during
  * volatility interruptions. Executed MidPoint orders are not considered.
+ *
+ * This class is not thread safe and needs client synchronization when updating deviations or ref prices. It will
+ * accept negative prices as price determination component has to ensure valid prices in general.
  *
  * In auction: fire only at end of call phase // TODO (FRa) : (FRa) : test
  *
@@ -16,81 +23,79 @@ import net.tinyexch.order.OrderType;
  */
 public abstract class VolatilityInterruptionEmitter {
 
-    //--------------------------------------------------------------------
-    /**
-     * Max percentage deviation symmetrically pos/neg of reference price retrieved as last price in an auction
-     * on current trading day.
-     */
-    private final float staticPriceRangePercentage;
+    private static final Logger LOGGER = LoggerFactory.getLogger(VolatilityInterruptionEmitter.class);
 
     /**
-     * Either the last price determined in an auction or if as fallback the last traded price. (price 2). Only updated
+     * Deviation ... max percentage deviation symmetrically pos/neg of reference price retrieved as last price in an auction
+     * on current trading day.
+     *
+     * Static reference price ... either the last price determined in an auction or if as fallback the last traded price. (price 2). Only updated
      * on trading day if an auction was conducted. Ergo: price remains largely unchanged during trading.
      */
-    private double staticPriceRangeRefPrice;
+    private PriceRange staticRange;
 
-    //--------------------------------------------------------------------
-
-    /**
-     * Similar to #staticPriceRangePercentage but orientates on last traded price in auction or continuous trading.
-     */
-    private final float dynamicPriceRangePercentage;
 
     /**
-     * Initialized as "last traded price" in auction or continuous trading.
+     * Deviation ... similar to #staticPriceDeviationPerc but orientates on last traded price in auction or continuous trading.
+     *
+     * Dyn reference price ... Initialized as "last traded price" in auction or continuous trading.
      * Later on readjusted after order was matched in continuous trading.
      */
-    private double dynamicPriceRangeRefPrice;
+    private PriceRange dynamicRange;
+
     //--------------------------------------------------------------------
 
-    protected VolatilityInterruptionEmitter(float staticPriceRangePercentage, float dynamicPriceRangePercentage) {
-        this.staticPriceRangePercentage = staticPriceRangePercentage;
-        this.dynamicPriceRangePercentage = dynamicPriceRangePercentage;
+    /**
+     * This listener should be invoked on any changes to the reference price to check if the new reference price is
+     * within the specified range parameters.
+     *
+     * @param staticPriceRangeRefPrice base price that is usually a defines the midpoint stable broader range
+     * @param staticPriceDeviationPerc percent by which #staticPriceRangeRefPrice differ in pos + neg direction
+     * @param dynamicPriceRangeRefPrice base price changing during (cont) trading usually extending the more stable
+     *                                  #staticPriceRangeRefPrice
+     * @param dynamicPriceDeviationPerc defines the pos/neg deviation around #dynamicPriceRangeRefPrice
+     */
+    protected VolatilityInterruptionEmitter( double staticPriceRangeRefPrice, float staticPriceDeviationPerc,
+                                             double dynamicPriceRangeRefPrice, float dynamicPriceDeviationPerc ) {
+
+        this.staticRange = new PriceRange(staticPriceRangeRefPrice, staticPriceDeviationPerc);
+        this.dynamicRange = new PriceRange(dynamicPriceRangeRefPrice, dynamicPriceDeviationPerc);
+
+        if ( !staticRange.intersect(dynamicRange) )
+            throw new InvalidReferencePriceException("Price ranges are not intersecting!");
     }
 
     //--------------------------------------------------------------------
     // public API
     //--------------------------------------------------------------------
 
-    public void updateStaticRefPrice(double staticPriceRangeRefPrice) {
-        this.staticPriceRangeRefPrice = staticPriceRangeRefPrice;
+    public void updateStaticRefPrice(double newStatRefPrice ) {
+        update( newStatRefPrice, newRange -> staticRange = newRange, dynamicRange, staticRange );
     }
 
-    public void updateDynamicRefPrice( double dynamicPriceRangeRefPrice ) {
-        this.dynamicPriceRangeRefPrice = dynamicPriceRangeRefPrice;
+    public void updateDynamicRefPrice( double newDynRefPrice ) {
+        update( newDynRefPrice, newRange -> dynamicRange = newRange, staticRange, dynamicRange);
     }
+
+    private void update( double newRefPrice, Consumer<PriceRange> rangeSetter,
+                         PriceRange unchangedRange, PriceRange toBeReplaced ) {
+        PriceRange newRefPriceRange = new PriceRange(newRefPrice, toBeReplaced.getPriceDeviationPerc() );
+        if ( newRefPriceRange.intersect(unchangedRange) ) {
+            rangeSetter.accept(newRefPriceRange);
+            LOGGER.debug("Updated price range to {}", newRefPriceRange.toString() );
+        } else {
+            String msg = String.format("New ref price range %s does not intersect with price range %s",
+                    newRefPriceRange.toString(), unchangedRange.toString());
+            throw new InvalidReferencePriceException( msg );
+        }
+    }
+
 
     public void validateIndicativePrice( double indicativePrice, OrderType matchedOrderType ) {
-        if ( !isIndicativePriceOutsideStaticPriceRange(indicativePrice) ||
-             !isIndicativePriceOutsideDynamicPriceRange(indicativePrice)) {
+        if ( !staticRange.contains(indicativePrice) && !dynamicRange.contains(indicativePrice)) {
             fireVolatilityInterruption();
         }
     }
 
     protected abstract void fireVolatilityInterruption();
-
-    //--------------------------------------------------------------------
-    // public API
-    //--------------------------------------------------------------------
-
-    // indicative price
-    // dynamic price range
-    // static price range
-    // reference price -> in contTrad: after order was matched
-    // last traded price
-    // executions of MidPoint orders are to be ignored
-    private boolean isIndicativePriceOutsideDynamicPriceRange( double indicativePrice ) {
-        return isInPriceRange( indicativePrice, dynamicPriceRangeRefPrice, dynamicPriceRangePercentage);
-    }
-
-    private boolean isIndicativePriceOutsideStaticPriceRange( double indicativePrice ) {
-        return isInPriceRange( indicativePrice, staticPriceRangeRefPrice, staticPriceRangePercentage );
-    }
-
-    // TODO (FRa) : (FRa) : add test to avoid neg bounds
-    private boolean isInPriceRange(double indicativePrice, double refPrice, float priceRange) {
-        double lowerPrice = refPrice * (100-priceRange/2) / 100;
-        double upperPrice = refPrice * (100+priceRange/2) / 100;
-        return (lowerPrice <= indicativePrice && indicativePrice <= upperPrice);
-    }
 }
