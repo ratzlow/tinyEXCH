@@ -1,6 +1,5 @@
 package net.tinyexch.ob.price.safeguard;
 
-import net.tinyexch.order.OrderType;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -127,7 +126,7 @@ public class VolatilityInterruptionEmitterTest {
         void assertRange(double indicativePrice, Range inOrOut, String msg)
                 throws InterruptedException {
             fired.set(Range.IN);
-            validateIndicativePrice(indicativePrice, OrderType.MARKET);
+            checkIndicativePrice(indicativePrice);
             Assert.assertEquals(msg, inOrOut, fired.get());
         }
     }

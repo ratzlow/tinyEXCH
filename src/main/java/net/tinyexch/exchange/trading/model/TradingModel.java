@@ -47,4 +47,8 @@ public abstract class TradingModel {
     public void init(TradingFormInitializer initializer, List<StateChangeListener> listeners) {
         initializer.setup(this, listeners);
     }
+
+    protected TradingModelProfile getProfile() {
+        return profile;
+    }
 }

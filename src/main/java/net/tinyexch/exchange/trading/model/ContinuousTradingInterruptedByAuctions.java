@@ -49,11 +49,15 @@ public class ContinuousTradingInterruptedByAuctions
         listeners.forEach(auction::register);
     }
 
+
     public void initContinuousTrading(Supplier<ContinuousTrading> continuousTradingSupplier,
-                                      TradingFormRunType tradingFormRunType, List<StateChangeListener> listeners) {
+                                      TradingFormRunType tradingFormRunType,
+                                      List<StateChangeListener> listeners) {
         auction = null;
         setTradingFormRunType(tradingFormRunType);
+
         continuousTrading = continuousTradingSupplier.get();
         listeners.forEach(continuousTrading::register);
+        continuousTrading.register( getProfile().getVolatilityInterruptionEmitter() );
     }
 }

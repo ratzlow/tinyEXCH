@@ -1,6 +1,9 @@
 package net.tinyexch.exchange.trading.form;
 
+import net.tinyexch.exchange.runtime.NotificationListener;
+import net.tinyexch.exchange.runtime.StateChangedEvent;
 import net.tinyexch.ob.Orderbook;
+import net.tinyexch.ob.match.MatchEngine;
 import org.slf4j.Logger;
 
 import java.util.*;
@@ -16,28 +19,38 @@ import java.util.*;
  */
 public abstract class TradingForm<S extends Enum<S>> {
 
-    protected final Orderbook orderbook = new Orderbook();
+    private final Orderbook orderbook;
     private final List<StateChangeListener<S>> stateChangeListeners = new ArrayList<>();
+    private final NotificationListener notificationListener;
+
     private final Map<S, Set<S>> allowedTransitions;
     private S currentState = getDefaultState();
+
 
     //--------------------------------------------------------------------------------------------------
     // constructors
     //--------------------------------------------------------------------------------------------------
 
-    protected TradingForm( List<StateChangeListener<S>> stateChangeListeners ) {
+    protected TradingForm( MatchEngine matchEngine, NotificationListener notificationListener,
+                           List<StateChangeListener<S>> stateChangeListeners ) {
+
         Objects.requireNonNull(stateChangeListeners);
+        this.orderbook = new Orderbook(matchEngine);
         this.allowedTransitions = getAllowedTransitions();
         this.stateChangeListeners.addAll(stateChangeListeners);
+        this.notificationListener = notificationListener;
     }
 
     protected TradingForm() {
+        this.notificationListener = notification -> {};
+        this.orderbook = new Orderbook();
         this.allowedTransitions = getAllowedTransitions();
     }
 
     //--------------------------------------------------------------------------------------------------
     // public API
     //--------------------------------------------------------------------------------------------------
+
 
     /**
      * Callback to switch through the life cycle of a trading form. Used to start, close a given
@@ -48,6 +61,7 @@ public abstract class TradingForm<S extends Enum<S>> {
      */
     protected void transitionTo( S targetState ) {
 
+        S previous = currentState;
         if ( targetState == currentState ) {
             getLogger().info("Ignore transition request as this {} is already in state {}",
                     getClass().getSimpleName(), targetState);
@@ -68,6 +82,7 @@ public abstract class TradingForm<S extends Enum<S>> {
         }
 
         stateChangeListeners.stream().forEach(listener -> listener.stateChanged(targetState));
+        notificationListener.accept( new StateChangedEvent<>(previous, currentState) );
     }
 
     public S getCurrentState() {
@@ -100,8 +115,12 @@ public abstract class TradingForm<S extends Enum<S>> {
     /**
      * @param listener another listener which will fire if the state of the current trading form changes
      */
-    public void register( StateChangeListener<S> listener ){
+    public void register( StateChangeListener<S> listener ) {
         Objects.requireNonNull(listener);
         stateChangeListeners.add( listener );
+    }
+
+    protected Orderbook getOrderbook() {
+        return orderbook;
     }
 }

@@ -3,6 +3,7 @@ package net.tinyexch.exchange.trading.form;
 import net.tinyexch.exchange.trading.form.auction.Auction;
 import net.tinyexch.exchange.trading.form.auction.AuctionState;
 import net.tinyexch.exchange.trading.form.continuous.ContinuousTrading;
+import net.tinyexch.exchange.trading.model.TradingModelProfile;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -43,8 +44,10 @@ public class ChangeTradingFormStateTest {
     @Test
     public void testAuctionOK() {
 
+        TradingModelProfile profile = new TradingModelProfile();
         List<AuctionState> states = new ArrayList<>();
         Auction auction = new Auction(
+            profile,
             Collections.singletonList( state -> states.add(state)),     // state listener
             order -> {},                                                // call phase
             () -> {},                                                   // price determination

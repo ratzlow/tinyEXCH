@@ -2,7 +2,7 @@ package net.tinyexch.exchange.trading.form.auction;
 
 import net.tinyexch.exchange.trading.form.StateChangeListener;
 import net.tinyexch.exchange.trading.form.TradingForm;
-import net.tinyexch.exchange.trading.model.TradingFormRunType;
+import net.tinyexch.exchange.trading.model.TradingModelProfile;
 import net.tinyexch.ob.OrderReceiver;
 import net.tinyexch.ob.SubmitType;
 import net.tinyexch.order.Order;
@@ -34,12 +34,13 @@ public class Auction extends TradingForm<AuctionState> implements OrderReceiver 
     // constructors
     //-------------------------------------------------------------------------------------
 
-    public Auction( List<StateChangeListener<AuctionState>> stateChangeListeners,
+    public Auction( TradingModelProfile profile,
+                    List<StateChangeListener<AuctionState>> stateChangeListeners,
                     CallPhase callPhase,
                     PriceDeterminationPhase priceDeterminationPhase,
                     OrderbookBalancingPhase orderbookBalancingPhase ) {
 
-        super(stateChangeListeners);
+        super(profile.getAuctionMatchEngine(), profile.getNotificationListener(), stateChangeListeners);
         this.callPhase = callPhase;
         this.priceDeterminationPhase = priceDeterminationPhase;
         this.orderbookBalancingPhase = orderbookBalancingPhase;
@@ -67,9 +68,10 @@ public class Auction extends TradingForm<AuctionState> implements OrderReceiver 
 
         callPhase.accept(order);
     }
+
     public void startCallPhase() {
         transitionTo( CALL_RUNNING );
-        orderbook.closePartially();
+        getOrderbook().closePartially();
     }
 
     public void stopCallPhase() {
@@ -78,14 +80,14 @@ public class Auction extends TradingForm<AuctionState> implements OrderReceiver 
 
     public void determinePrice() {
         transitionTo( PRICE_DETERMINATION_RUNNING );
-        orderbook.close();
+        getOrderbook().close();
         priceDeterminationPhase.determinePrice();
         transitionTo( PRICE_DETERMINATION_STOPPED );
     }
 
     public void balanceOrderbook() {
         transitionTo( ORDERBOOK_BALANCING_RUNNING );
-        orderbook.close();
+        getOrderbook().close();
         orderbookBalancingPhase.balance();
         transitionTo( ORDERBOOK_BALANCING_STOPPED );
     }

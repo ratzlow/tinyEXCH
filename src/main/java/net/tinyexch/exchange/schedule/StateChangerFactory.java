@@ -1,6 +1,5 @@
 package net.tinyexch.exchange.schedule;
 
-import net.tinyexch.exchange.schedule.TradingFormInitializer;
 import net.tinyexch.exchange.trading.form.StateChangeListener;
 import net.tinyexch.exchange.trading.form.TradingModelStateChanger;
 import net.tinyexch.exchange.trading.form.auction.Auction;

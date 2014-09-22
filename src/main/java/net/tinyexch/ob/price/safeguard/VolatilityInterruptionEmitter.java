@@ -1,6 +1,5 @@
 package net.tinyexch.ob.price.safeguard;
 
-import net.tinyexch.order.OrderType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +23,10 @@ import java.util.function.Consumer;
 public abstract class VolatilityInterruptionEmitter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(VolatilityInterruptionEmitter.class);
+
+    public static final VolatilityInterruptionEmitter NO_OP_EMITTER = new VolatilityInterruptionEmitter( 0,0,0,0 ) {
+        @Override protected void fireVolatilityInterruption() { }
+    };
 
     /**
      * Deviation ... max percentage deviation symmetrically pos/neg of reference price retrieved as last price in an auction
@@ -90,11 +93,12 @@ public abstract class VolatilityInterruptionEmitter {
         }
     }
 
-
-    public void validateIndicativePrice( double indicativePrice, OrderType matchedOrderType ) {
-        if ( !staticRange.contains(indicativePrice) && !dynamicRange.contains(indicativePrice)) {
+    public boolean checkIndicativePrice(double indicativePrice) {
+        boolean valid = !staticRange.contains(indicativePrice) && !dynamicRange.contains(indicativePrice);
+        if (valid) {
             fireVolatilityInterruption();
         }
+        return valid;
     }
 
     protected abstract void fireVolatilityInterruption();
