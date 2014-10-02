@@ -1,14 +1,9 @@
 package net.tinyexch.exchange.schedule;
 
-import net.tinyexch.exchange.trading.form.TradingModelStateChanger;
-
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 /**
  * The calender defines the trading
@@ -35,8 +30,6 @@ import java.util.Random;
  */
 public class TradingCalendar {
 
-    private final Random random = new Random(LocalTime.now().getNano());
-
     private List<LocalDate> tradingDays = new ArrayList<>();
     private List<TradingPhaseTrigger> triggers = new ArrayList<>();
     private List<TradingFormSchedule> tradingFormSchedules = new ArrayList<>();
@@ -52,12 +45,6 @@ public class TradingCalendar {
     // helpers to setup the schedule for trading
     //-------------------------------------------------------------------------------------------------
 
-    public TradingCalendar addVariantDurationTrigger( TradingModelStateChanger stateChange, LocalTime from,
-                                                      int plusMinDuration, int plusMaxDuration, ChronoUnit unit ) {
-        int duration = random.nextInt(plusMaxDuration - plusMinDuration) + plusMinDuration;
-        LocalTime time = from.plus(duration, unit);
-        return add( new TradingPhaseTrigger(stateChange, time) );
-    }
 
     public List<LocalDate> getTradingDays() {
         return tradingDays;

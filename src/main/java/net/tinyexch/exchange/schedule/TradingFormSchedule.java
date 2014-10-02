@@ -15,9 +15,4 @@ public interface TradingFormSchedule {
      * @return list of triggers with first trigger being a fixed time trigger
      */
     List<TradingPhaseTrigger> getTriggers();
-
-    /**
-     * @return defines how to instantiate a trading form and assign listeners
-     */
-    TradingFormInitializer getInitializer();
 }

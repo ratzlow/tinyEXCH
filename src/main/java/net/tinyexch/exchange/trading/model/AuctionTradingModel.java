@@ -1,6 +1,6 @@
 package net.tinyexch.exchange.trading.model;
 
-import net.tinyexch.exchange.trading.form.StateChangeListener;
+import net.tinyexch.exchange.event.NotificationListener;
 import net.tinyexch.exchange.trading.form.auction.Auction;
 import net.tinyexch.exchange.trading.form.auction.AuctionProvider;
 import net.tinyexch.ob.OrderReceiver;
@@ -8,9 +8,6 @@ import net.tinyexch.ob.SubmitType;
 import net.tinyexch.order.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * In this model we execute one or more auctions.
@@ -21,10 +18,11 @@ import java.util.function.Supplier;
 public class AuctionTradingModel extends TradingModel implements OrderReceiver, AuctionProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuctionTradingModel.class);
-    private Auction auction;
+    private final Auction auction;
 
-    public AuctionTradingModel(TradingModelProfile profile) {
-        super(profile);
+    public AuctionTradingModel(TradingModelProfile profile, NotificationListener notificationListener, Auction auction) {
+        super(profile, notificationListener);
+        this.auction = auction;
     }
 
     @Override
@@ -38,11 +36,5 @@ public class AuctionTradingModel extends TradingModel implements OrderReceiver, 
     @Override
     public Auction getAuction() {
         return auction;
-    }
-
-    public void initAuction(Supplier<Auction> supplier, TradingFormRunType runType, List<StateChangeListener> listeners) {
-        setTradingFormRunType(runType);
-        auction = supplier.get();
-        listeners.forEach( auction::register );
     }
 }

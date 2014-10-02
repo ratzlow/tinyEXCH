@@ -7,6 +7,7 @@ package net.tinyexch.exchange.trading.form;
  * @since 2014-08-03
  */
 // TODO (FRa) : (FRa) : convert to functional interface?!
+@Deprecated
 public interface TradingModelStateChanger<T> {
     void transition( T tradingModel );
 }

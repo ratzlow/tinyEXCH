@@ -1,14 +1,11 @@
 package net.tinyexch.exchange.trading.model;
 
-import net.tinyexch.exchange.trading.form.StateChangeListener;
+import net.tinyexch.exchange.event.NotificationListener;
 import net.tinyexch.exchange.trading.form.auction.Auction;
 import net.tinyexch.exchange.trading.form.auction.AuctionProvider;
 import net.tinyexch.exchange.trading.form.continuous.ContinuousTrading;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * // TODO (FRa) : (FRa) : Is this composite correctly designed? Are the market models stateful?
@@ -22,12 +19,15 @@ public class ContinuousTradingInterruptedByAuctions
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ContinuousTradingInterruptedByAuctions.class);
 
-    private Auction auction;
-    private ContinuousTrading continuousTrading;
+    private final Auction auction;
+    private final ContinuousTrading continuousTrading;
 
 
-    public ContinuousTradingInterruptedByAuctions(TradingModelProfile profile) {
-        super(profile);
+    public ContinuousTradingInterruptedByAuctions(TradingModelProfile profile, NotificationListener notificationListener,
+                                                  ContinuousTrading continuousTrading, Auction auction) {
+        super(profile, notificationListener);
+        this.auction = auction;
+        this.continuousTrading = continuousTrading;
     }
 
     @Override
@@ -40,24 +40,5 @@ public class ContinuousTradingInterruptedByAuctions
 
     public ContinuousTrading getContinuousTrading() {
         return continuousTrading;
-    }
-
-    public void initAuction(Supplier<Auction> auctionSupplier, TradingFormRunType tradingFormRunType, List<StateChangeListener> listeners) {
-        continuousTrading = null;
-        setTradingFormRunType(tradingFormRunType);
-        auction = auctionSupplier.get();
-        listeners.forEach(auction::register);
-    }
-
-
-    public void initContinuousTrading(Supplier<ContinuousTrading> continuousTradingSupplier,
-                                      TradingFormRunType tradingFormRunType,
-                                      List<StateChangeListener> listeners) {
-        auction = null;
-        setTradingFormRunType(tradingFormRunType);
-
-        continuousTrading = continuousTradingSupplier.get();
-        listeners.forEach(continuousTrading::register);
-        continuousTrading.register( getProfile().getVolatilityInterruptionEmitter() );
     }
 }

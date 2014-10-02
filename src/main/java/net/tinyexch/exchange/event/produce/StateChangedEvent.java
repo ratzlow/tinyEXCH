@@ -1,13 +1,16 @@
-package net.tinyexch.exchange.runtime;
+package net.tinyexch.exchange.event.produce;
+
+import java.time.Instant;
 
 /**
- * // TODO (FRa) : (FRa) : comment
+ * Will be emitted when some market life cycle transition occured.
  *
  * @author ratzlow@gmail.com
  * @since 2014-09-22
  */
-public class StateChangedEvent<S extends Enum<S>> implements MarketNotification {
+public class StateChangedEvent<S extends Enum<S>>  {
 
+    private final Instant timestamp = Instant.now();
     private final S previous;
     private final S current;
 
@@ -17,9 +20,6 @@ public class StateChangedEvent<S extends Enum<S>> implements MarketNotification 
         this.current = currentState;
     }
 
-    @Override
-    public void process() { }
-
     public S getPrevious() {
         return previous;
     }
@@ -27,4 +27,6 @@ public class StateChangedEvent<S extends Enum<S>> implements MarketNotification 
     public S getCurrent() {
         return current;
     }
+
+    public Instant getTimestamp() { return timestamp; }
 }

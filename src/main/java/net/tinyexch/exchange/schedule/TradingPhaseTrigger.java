@@ -1,6 +1,7 @@
 package net.tinyexch.exchange.schedule;
 
-import net.tinyexch.exchange.trading.form.TradingModelStateChanger;
+import net.tinyexch.exchange.event.consume.ChangeStateEvent;
+import net.tinyexch.exchange.trading.model.TradingFormRunType;
 
 import java.time.Duration;
 import java.time.LocalTime;
@@ -14,6 +15,8 @@ import java.util.Optional;
  * @since 2014-08-06
  */
 public final class TradingPhaseTrigger {
+
+    private ChangeStateEvent changeStateEvent;
 
     /**
      * Specifies how to interpret this trigger in relation to it is predecessor
@@ -30,34 +33,39 @@ public final class TradingPhaseTrigger {
     // instance vars
     //
 
-    private final TradingModelStateChanger stateChanger;
     private final InitiatorType initiatorType;
     private Optional<LocalTime> fixedTime = Optional.empty();
     private Optional<Enum> waitFor = Optional.empty();
+    private Optional<TradingFormRunType> tradingFormRunType = Optional.empty();
+
 
     //
     // constructor
     //
 
-    public TradingPhaseTrigger(TradingModelStateChanger stateChanger, LocalTime time ) {
-        this.stateChanger = stateChanger;
+
+    public TradingPhaseTrigger(Enum targetState, LocalTime time, TradingFormRunType runtype) {
+        this.changeStateEvent = new ChangeStateEvent(targetState, runtype );
         this.initiatorType = InitiatorType.FIXED_TIME;
         this.fixedTime = Optional.of(time);
+        this.tradingFormRunType = Optional.ofNullable(runtype);
     }
 
-    public TradingPhaseTrigger(TradingModelStateChanger stateChanger, Enum waitFor) {
-        this.stateChanger = stateChanger;
+    public TradingPhaseTrigger(Enum targetState, LocalTime time) {
+        this(targetState, time, null );
+    }
+
+    public TradingPhaseTrigger( Enum targetState, Enum waitFor) {
+        this.changeStateEvent = new ChangeStateEvent( targetState );
         this.initiatorType = InitiatorType.WAIT_FOR_STATECHANGE;
         this.waitFor = Optional.of(waitFor);
+        this.tradingFormRunType = Optional.empty();
     }
+
 
     //
     // public API
     //
-
-    public TradingModelStateChanger getStateChanger() {
-        return stateChanger;
-    }
 
     public LocalTime getFixedTime() {
         return fixedTime.orElseThrow( () -> new SchedulerException("You are dealing with a WaitFor trigger!") );
@@ -83,13 +91,20 @@ public final class TradingPhaseTrigger {
         return Duration.ofMillis( offsetMillis );
     }
 
+
+    public ChangeStateEvent getChangeStateEvent() {
+        return changeStateEvent;
+    }
+
     @Override
     public String toString() {
-        return "TradingPhaseTrigger{" +
-                "stateChanger=" + stateChanger +
-                ", initiatorType=" + initiatorType +
-                ", fixedTime=" + fixedTime +
-                ", waitFor=" + waitFor +
-                '}';
+        final StringBuilder sb = new StringBuilder("TradingPhaseTrigger{");
+        sb.append("changeStateEvent=").append(changeStateEvent);
+        sb.append(", initiatorType=").append(initiatorType);
+        sb.append(", fixedTime=").append(fixedTime);
+        sb.append(", waitFor=").append(waitFor);
+        sb.append(", tradingFormRunType=").append(tradingFormRunType);
+        sb.append('}');
+        return sb.toString();
     }
 }

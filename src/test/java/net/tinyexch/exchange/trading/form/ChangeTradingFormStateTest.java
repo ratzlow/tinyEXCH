@@ -1,13 +1,17 @@
 package net.tinyexch.exchange.trading.form;
 
+import net.tinyexch.exchange.event.MarketRunner;
+import net.tinyexch.exchange.event.NotificationListener;
+import net.tinyexch.exchange.event.produce.StateChangedEvent;
+import net.tinyexch.exchange.schedule.TradingCalendar;
 import net.tinyexch.exchange.trading.form.auction.Auction;
 import net.tinyexch.exchange.trading.form.auction.AuctionState;
 import net.tinyexch.exchange.trading.form.continuous.ContinuousTrading;
-import net.tinyexch.exchange.trading.model.TradingModelProfile;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static net.tinyexch.exchange.trading.form.auction.AuctionState.*;
@@ -23,9 +27,11 @@ import static org.junit.Assert.assertEquals;
  */
 public class ChangeTradingFormStateTest {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ChangeTradingFormStateTest.class);
+
     @Test
     public void testContinuousTradingStateCycle() {
-        ContinuousTrading trading = new ContinuousTrading();
+        ContinuousTrading trading = new ContinuousTrading(NotificationListener.NO_OP);
         // before anything happened
         assertEquals(STOPPED, trading.getDefaultState());
         assertEquals(trading.getCurrentState(), trading.getDefaultState());
@@ -44,15 +50,24 @@ public class ChangeTradingFormStateTest {
     @Test
     public void testAuctionOK() {
 
-        TradingModelProfile profile = new TradingModelProfile();
         List<AuctionState> states = new ArrayList<>();
-        Auction auction = new Auction(
-            profile,
-            Collections.singletonList( state -> states.add(state)),     // state listener
-            order -> {},                                                // call phase
-            () -> {},                                                   // price determination
-            () -> {}                                                    // OB balancing
-        );
+        // TODO (FRa) : (FRa) : use mock lib for this interface mockout
+        NotificationListener testListener = new NotificationListener() {
+            @Override public void init(MarketRunner marketRunner, TradingCalendar tradingCalendar) { }
+
+            @Override
+            public <T> void fire(T notification) {
+                if (notification instanceof StateChangedEvent) {
+                    StateChangedEvent e = (StateChangedEvent) notification;
+                    states.add((AuctionState) e.getCurrent());
+
+                } else {
+                    LOGGER.info("Ignore sent event {}" + notification);
+                }
+            }
+        };
+
+        Auction auction = new Auction(testListener);
 
         // before anything happened
         assertEquals(INACTIVE, auction.getDefaultState());
@@ -79,7 +94,7 @@ public class ChangeTradingFormStateTest {
 
     @Test(expected = IllegalStateException.class)
     public void testAuctionNotOKJumpAhead() {
-        Auction auction = new Auction();
+        Auction auction = new Auction(NotificationListener.NO_OP);
         auction.transitionTo(CALL_RUNNING);
         auction.transitionTo(PRICE_DETERMINATION_RUNNING);
     }
@@ -87,7 +102,7 @@ public class ChangeTradingFormStateTest {
 
     @Test(expected = IllegalStateException.class)
     public void testAuctionNotOKJumpBack() {
-        Auction auction = new Auction();
+        Auction auction = new Auction(NotificationListener.NO_OP);
         auction.transitionTo(CALL_RUNNING);
         auction.transitionTo(PRICE_DETERMINATION_RUNNING);
         auction.transitionTo(CALL_RUNNING);

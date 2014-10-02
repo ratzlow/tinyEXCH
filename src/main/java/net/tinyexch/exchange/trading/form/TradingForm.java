@@ -1,7 +1,7 @@
 package net.tinyexch.exchange.trading.form;
 
-import net.tinyexch.exchange.runtime.NotificationListener;
-import net.tinyexch.exchange.runtime.StateChangedEvent;
+import net.tinyexch.exchange.event.NotificationListener;
+import net.tinyexch.exchange.event.produce.StateChangedEvent;
 import net.tinyexch.ob.Orderbook;
 import net.tinyexch.ob.match.MatchEngine;
 import org.slf4j.Logger;
@@ -17,11 +17,11 @@ import java.util.*;
  *
  * @param <S> state type of the concrete trading form
  */
+// TODO (FRa) : (FRa) : InitialPublicOffering, OverTheCounter
 public abstract class TradingForm<S extends Enum<S>> {
 
     private final Orderbook orderbook;
-    private final List<StateChangeListener<S>> stateChangeListeners = new ArrayList<>();
-    private final NotificationListener notificationListener;
+    protected final NotificationListener notificationListener;
 
     private final Map<S, Set<S>> allowedTransitions;
     private S currentState = getDefaultState();
@@ -31,18 +31,15 @@ public abstract class TradingForm<S extends Enum<S>> {
     // constructors
     //--------------------------------------------------------------------------------------------------
 
-    protected TradingForm( MatchEngine matchEngine, NotificationListener notificationListener,
-                           List<StateChangeListener<S>> stateChangeListeners ) {
-
-        Objects.requireNonNull(stateChangeListeners);
+    protected TradingForm( MatchEngine matchEngine,
+                           NotificationListener notificationListener ) {
         this.orderbook = new Orderbook(matchEngine);
         this.allowedTransitions = getAllowedTransitions();
-        this.stateChangeListeners.addAll(stateChangeListeners);
         this.notificationListener = notificationListener;
     }
 
-    protected TradingForm() {
-        this.notificationListener = notification -> {};
+    protected TradingForm( NotificationListener notificationListener ) {
+        this.notificationListener = notificationListener;
         this.orderbook = new Orderbook();
         this.allowedTransitions = getAllowedTransitions();
     }
@@ -59,7 +56,7 @@ public abstract class TradingForm<S extends Enum<S>> {
      *
      * @throws java.lang.IllegalStateException if invalid transition is attempted
      */
-    protected void transitionTo( S targetState ) {
+    public void transitionTo( S targetState ) {
 
         S previous = currentState;
         if ( targetState == currentState ) {
@@ -81,8 +78,7 @@ public abstract class TradingForm<S extends Enum<S>> {
             throw new IllegalStateException(msg);
         }
 
-        stateChangeListeners.stream().forEach(listener -> listener.stateChanged(targetState));
-        notificationListener.accept( new StateChangedEvent<>(previous, currentState) );
+        notificationListener.fire(new StateChangedEvent<S>(previous, currentState));
     }
 
     public S getCurrentState() {
@@ -112,13 +108,6 @@ public abstract class TradingForm<S extends Enum<S>> {
      */
     protected abstract Logger getLogger();
 
-    /**
-     * @param listener another listener which will fire if the state of the current trading form changes
-     */
-    public void register( StateChangeListener<S> listener ) {
-        Objects.requireNonNull(listener);
-        stateChangeListeners.add( listener );
-    }
 
     protected Orderbook getOrderbook() {
         return orderbook;

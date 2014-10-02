@@ -11,7 +11,7 @@ import java.util.function.Consumer;
  * volatility interruptions. Executed MidPoint orders are not considered.
  *
  * This class is not thread safe and needs client synchronization when updating deviations or ref prices. It will
- * accept negative prices as price determination component has to ensure valid prices in general.
+ * fire negative prices as price determination component has to ensure valid prices in general.
  *
  * In auction: fire only at end of call phase // TODO (FRa) : (FRa) : test
  *

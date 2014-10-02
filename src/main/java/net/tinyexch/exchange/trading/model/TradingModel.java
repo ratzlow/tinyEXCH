@@ -1,10 +1,8 @@
 package net.tinyexch.exchange.trading.model;
 
-import net.tinyexch.exchange.schedule.TradingFormInitializer;
-import net.tinyexch.exchange.trading.form.StateChangeListener;
+import net.tinyexch.exchange.event.NotificationListener;
+import net.tinyexch.exchange.event.produce.TradingFormRunTypeChangedEvent;
 import org.slf4j.Logger;
-
-import java.util.List;
 
 /**
  * Specifies how the trading process for a given security should be executed. It defines the sequence and kind of
@@ -17,14 +15,16 @@ import java.util.List;
 public abstract class TradingModel {
 
     private final TradingModelProfile profile;
+    private final NotificationListener notificationListener;
     private TradingFormRunType tradingFormRunType;
 
     //--------------------------------------------------------------------------------
     // constructors
     //--------------------------------------------------------------------------------
 
-    protected TradingModel(TradingModelProfile profile) {
+    protected TradingModel(TradingModelProfile profile, NotificationListener notificationListener ) {
         this.profile = profile;
+        this.notificationListener = notificationListener;
     }
 
 
@@ -39,16 +39,10 @@ public abstract class TradingModel {
 
     protected abstract Logger getLogger();
 
-    protected void setTradingFormRunType(TradingFormRunType tradingFormRunType) {
+    public void setTradingFormRunType(TradingFormRunType tradingFormRunType) {
+        TradingFormRunType previous = this.tradingFormRunType;
         getLogger().info("Change tradingFromRunType from {} -> {}", this.tradingFormRunType, tradingFormRunType);
         this.tradingFormRunType = tradingFormRunType;
-    }
-
-    public void init(TradingFormInitializer initializer, List<StateChangeListener> listeners) {
-        initializer.setup(this, listeners);
-    }
-
-    protected TradingModelProfile getProfile() {
-        return profile;
+        notificationListener.fire(new TradingFormRunTypeChangedEvent(previous, tradingFormRunType));
     }
 }

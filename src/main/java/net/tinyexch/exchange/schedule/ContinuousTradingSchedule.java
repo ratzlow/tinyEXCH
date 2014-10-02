@@ -1,8 +1,13 @@
 package net.tinyexch.exchange.schedule;
 
+import net.tinyexch.exchange.trading.model.TradingFormRunType;
+
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import static net.tinyexch.exchange.trading.form.continuous.ContinuousTradingState.RUNNING;
+import static net.tinyexch.exchange.trading.form.continuous.ContinuousTradingState.STOPPED;
 
 /**
  * This class generates the needed trading phase triggers for an auction.
@@ -14,10 +19,8 @@ public class ContinuousTradingSchedule implements TradingFormSchedule {
 
     private final LocalTime start;
     private final LocalTime stop;
-    private final TradingFormInitializer initializer;
 
-    public ContinuousTradingSchedule(TradingFormInitializer initializer, LocalTime start, LocalTime stop) {
-        this.initializer = initializer;
+    public ContinuousTradingSchedule(LocalTime start, LocalTime stop) {
         this.start = start;
         this.stop = stop;
     }
@@ -27,12 +30,10 @@ public class ContinuousTradingSchedule implements TradingFormSchedule {
         List<TradingPhaseTrigger> triggers = new ArrayList<>();
 
         // start call phase at fixed time
-        triggers.add( new TradingPhaseTrigger(StateChangerFactory.startContinuousTrading(), start) );
-        triggers.add( new TradingPhaseTrigger(StateChangerFactory.stopContinuousTrading(), stop) );
+        triggers.add( new TradingPhaseTrigger(RUNNING, start, TradingFormRunType.CONTINUOUS_TRADING) );
+        triggers.add( new TradingPhaseTrigger(STOPPED, stop) );
 
         return triggers;
     }
 
-    @Override
-    public TradingFormInitializer getInitializer() { return initializer; }
 }

@@ -1,7 +1,7 @@
 package net.tinyexch.ob;
 
 /**
- * // TODO (FRa) : (FRa) : comment
+ * Marks the state of an {@link net.tinyexch.ob.Orderbook} that determines what actions the book might allow.
  *
  * @author ratzlow@gmail.com
  * @since 2014-08-02

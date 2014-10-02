@@ -1,5 +1,7 @@
 package net.tinyexch.exchange.trading.form.auction;
 
+import net.tinyexch.exchange.event.NotificationListener;
+import net.tinyexch.exchange.event.produce.StateChangedEvent;
 import net.tinyexch.exchange.trading.form.StateChangeListener;
 import net.tinyexch.exchange.trading.form.TradingForm;
 import net.tinyexch.exchange.trading.model.TradingModelProfile;
@@ -34,20 +36,8 @@ public class Auction extends TradingForm<AuctionState> implements OrderReceiver 
     // constructors
     //-------------------------------------------------------------------------------------
 
-    public Auction( TradingModelProfile profile,
-                    List<StateChangeListener<AuctionState>> stateChangeListeners,
-                    CallPhase callPhase,
-                    PriceDeterminationPhase priceDeterminationPhase,
-                    OrderbookBalancingPhase orderbookBalancingPhase ) {
-
-        super(profile.getAuctionMatchEngine(), profile.getNotificationListener(), stateChangeListeners);
-        this.callPhase = callPhase;
-        this.priceDeterminationPhase = priceDeterminationPhase;
-        this.orderbookBalancingPhase = orderbookBalancingPhase;
-    }
-
-    public Auction() {
-        super();
+    public Auction( NotificationListener notificationListener ) {
+        super( notificationListener );
         callPhase = order -> LOGGER.info("Accepted order: {}", order);
         priceDeterminationPhase = () -> {};
         orderbookBalancingPhase = () -> {};
@@ -62,7 +52,7 @@ public class Auction extends TradingForm<AuctionState> implements OrderReceiver 
     @Override
     public void submit( Order order, SubmitType submitType ) {
         if ( getCurrentState() != CALL_RUNNING ) {
-            String msg = "Call phase not opened so cannot accept order! Current state is = " + getCurrentState();
+            String msg = "Call phase not opened so cannot fire order! Current state is = " + getCurrentState();
             throw new AuctionException(msg);
         }
 
@@ -102,7 +92,7 @@ public class Auction extends TradingForm<AuctionState> implements OrderReceiver 
         transitions.put(PRICE_DETERMINATION_RUNNING, singleton(PRICE_DETERMINATION_STOPPED) );
         transitions.put(PRICE_DETERMINATION_STOPPED, EnumSet.of(INACTIVE, ORDERBOOK_BALANCING_RUNNING));
         transitions.put(ORDERBOOK_BALANCING_RUNNING, singleton(ORDERBOOK_BALANCING_STOPPED) );
-        transitions.put(ORDERBOOK_BALANCING_STOPPED, singleton(INACTIVE) );
+        transitions.put(ORDERBOOK_BALANCING_STOPPED, EnumSet.of(INACTIVE, CALL_RUNNING) );
 
         return transitions;
     }

@@ -1,13 +1,14 @@
 package net.tinyexch.exchange.schedule;
 
+import net.tinyexch.exchange.trading.model.TradingFormRunType;
+
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static net.tinyexch.exchange.trading.form.auction.AuctionState.CALL_STOPPED;
-import static net.tinyexch.exchange.trading.form.auction.AuctionState.PRICE_DETERMINATION_STOPPED;
+import static net.tinyexch.exchange.trading.form.auction.AuctionState.*;
 
 /**
  * This class generates the needed trading phase triggers for an auction.
@@ -19,29 +20,23 @@ public class AuctionSchedule implements TradingFormSchedule {
 
     private final Random random = new Random(LocalTime.now().getNano());
 
-    /** If the type is not specified the trading form is already preconfigured */
-//    private final TradingFormRunType type;
-
-    /** default generator */
-//    private Supplier<Auction> generator;
-
+    private final TradingFormRunType tradingFormRunType;
     private LocalTime callStartTime;
     private Duration minCallDuration;
     private Duration randomCallDuration;
 
     private boolean orderbookBalancingRequired = true;
-    private final TradingFormInitializer initializer;
 
     //
     // constructors
     //
 
-    private AuctionSchedule(TradingFormInitializer initializer) {
-        this.initializer = initializer;
+    private AuctionSchedule(TradingFormRunType tradingFormRunType) {
+        this.tradingFormRunType = tradingFormRunType;
     }
 
-    public static AuctionSchedule kickOff(TradingFormInitializer initializer) {
-        return new AuctionSchedule( initializer );
+    public static AuctionSchedule kickOff( TradingFormRunType tradingFormRunType ) {
+        return new AuctionSchedule( tradingFormRunType );
     }
 
     //
@@ -73,26 +68,23 @@ public class AuctionSchedule implements TradingFormSchedule {
         List<TradingPhaseTrigger> triggers = new ArrayList<>();
 
         // start call phase at fixed time
-        triggers.add( new TradingPhaseTrigger(StateChangerFactory.startCall(
-                ),
-                callStartTime)
-        );
+        triggers.add( new TradingPhaseTrigger(CALL_RUNNING, callStartTime, tradingFormRunType) );
+
         // call ends after minimum time extend by a random period within a given range
         LocalTime callStopTime = callStartTime.plus(minCallDuration).plus(getSubDuration(randomCallDuration));
-        triggers.add( new TradingPhaseTrigger(StateChangerFactory.stopCall(), callStopTime) );
+        triggers.add( new TradingPhaseTrigger(CALL_STOPPED, callStopTime) );
 
         // start price determination phase
-        triggers.add( new TradingPhaseTrigger(StateChangerFactory.determinePrice(), CALL_STOPPED) );
+        triggers.add( new TradingPhaseTrigger(PRICE_DETERMINATION_RUNNING, CALL_STOPPED) );
 
         // not all auction types need a balancing phase
         if ( orderbookBalancingRequired ) {
-            triggers.add( new TradingPhaseTrigger(StateChangerFactory.balanceOrderbook(), PRICE_DETERMINATION_STOPPED) );
+            triggers.add( new TradingPhaseTrigger(ORDERBOOK_BALANCING_RUNNING, PRICE_DETERMINATION_STOPPED) );
         }
 
         return triggers;
     }
 
-    public TradingFormInitializer getInitializer() { return initializer; }
 
     private Duration getSubDuration( Duration max ) {
         long millis = max.getNano() / 1_000_000;
@@ -102,5 +94,4 @@ public class AuctionSchedule implements TradingFormSchedule {
         int valueInRange = random.nextInt((int) millis);
         return Duration.ofMillis(valueInRange);
     }
-
 }

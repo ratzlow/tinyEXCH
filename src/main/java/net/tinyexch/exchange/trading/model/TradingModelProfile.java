@@ -1,7 +1,5 @@
 package net.tinyexch.exchange.trading.model;
 
-import net.tinyexch.exchange.runtime.MarketNotification;
-import net.tinyexch.exchange.runtime.NotificationListener;
 import net.tinyexch.ob.match.MatchEngine;
 import net.tinyexch.ob.price.safeguard.VolatilityInterruptionEmitter;
 import net.tinyexch.ob.validator.NewOrderValidators;
@@ -12,11 +10,10 @@ import org.slf4j.LoggerFactory;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 
 /**
  * Define how a concrete trading model should operate at a given time.
- * E.g. an EOD auction might execute or accept different set of orders than on an intraday auction.
+ * E.g. an EOD auction might execute or fire different set of orders than on an intraday auction.
  *
  * @author ratzlow@gmail.com
  * @since 2014-08-01
@@ -45,22 +42,10 @@ public class TradingModelProfile {
     /** No Op matching */
     private MatchEngine continuousTradingMatchEngine = order -> Optional.empty();
 
-    /** All messages emitted by a market will be transmitted to the notification consumer */
-    private NotificationListener notificationListener = notification -> LOGGER.warn("No notification listener set!");
-
 
     //-----------------------------------------------------------------------------
     // getter & setter
     //-----------------------------------------------------------------------------
-
-
-    public NotificationListener getNotificationListener() {
-        return notificationListener;
-    }
-
-    public void setNotificationListener(NotificationListener notificationListener) {
-        this.notificationListener = notificationListener;
-    }
 
     public MatchEngine getAuctionMatchEngine() {
         return auctionMatchEngine;

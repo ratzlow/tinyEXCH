@@ -116,7 +116,7 @@ public class Orderbook {
         }
     }
 
-    // TODO (FRa) : (FRa) : remove from OB and emit CXL-ACK (check FIX what is the response)
+    // TODO (FRa) : (FRa) : remove from OB and produce CXL-ACK (check FIX what is the response)
     private Optional<Trade> cancel( Order order ) {
         throw new IllegalStateException("Not yet implemented!");
     }
