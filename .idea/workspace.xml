@@ -2,43 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="68b7f672-a3db-4303-8897-9439573ca816" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/event/consume/ChangeStateCommand.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/event/consume/ChangeStateEvent.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/event/consume/ConsumerCommandFactory.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/event/DefaultNotificationListener.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/test/java/net/tinyexch/exchange/event/EventBasedLifeCycleTest.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/event/MarketRunner.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/event/NotificationListener.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/event/produce/StateChangedEventHandler.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/event/produce/TradingFormRunTypeChangedEvent.java" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/runtime/MarketCommand.java" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/runtime/MarketNotification.java" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/runtime/MarketRunner.java" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/runtime/NotificationListener.java" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/schedule/StateChangerFactory.java" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/schedule/TradingFormInitializer.java" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/schedule/TradingProcess.java" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/InitialPublicOffering.java" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/OverTheCounter.java" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/test/java/net/tinyexch/exchange/schedule/TradingModelScheduledStateChangeTest.java" afterPath="" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/runtime/StateChangedEvent.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/event/produce/StateChangedEvent.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/tinyExch.vpp" afterPath="$PROJECT_DIR$/docs/tinyExch.vpp" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/auction/Auction.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/auction/Auction.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/schedule/AuctionSchedule.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/schedule/AuctionSchedule.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/model/AuctionTradingModel.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/model/AuctionTradingModel.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/java/net/tinyexch/exchange/trading/form/ChangeTradingFormStateTest.java" afterPath="$PROJECT_DIR$/src/test/java/net/tinyexch/exchange/trading/form/ChangeTradingFormStateTest.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/model/ContinuousTradingInterruptedByAuctions.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/model/ContinuousTradingInterruptedByAuctions.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/schedule/ContinuousTradingSchedule.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/schedule/ContinuousTradingSchedule.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/Orderbook.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/Orderbook.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/OrderbookState.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/OrderbookState.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/schedule/TradingCalendar.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/schedule/TradingCalendar.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/TradingForm.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/TradingForm.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/schedule/TradingFormSchedule.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/schedule/TradingFormSchedule.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/model/TradingModel.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/model/TradingModel.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/model/TradingModelProfile.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/model/TradingModelProfile.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/TradingModelStateChanger.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/TradingModelStateChanger.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/schedule/TradingPhaseTrigger.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/schedule/TradingPhaseTrigger.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/price/safeguard/VolatilityInterruptionEmitter.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/price/safeguard/VolatilityInterruptionEmitter.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <list id="79c31cec-d3c9-4005-bd47-2d0190e1afd7" name="IntegrateVolatilityInterruption" comment="">
@@ -1008,9 +971,13 @@
       <option name="issue" value="true" />
       <option name="type" value="FEATURE" />
       <updated>1412287448771</updated>
-      <workItem from="1412287448818" duration="52000" />
+      <workItem from="1412287448818" duration="153000" />
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="tE-19: refactored market life cycle and interaction with markets to pure event model">
+      <created>1412287562947</created>
+      <updated>1412287562947</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <option name="createChangelist" value="false" />
     <option name="createBranch" value="false" />
     <option name="markAsInProgress" value="true" />
@@ -1032,7 +999,7 @@
     </servers>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="291048000" />
+    <option name="totallyTimeSpent" value="291149000" />
   </component>
   <component name="TodoView" selected-index="0">
     <todo-panel id="selected-file">
@@ -1055,10 +1022,10 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="15" y="22" width="1377" height="810" extended-state="0" />
+    <frame x="15" y="22" width="1377" height="810" extended-state="1" />
     <editor active="false" />
     <layout>
-      <window_info id="Changes" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.67688024" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.67688024" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.5682451" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -1069,7 +1036,7 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3286517" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32924962" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3913649" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.5793872" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2896936" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.53342617" sideWeight="0.5" order="13" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.12255639" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -1131,7 +1098,8 @@
     <MESSAGE value="Added travis support" />
     <MESSAGE value="tE-20: added emitter that can raise volatility interruption if price leaves price range" />
     <MESSAGE value="tE-20: started integration of volatility interruptions; started to change communication model towards pure messaging" />
-    <option name="LAST_COMMIT_MESSAGE" value="tE-20: started integration of volatility interruptions; started to change communication model towards pure messaging" />
+    <MESSAGE value="tE-19: refactored market life cycle and interaction with markets to pure event model" />
+    <option name="LAST_COMMIT_MESSAGE" value="tE-19: refactored market life cycle and interaction with markets to pure event model" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
