@@ -3,6 +3,7 @@ package net.tinyexch.ob.price.safeguard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -20,13 +21,12 @@ import java.util.function.Consumer;
  * @since 2014-09-09
  * @link chap 11
  */
-public abstract class VolatilityInterruptionEmitter {
+// TODO (FRa) : (FRa) : is the dyn price range extending static range in both directions?
+public class VolatilityInterruptionGuard {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(VolatilityInterruptionEmitter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(VolatilityInterruptionGuard.class);
 
-    public static final VolatilityInterruptionEmitter NO_OP_EMITTER = new VolatilityInterruptionEmitter( 0,0,0,0 ) {
-        @Override protected void fireVolatilityInterruption() { }
-    };
+    public static final VolatilityInterruptionGuard NO_OP_EMITTER = new VolatilityInterruptionGuard( 0,0,0,0 );
 
     /**
      * Deviation ... max percentage deviation symmetrically pos/neg of reference price retrieved as last price in an auction
@@ -58,8 +58,8 @@ public abstract class VolatilityInterruptionEmitter {
      *                                  #staticPriceRangeRefPrice
      * @param dynamicPriceDeviationPerc defines the pos/neg deviation around #dynamicPriceRangeRefPrice
      */
-    protected VolatilityInterruptionEmitter( double staticPriceRangeRefPrice, float staticPriceDeviationPerc,
-                                             double dynamicPriceRangeRefPrice, float dynamicPriceDeviationPerc ) {
+    public VolatilityInterruptionGuard(double staticPriceRangeRefPrice, float staticPriceDeviationPerc,
+                                          double dynamicPriceRangeRefPrice, float dynamicPriceDeviationPerc) {
 
         this.staticRange = new PriceRange(staticPriceRangeRefPrice, staticPriceDeviationPerc);
         this.dynamicRange = new PriceRange(dynamicPriceRangeRefPrice, dynamicPriceDeviationPerc);
@@ -93,13 +93,8 @@ public abstract class VolatilityInterruptionEmitter {
         }
     }
 
-    public boolean checkIndicativePrice(double indicativePrice) {
-        boolean valid = !staticRange.contains(indicativePrice) && !dynamicRange.contains(indicativePrice);
-        if (valid) {
-            fireVolatilityInterruption();
-        }
-        return valid;
+    public Optional<VolatilityInterruption> checkIndicativePrice(double indicativePrice) {
+        boolean valid = staticRange.contains(indicativePrice) || dynamicRange.contains(indicativePrice);
+        return valid ? Optional.empty() : Optional.of( new VolatilityInterruption( indicativePrice, staticRange, dynamicRange ));
     }
-
-    protected abstract void fireVolatilityInterruption();
 }

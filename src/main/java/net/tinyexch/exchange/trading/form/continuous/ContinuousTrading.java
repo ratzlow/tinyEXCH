@@ -3,8 +3,11 @@ package net.tinyexch.exchange.trading.form.continuous;
 import net.tinyexch.exchange.event.NotificationListener;
 import net.tinyexch.exchange.trading.form.TradingForm;
 import net.tinyexch.ob.SubmitType;
-import net.tinyexch.ob.price.safeguard.VolatilityInterruptionEmitter;
+import net.tinyexch.ob.match.MatchEngine;
+import net.tinyexch.ob.price.safeguard.VolatilityInterruption;
+import net.tinyexch.ob.price.safeguard.VolatilityInterruptionGuard;
 import net.tinyexch.order.Order;
+import net.tinyexch.order.OrderType;
 import net.tinyexch.order.Trade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,12 +35,25 @@ public class ContinuousTrading extends TradingForm<ContinuousTradingState> {
     private boolean volatilityInterrupted = false;
 
     /** default: no op implementation */
-    private VolatilityInterruptionEmitter volatilityInterruptionEmitter = VolatilityInterruptionEmitter.NO_OP_EMITTER;
+    private VolatilityInterruptionGuard volatilityInterruptionGuard = VolatilityInterruptionGuard.NO_OP_EMITTER;
 
+    //-----------------------------------------------------------------------------
+    // constructors
+    //-----------------------------------------------------------------------------
 
     public ContinuousTrading( NotificationListener notificationListener ) {
         super(notificationListener);
     }
+
+    public ContinuousTrading( NotificationListener notificationListener, MatchEngine matchEngine,
+                              VolatilityInterruptionGuard volatilityInterruptionGuard) {
+        super(notificationListener, matchEngine);
+        this.volatilityInterruptionGuard = volatilityInterruptionGuard;
+    }
+
+    //-----------------------------------------------------------------------------
+    // public API
+    //-----------------------------------------------------------------------------
 
     @Override
     protected Map<ContinuousTradingState, Set<ContinuousTradingState>> getAllowedTransitions() {
@@ -54,9 +70,24 @@ public class ContinuousTrading extends TradingForm<ContinuousTradingState> {
 
         // TODO (FRa) : (FRa) : is this applicable?! too functional?
         // check for volatility interruptions apply for auction and continuous trading
-        volatilityInterrupted = submitResult
-                .map(trade -> volatilityInterruptionEmitter.checkIndicativePrice( trade.getExecutionPrice() ))
-                .orElse(false);
+        submitResult.ifPresent( this::checkVolatilityInterruption );
+    }
+
+    private void checkVolatilityInterruption(Trade trade) {
+        Optional<VolatilityInterruption> interruptionEvent =
+                volatilityInterruptionGuard.checkIndicativePrice(trade.getExecutionPrice());
+
+        if (interruptionEvent.isPresent() ) {
+            getLogger().info("Volatility interruption occurred on: {}", interruptionEvent );
+            volatilityInterrupted = true;
+            notificationListener.fire(interruptionEvent.get());
+        } else {
+            boolean midpointInvolved = trade.getBuy().getOrderType() == OrderType.MIDPOINT ||
+                                       trade.getSell().getOrderType() == OrderType.MIDPOINT;
+            if ( !midpointInvolved ) {
+                volatilityInterruptionGuard.updateDynamicRefPrice(trade.getExecutionPrice());
+            }
+        }
     }
 
     @Override
@@ -74,10 +105,7 @@ public class ContinuousTrading extends TradingForm<ContinuousTradingState> {
     @Override
     protected Logger getLogger() { return LOGGER; }
 
-
-    public void register( VolatilityInterruptionEmitter emitter ) {
-        volatilityInterruptionEmitter = emitter;
-    }
-
     public void clearVolatilityInterruption() { volatilityInterrupted = false; }
+
+    public boolean isVolatilityInterrupted() { return volatilityInterrupted; }
 }

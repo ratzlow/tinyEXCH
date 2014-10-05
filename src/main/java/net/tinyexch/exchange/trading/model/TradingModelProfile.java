@@ -1,14 +1,13 @@
 package net.tinyexch.exchange.trading.model;
 
 import net.tinyexch.ob.match.MatchEngine;
-import net.tinyexch.ob.price.safeguard.VolatilityInterruptionEmitter;
+import net.tinyexch.ob.price.safeguard.VolatilityInterruptionGuard;
 import net.tinyexch.ob.validator.NewOrderValidators;
 import net.tinyexch.order.OrderType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.EnumSet;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -34,13 +33,13 @@ public class TradingModelProfile {
 
     private NewOrderValidators newOrderValidators = new NewOrderValidators();
 
-    private VolatilityInterruptionEmitter volatilityInterruptionEmitter = VolatilityInterruptionEmitter.NO_OP_EMITTER;
+    private VolatilityInterruptionGuard volatilityInterruptionGuard = VolatilityInterruptionGuard.NO_OP_EMITTER;
 
     /** No Op matching */
-    private MatchEngine auctionMatchEngine = order -> Optional.empty();
+    private MatchEngine auctionMatchEngine = MatchEngine.NO_OP;
 
     /** No Op matching */
-    private MatchEngine continuousTradingMatchEngine = order -> Optional.empty();
+    private MatchEngine continuousTradingMatchEngine = MatchEngine.NO_OP;
 
 
     //-----------------------------------------------------------------------------
@@ -87,11 +86,11 @@ public class TradingModelProfile {
         this.newOrderValidators = newOrderValidators;
     }
 
-    public VolatilityInterruptionEmitter getVolatilityInterruptionEmitter() {
-        return volatilityInterruptionEmitter;
+    public VolatilityInterruptionGuard getVolatilityInterruptionGuard() {
+        return volatilityInterruptionGuard;
     }
 
-    public void setVolatilityInterruptionEmitter(VolatilityInterruptionEmitter volatilityInterruptionEmitter) {
-        this.volatilityInterruptionEmitter = volatilityInterruptionEmitter;
+    public void setVolatilityInterruptionGuard(VolatilityInterruptionGuard volatilityInterruptionGuard) {
+        this.volatilityInterruptionGuard = volatilityInterruptionGuard;
     }
 }

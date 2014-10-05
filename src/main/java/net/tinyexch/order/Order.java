@@ -1,5 +1,6 @@
 package net.tinyexch.order;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 /**
@@ -11,6 +12,8 @@ import java.time.LocalDateTime;
  * @link http://www.onixs.biz/fix-dictionary
  */
 public class Order {
+
+    private Instant timestamp = Instant.now();
 
     /** @link FIX:54 */
     private Side side;
@@ -29,13 +32,32 @@ public class Order {
      */
     private TimeInForce timeInForce = TimeInForce.DAY;
 
+
     /** @link FIX:40 */
     private OrderType orderType;
 
 
-    public Side getSide() {
-        return side;
+    //---------------------------------------------------------
+    // constructors
+    //---------------------------------------------------------
+
+    public Order() { }
+
+    public Order( Side side ) {
+        this.side = side;
     }
+
+    //---------------------------------------------------------
+    // accessors
+    //---------------------------------------------------------
+
+    public static Order of( Side side ) {
+        return new Order(side);
+    }
+
+    public Instant getTimestamp() { return timestamp; }
+
+    public Side getSide() { return side; }
 
     public int getOrderQty() {
         return orderQty;

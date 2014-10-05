@@ -1,5 +1,6 @@
 package net.tinyexch.ob.match;
 
+import net.tinyexch.ob.OrderbookSide;
 import net.tinyexch.order.Order;
 import net.tinyexch.order.Trade;
 
@@ -14,5 +15,7 @@ import java.util.Optional;
 @FunctionalInterface
 public interface MatchEngine {
 
-    Optional<Trade> match( Order order );
+    static final MatchEngine NO_OP = (order, otherOrderbookSide) -> Optional.empty();
+
+    Optional<Trade> match(Order order, OrderbookSide toMatchAgainst);
 }

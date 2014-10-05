@@ -31,8 +31,7 @@ public abstract class TradingForm<S extends Enum<S>> {
     // constructors
     //--------------------------------------------------------------------------------------------------
 
-    protected TradingForm( MatchEngine matchEngine,
-                           NotificationListener notificationListener ) {
+    protected TradingForm(NotificationListener notificationListener, MatchEngine matchEngine) {
         this.orderbook = new Orderbook(matchEngine);
         this.allowedTransitions = getAllowedTransitions();
         this.notificationListener = notificationListener;
@@ -78,7 +77,7 @@ public abstract class TradingForm<S extends Enum<S>> {
             throw new IllegalStateException(msg);
         }
 
-        notificationListener.fire(new StateChangedEvent<S>(previous, currentState));
+        notificationListener.fire(new StateChangedEvent<>(previous, currentState));
     }
 
     public S getCurrentState() {

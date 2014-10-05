@@ -5,14 +5,10 @@ import net.tinyexch.order.Order;
 import net.tinyexch.order.Side;
 import net.tinyexch.order.Trade;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.Objects;
 import java.util.Optional;
 
-import static net.tinyexch.ob.SubmitType.CANCEL;
-import static net.tinyexch.ob.SubmitType.MODIFY;
-import static net.tinyexch.ob.SubmitType.NEW;
+import static net.tinyexch.ob.SubmitType.*;
 
 /**
  * Captures all orders for a given {@link net.tinyexch.ob.Listing}. It can be run in different
@@ -27,7 +23,7 @@ import static net.tinyexch.ob.SubmitType.NEW;
 // TODO (FRa) : (FRa) : use persistent/functional data structures - if possible
 public class Orderbook {
 
-    private MatchEngine matchEngine = order -> Optional.<Trade>empty();
+    private MatchEngine matchEngine = MatchEngine.NO_OP;
 
     //------------------------------------------------------------------------------------------------------------------
     // mutable state changing during runtime
@@ -38,12 +34,12 @@ public class Orderbook {
     /**
      * Contains all bid/buy orders
      */
-    private final Deque<Order> buy = new ArrayDeque<Order>();
+    private final OrderbookSide buy = new OrderbookSide();
 
     /**
      * Contains all ask/sell orders
      */
-    private final Deque<Order> sell = new ArrayDeque<Order>();
+    private final OrderbookSide sell = new OrderbookSide();
 
 
     //------------------------------------------------------------------------------------------------------------------
@@ -108,20 +104,30 @@ public class Orderbook {
     // internal operations
     //------------------------------------------------------------------------------------------------------------------
 
-    private void add( Order order ) {
-        if ( order.getSide() == Side.BUY ) {
-            buy.add( order );
-        } else {
-            sell.add( order );
-        }
-    }
-
     // TODO (FRa) : (FRa) : remove from OB and produce CXL-ACK (check FIX what is the response)
     private Optional<Trade> cancel( Order order ) {
         throw new IllegalStateException("Not yet implemented!");
     }
 
     private Optional<Trade> match( Order order ) {
-        return matchEngine.match(order);
+        final OrderbookSide thisSide;
+        final OrderbookSide otherSide;
+        if ( order.getSide() == Side.BUY ) {
+            thisSide = buy;
+            otherSide = sell;
+        } else {
+            thisSide = sell;
+            otherSide = buy;
+        }
+
+        Optional<Trade> match = matchEngine.match( order, otherSide );
+        // TODO (FRa) : (FRa) : jdk8 use optional.flatmap
+        // TODO (FRa) : (FRa) : check round/odd lots handling
+        boolean fullyMatched = match.isPresent() && match.get().getRoundLots() == order.getOrderQty();
+        if ( !fullyMatched ) {
+            thisSide.add( order );
+        }
+
+        return match;
     }
 }
