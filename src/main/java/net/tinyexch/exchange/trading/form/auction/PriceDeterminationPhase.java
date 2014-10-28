@@ -1,12 +1,11 @@
 package net.tinyexch.exchange.trading.form.auction;
 
 /**
- * // TODO (FRa) : (FRa) : comment
+ * Triggered after orderbook was closed. Follows the {@link net.tinyexch.exchange.trading.form.auction.CallPhase}
  *
  * @author ratzlow@gmail.com
  * @since 2014-08-10
  */
-@FunctionalInterface
 public interface PriceDeterminationPhase {
-    void determinePrice();
+    PriceDeterminationResult determinePrice();
 }

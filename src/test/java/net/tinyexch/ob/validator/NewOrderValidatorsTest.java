@@ -21,7 +21,9 @@ import java.util.EnumSet;
  */
 public class NewOrderValidatorsTest {
 
-    EnumSet<OrderType> acceptedOrderTypes = EnumSet.allOf(OrderType.class);
+    private EnumSet<OrderType> acceptedOrderTypes = EnumSet.allOf(OrderType.class);
+    private int sequence = 0;
+
 
     @Test
     public void testMinSizeCheck() {
@@ -54,31 +56,31 @@ public class NewOrderValidatorsTest {
                 acceptedOrderTypes);
         LocalDateTime now = LocalDateTime.now();
 
-        Order gtdOrderValidToday = new Order().setTimeInForce(TimeInForce.GTD)
+        Order gtdOrderValidToday = new Order(newOrderID()).setTimeInForce(TimeInForce.GTD)
                 .setExpirationDate(now.truncatedTo(ChronoUnit.DAYS));
         Assert.assertFalse( check.gtdCheck.validate(gtdOrderValidToday).isPresent());
 
 
-        Order dayOrderValidToday = new Order().setTimeInForce(TimeInForce.DAY)
+        Order dayOrderValidToday = new Order(newOrderID()).setTimeInForce(TimeInForce.DAY)
                 .setExpirationDate(now.truncatedTo(ChronoUnit.DAYS));
         Assert.assertFalse( check.gtdCheck.validate(dayOrderValidToday).isPresent());
 
 
-        Order dayOrderInvalidTomorrow = new Order().setTimeInForce(TimeInForce.DAY)
+        Order dayOrderInvalidTomorrow = new Order(newOrderID()).setTimeInForce(TimeInForce.DAY)
                 .setExpirationDate(now.plusDays(1).truncatedTo(ChronoUnit.DAYS));
         assertFailedGtdValidation( check, dayOrderInvalidTomorrow);
 
 
-        Order orderAtLastAcceptableDate = new Order().setTimeInForce(TimeInForce.GTD)
+        Order orderAtLastAcceptableDate = new Order(newOrderID()).setTimeInForce(TimeInForce.GTD)
                 .setExpirationDate(now.plusDays(maxExpirationDayOffset));
         Assert.assertFalse( check.gtdCheck.validate(orderAtLastAcceptableDate).isPresent() );
 
 
-        Order orderInPast = new Order().setExpirationDate(now.minusDays(1));
+        Order orderInPast = new Order(newOrderID()).setExpirationDate(now.minusDays(1));
         assertFailedGtdValidation(check, orderInPast);
 
 
-        Order orderTooFarInFuture = new Order().setTimeInForce(TimeInForce.GTD)
+        Order orderTooFarInFuture = new Order(newOrderID()).setTimeInForce(TimeInForce.GTD)
                 .setExpirationDate(now.plusDays(maxExpirationDayOffset + 1));
         assertFailedGtdValidation(check, orderTooFarInFuture);
     }
@@ -91,6 +93,10 @@ public class NewOrderValidatorsTest {
     }
 
     private Order newOrder(Side side, int size ) {
-        return new Order().setSide(side).setOrderQty(size);
+        return new Order(newOrderID()).setSide(side).setOrderQty(size);
+    }
+
+    private String newOrderID() {
+        return Integer.valueOf(++sequence).toString();
     }
 }

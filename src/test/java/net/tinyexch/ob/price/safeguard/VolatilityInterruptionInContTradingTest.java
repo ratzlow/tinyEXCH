@@ -6,6 +6,7 @@ import net.tinyexch.exchange.trading.form.continuous.ContinuousTrading;
 import net.tinyexch.ob.SubmitType;
 import net.tinyexch.ob.match.MatchEngine;
 import net.tinyexch.order.Order;
+import net.tinyexch.order.OrderType;
 import net.tinyexch.order.Side;
 import net.tinyexch.order.Trade;
 import org.junit.Test;
@@ -26,8 +27,9 @@ public class VolatilityInterruptionInContTradingTest {
 
     @Test
     public void testInterruptionRaisedInContTrading() {
-        Order buy = Order.of(Side.BUY);
-        Order sell = Order.of(Side.BUY);
+        Order buy = Order.of(Integer.valueOf(1).toString(), Side.BUY).setOrderType(OrderType.LIMIT);
+        Order sell = Order.of(Integer.valueOf(2).toString(), Side.BUY).setOrderType(OrderType.LIMIT);
+
         Trade trade = new Trade(buy, sell, 14.6, 20, 0);
         MatchEngine matchEngine = ( order, otherSide) -> Optional.of( trade );
 

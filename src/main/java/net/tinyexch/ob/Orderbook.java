@@ -7,6 +7,7 @@ import net.tinyexch.order.Trade;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static net.tinyexch.ob.SubmitType.*;
 
@@ -34,12 +35,12 @@ public class Orderbook {
     /**
      * Contains all bid/buy orders
      */
-    private final OrderbookSide buy = new OrderbookSide();
+    private final OrderbookSide buySide = new OrderbookSide();
 
     /**
      * Contains all ask/sell orders
      */
-    private final OrderbookSide sell = new OrderbookSide();
+    private final OrderbookSide sellSide = new OrderbookSide();
 
 
     //------------------------------------------------------------------------------------------------------------------
@@ -49,10 +50,17 @@ public class Orderbook {
 
     public Orderbook() {}
 
+    public Orderbook( Order[] buys, Order[] sells ) {
+        Objects.requireNonNull(buys, "No buy orders specified!");
+        Objects.requireNonNull(sells, "No sell orders specified!");
+
+        Stream.of(buys).forEach( buySide::add );
+        Stream.of(sells).forEach( sellSide::add );
+    }
+
     public Orderbook( MatchEngine matchEngine ) {
         this.matchEngine = matchEngine;
     }
-
 
     //------------------------------------------------------------------------------------------------------------------
     // mutable state changing during runtime
@@ -113,11 +121,11 @@ public class Orderbook {
         final OrderbookSide thisSide;
         final OrderbookSide otherSide;
         if ( order.getSide() == Side.BUY ) {
-            thisSide = buy;
-            otherSide = sell;
+            thisSide = buySide;
+            otherSide = sellSide;
         } else {
-            thisSide = sell;
-            otherSide = buy;
+            thisSide = sellSide;
+            otherSide = buySide;
         }
 
         Optional<Trade> match = matchEngine.match( order, otherSide );
@@ -130,4 +138,8 @@ public class Orderbook {
 
         return match;
     }
+
+    public OrderbookSide getBuySide() { return buySide; }
+
+    public OrderbookSide getSellSide() { return sellSide; }
 }

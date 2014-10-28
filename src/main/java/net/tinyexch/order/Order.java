@@ -15,6 +15,9 @@ public class Order {
 
     private Instant timestamp = Instant.now();
 
+    /** @link FIX:11 */
+    private final String clientOrderID;
+
     /** @link FIX:54 */
     private Side side;
 
@@ -36,14 +39,20 @@ public class Order {
     /** @link FIX:40 */
     private OrderType orderType;
 
+    /** @link FIX:44 */
+    private double price;
+
 
     //---------------------------------------------------------
     // constructors
     //---------------------------------------------------------
 
-    public Order() { }
+    public Order( String clientOrderID) {
+        this.clientOrderID = clientOrderID;
+    }
 
-    public Order( Side side ) {
+    public Order( String clientOrderID, Side side ) {
+        this(clientOrderID);
         this.side = side;
     }
 
@@ -51,8 +60,8 @@ public class Order {
     // accessors
     //---------------------------------------------------------
 
-    public static Order of( Side side ) {
-        return new Order(side);
+    public static Order of( String clientOrderID, Side side ) {
+        return new Order(clientOrderID, side);
     }
 
     public Instant getTimestamp() { return timestamp; }
@@ -98,5 +107,18 @@ public class Order {
     public Order setOrderType(OrderType orderType) {
         this.orderType = orderType;
         return this;
+    }
+
+    public Order setPrice(double price) {
+        this.price = price;
+        return this;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public String getClientOrderID() {
+        return clientOrderID;
     }
 }
