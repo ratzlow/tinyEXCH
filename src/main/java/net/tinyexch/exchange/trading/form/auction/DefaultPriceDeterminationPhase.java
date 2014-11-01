@@ -6,6 +6,7 @@ import net.tinyexch.order.Order;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import static net.tinyexch.ob.match.Algos.*;
 
@@ -27,6 +28,7 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
     // state
     //--------------------------------------------------------
     private final Orderbook orderbook;
+    private final Optional<Double> referencePrice;
 
 
     //--------------------------------------------------------
@@ -38,7 +40,14 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
      */
     public DefaultPriceDeterminationPhase(Orderbook orderbook) {
         this.orderbook = orderbook;
+        this.referencePrice = Optional.empty();
     }
+
+    public DefaultPriceDeterminationPhase(Orderbook orderbook, Double referencePrice ) {
+        this.orderbook = orderbook;
+        this.referencePrice = Optional.of(referencePrice);
+    }
+
 
     //--------------------------------------------------------
     // API
@@ -46,8 +55,9 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
 
     @Override
     public PriceDeterminationResult determinePrice() {
-        List<Order> bidOrders = orderbook.getBuySide().getBest(BUY_PRICE_ORDERING);
-        List<Order> askOrders = orderbook.getSellSide().getBest(SELL_PRICE_ORDERING);
+
+        List<Order> bidOrders = orderbook.getBuySide().getBest( BUY_PRICE_ORDERING);
+        List<Order> askOrders = orderbook.getSellSide().getBest( SELL_PRICE_ORDERING);
 
         double[] bidPrices = bidOrders.stream().mapToDouble(Order::getPrice).toArray();
         double[] askPrices = askOrders.stream().mapToDouble(Order::getPrice).toArray();
@@ -59,7 +69,38 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
 
         int askQty = getMatchableQuantity(askOrders, order -> order.getPrice() <= worstMatchableAskPrice );
         int bidQty = getMatchableQuantity(bidOrders, order -> order.getPrice() >= worstMatchableBidPrice );
+        double auctionPrice = calcAuctionPrice(worstMatchableBidPrice, worstMatchableAskPrice, bidQty, askQty);
 
-        return new PriceDeterminationResult( worstMatchableBidPrice, worstMatchableAskPrice, bidQty, askQty );
+        return new PriceDeterminationResult( worstMatchableBidPrice, worstMatchableAskPrice, bidQty, askQty, auctionPrice );
+    }
+
+
+    private double calcAuctionPrice( double bidPrice, double askPrice, int bidQty, int askQty ) {
+        final double auctionPrice;
+        if ( referencePrice.isPresent() ) {
+            Double price = referencePrice.get();
+            if ( price.equals(bidPrice)) {
+                auctionPrice = bidPrice;
+
+            } else if (price.equals(askPrice)) {
+                auctionPrice = askPrice;
+
+                // take closest price to ref price
+            } else {
+                double bidOffset = Math.abs(price - bidPrice);
+                double askOffset = Math.abs(price - askPrice);
+
+                if      (bidOffset < askOffset) auctionPrice = bidPrice;
+                else if (askOffset < bidOffset) auctionPrice = askPrice;
+                else throw new AuctionException("Cannot determine auction price! Price offset bid/ask - reference price are equal");
+            }
+
+        } else {
+            int bidSurplus = PriceDeterminationResult.bidSurplusFunc.apply(bidQty, askQty);
+            int askSurplus = PriceDeterminationResult.askSurplusFunc.apply(bidQty, askQty);
+            auctionPrice = bidSurplus > askSurplus ? bidPrice : askPrice;
+        }
+
+        return auctionPrice;
     }
 }

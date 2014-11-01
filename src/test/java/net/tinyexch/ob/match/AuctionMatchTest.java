@@ -5,17 +5,11 @@ import net.tinyexch.exchange.trading.form.auction.PriceDeterminationPhase;
 import net.tinyexch.exchange.trading.form.auction.PriceDeterminationResult;
 import net.tinyexch.ob.Orderbook;
 import net.tinyexch.order.Order;
-import net.tinyexch.order.OrderType;
-import net.tinyexch.order.Side;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import static net.tinyexch.ob.TestConstants.ROUNDING_DELTA;
-import static net.tinyexch.ob.match.Algos.searchClosestAsk;
-import static net.tinyexch.ob.match.Algos.searchClosestBid;
+import static net.tinyexch.ob.match.OrderFactory.*;
 
 /**
  * Test various matching strategies depending on a given orderbook situation.
@@ -25,14 +19,18 @@ import static net.tinyexch.ob.match.Algos.searchClosestBid;
  */
 public class AuctionMatchTest {
 
-    private final Orderbook book_Ex_1 = new Orderbook( new Order[]{ buy(1, 202, 200), buy(2, 201, 200), buy(3, 200, 300) },
-                                               new Order[]{ sell(4, 200, 100), sell(5, 198, 200), sell(6, 197, 400) } );
+    private final Orderbook book_Ex_1 = new Orderbook( new Order[]{ buyL(202, 200), buyL(201, 200), buyL(200, 300) },
+                                                       new Order[]{ sellL(200, 100), sellL(198, 200), sellL(197, 400) } );
 
-    private final Orderbook book_Ex_2 = new Orderbook( new Order[]{ buy(1, 202, 400), buy(2, 201, 200) },
-                                               new Order[]{ sell(1, 199, 300), sell(2, 198, 200) } );
+    private final Orderbook book_Ex_2 = new Orderbook( new Order[]{ buyL(202, 400), buyL(201, 200) },
+                                                       new Order[]{ sellL(199, 300), sellL(198, 200) } );
 
-    private final Orderbook book_Ex_3 = new Orderbook( new Order[]{ buy(1, 202, 300), buy(2, 201, 200) },
-                                               new Order[]{ sell(3, 199, 400), sell(4, 198, 200) } );
+    private final Orderbook book_Ex_3 = new Orderbook( new Order[]{ buyL(202, 300), buyL(201, 200) },
+                                                       new Order[]{ sellL(199, 400), sellL(198, 200) } );
+
+    private final Orderbook book_Ex_4 = new Orderbook( new Order[]{ buyM(100), buyL(199, 100) },
+                                                       new Order[]{ sellM(100), sellL(202, 100) } );
+
 
     /**
      * There is exactly one limit at which the highest order volume can be executed and which has the lowest surplus.
@@ -79,28 +77,23 @@ public class AuctionMatchTest {
     }
 
 
-    // TODO (FRa) : (FRa) : move to AlgosTest
+    /**
+     * There are several possible limits and there is both an ask surplus and a bid surplus.
+     *
+     * The auction price either equals the reference price or is fixed according to the limit nearest to the reference
+     * price.
+     */
+    // TODO (FRa) : (FRa) : add test where ref price is exactly in the middle of 2 possible limits, check rules
     @Test
-    public void testOrderbookBuilding() {
-        // sorted with best coming first?!
-        List<Order> orderedBuys = book_Ex_1.getBuySide().getBest(DefaultPriceDeterminationPhase.BUY_PRICE_ORDERING);
-        List<Order> orderedSells = book_Ex_1.getSellSide().getBest(DefaultPriceDeterminationPhase.SELL_PRICE_ORDERING);
+    public void testAuctionPriceEqualsReferencePrice_Ex4_1() {
 
-        Assert.assertArrayEquals(new Integer[]{1, 2, 3},
-                orderedBuys.stream().map(order -> Integer.parseInt(order.getClientOrderID()))
-                        .collect(Collectors.toList()).toArray());
-        Assert.assertArrayEquals(new Integer[]{6, 5, 4},
-                orderedSells.stream().map(order -> Integer.parseInt(order.getClientOrderID()))
-                        .collect(Collectors.toList()).toArray());
+        PriceDeterminationResult result_1 = determinePrice(book_Ex_4, 199D);
+        Assert.assertEquals( "If the reference price is € 199, the auction price will be € 199.",
+                199D, result_1.getAuctionPrice(), ROUNDING_DELTA );
 
-        double[] bidPrices = orderedBuys.stream().mapToDouble(Order::getPrice).toArray();
-        double[] askPrices = orderedSells.stream().mapToDouble(Order::getPrice).toArray();
-
-        double worstMatchableAskPrice = searchClosestAsk(orderedBuys.get(0).getPrice(), askPrices);
-        double worstMatchableBidPrice = searchClosestBid(orderedSells.get(0).getPrice(), bidPrices);
-
-        Assert.assertEquals(200, worstMatchableBidPrice, ROUNDING_DELTA);
-        Assert.assertEquals(200, worstMatchableAskPrice, ROUNDING_DELTA);
+        PriceDeterminationResult result_2 = determinePrice(book_Ex_4, 200D);
+        Assert.assertEquals( "If the reference price is € 200, the auction price will be € 199.",
+                199D, result_2.getAuctionPrice(), ROUNDING_DELTA );
     }
 
 
@@ -109,16 +102,8 @@ public class AuctionMatchTest {
         return phase.determinePrice();
     }
 
-    private Order buy(int clientOrderID, double price, int qty) {
-        return newOrder( Side.BUY, clientOrderID, price, qty );
-    }
-
-    private Order sell(int clientOrderID, double price, int qty) {
-        return newOrder( Side.SELL, clientOrderID, price, qty );
-    }
-
-    private Order newOrder(Side side, int clientOrderID, double price, int qty) {
-        return Order.of( Integer.toString(clientOrderID), side ).setPrice(price)
-                .setOrderQty(qty).setOrderType(OrderType.LIMIT);
+    private PriceDeterminationResult determinePrice( Orderbook orderbook, double referencePrice  ) {
+        PriceDeterminationPhase phase = new DefaultPriceDeterminationPhase(orderbook, referencePrice );
+        return phase.determinePrice();
     }
 }

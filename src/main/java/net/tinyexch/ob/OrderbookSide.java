@@ -5,6 +5,7 @@ import net.tinyexch.order.OrderType;
 import net.tinyexch.order.Trade;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -53,7 +54,7 @@ public class OrderbookSide {
     }
 
     public List<Order> getBest( Comparator<Order> byPrios ) {
-        ArrayList<Order> sortedOrders = new ArrayList<>(limitOrders);
+        List<Order> sortedOrders = new ArrayList<>(limitOrders);
         Collections.sort(sortedOrders, byPrios );
         return Collections.unmodifiableList(sortedOrders);
     }

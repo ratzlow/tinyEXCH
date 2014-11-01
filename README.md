@@ -4,7 +4,7 @@ Various public documents are available that describe to a certain degree the
 rules of a stock exchanges. Used references are stored in ./docs.
 
 If you want to see upcoming tasks please visit [http://ratzlow.myjetbrains.com/youtrack/issues/tE](http://ratzlow.myjetbrains.com/youtrack/issues/tE)
-The current build status can be seen on [https://travis-ci.org/ratzlow/tinyEXCH (https://travis-ci.org/ratzlow/tinyEXCH)]
+The current build status can be seen on [https://travis-ci.org/ratzlow/tinyEXCH] (https://travis-ci.org/ratzlow/tinyEXCH)
 
 How to build
 -------------

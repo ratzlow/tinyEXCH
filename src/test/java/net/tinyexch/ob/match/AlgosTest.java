@@ -1,16 +1,25 @@
 package net.tinyexch.ob.match;
 
+import net.tinyexch.exchange.trading.form.auction.DefaultPriceDeterminationPhase;
+import net.tinyexch.ob.Orderbook;
+import net.tinyexch.order.Order;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.DoublePredicate;
+import java.util.stream.Collectors;
 
 import static net.tinyexch.ob.TestConstants.ROUNDING_DELTA;
-import static net.tinyexch.ob.match.Algos.searchClosest;
+import static net.tinyexch.ob.match.Algos.*;
+import static net.tinyexch.ob.match.OrderFactory.newOrder;
+import static net.tinyexch.order.OrderType.LIMIT;
+import static net.tinyexch.order.Side.BUY;
+import static net.tinyexch.order.Side.SELL;
 
 /**
  * Test functional wise if the algos work.
@@ -38,6 +47,33 @@ public class AlgosTest {
         Assert.assertEquals(1, searchClosest(2, new double[]{1, 3, 3, 3, 3, 7}, withinBoundaries), ROUNDING_DELTA);
         Assert.assertEquals(3, searchClosest(5, new double[]{1, 3, 3, 3, 3, 7}, withinBoundaries), ROUNDING_DELTA);
         Assert.assertEquals(7, searchClosest(6, new double[]{1, 3, 3, 3, 3, 7}, withinBoundaries), ROUNDING_DELTA);
+    }
+
+
+    @Test
+    public void testOrderbookBuilding() {
+
+        Orderbook ob = new Orderbook(
+            new Order[]{ newOrder(BUY, 202, 200, LIMIT), newOrder(BUY, 201, 200, LIMIT), newOrder(BUY, 200, 200, LIMIT)},
+            new Order[]{ newOrder(SELL, 200, 100, LIMIT), newOrder(SELL, 198, 200, LIMIT), newOrder(SELL, 197, 400, LIMIT)}
+        );
+
+        List<Order> orderedBuys = ob.getBuySide().getBest(DefaultPriceDeterminationPhase.BUY_PRICE_ORDERING);
+        List<Order> orderedSells = ob.getSellSide().getBest(DefaultPriceDeterminationPhase.SELL_PRICE_ORDERING);
+
+        Assert.assertArrayEquals(new Double[]{202D, 201D, 200D},
+                orderedBuys.stream().map(Order::getPrice).collect(Collectors.toList()).toArray());
+        Assert.assertArrayEquals(new Double[]{197D, 198D, 200D},
+                orderedSells.stream().map(Order::getPrice).collect(Collectors.toList()).toArray());
+
+        double[] bidPrices = orderedBuys.stream().mapToDouble(Order::getPrice).toArray();
+        double[] askPrices = orderedSells.stream().mapToDouble(Order::getPrice).toArray();
+
+        double worstMatchableAskPrice = searchClosestAsk(orderedBuys.get(0).getPrice(), askPrices);
+        double worstMatchableBidPrice = searchClosestBid(orderedSells.get(0).getPrice(), bidPrices);
+
+        Assert.assertEquals(200, worstMatchableBidPrice, ROUNDING_DELTA);
+        Assert.assertEquals(200, worstMatchableAskPrice, ROUNDING_DELTA);
     }
 
 
