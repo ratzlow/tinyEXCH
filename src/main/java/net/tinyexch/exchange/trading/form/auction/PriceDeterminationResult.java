@@ -15,12 +15,13 @@ public class PriceDeterminationResult {
     final static BiFunction<Integer, Integer, Integer> askSurplusFunc =
             (matchableBidQty, matchableAskQty) -> matchableBidQty < matchableAskQty ? matchableAskQty - matchableBidQty : 0;
 
-
     private final double bidPrice;
     private final double askPrice;
     private final int matchableBidQty;
     private final int matchableAskQty;
     private final double auctionPrice;
+    private final int bidSurplus;
+    private final int askSurplus;
 
     //----------------------------------------------------
     // constructors
@@ -36,16 +37,17 @@ public class PriceDeterminationResult {
         this.matchableBidQty = matchableBidQty;
         this.matchableAskQty = matchableAskQty;
         this.auctionPrice = auctionPrice;
+        this.bidSurplus = bidSurplusFunc.apply(matchableBidQty, matchableAskQty);
+        this.askSurplus = askSurplusFunc.apply(matchableBidQty, matchableAskQty);
     }
-
 
 
     //----------------------------------------------------
     // accessors
     //----------------------------------------------------
 
-    public int getBidSurplus() { return bidSurplusFunc.apply(matchableBidQty, matchableAskQty); }
-    public int getAskSurplus() { return askSurplusFunc.apply(matchableBidQty, matchableAskQty); }
+    public int getBidSurplus() { return bidSurplus; }
+    public int getAskSurplus() { return askSurplus; }
 
     public double getBidPrice() {
         return bidPrice;

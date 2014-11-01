@@ -31,6 +31,8 @@ public class AuctionMatchTest {
     private final Orderbook book_Ex_4 = new Orderbook( new Order[]{ buyM(100), buyL(199, 100) },
                                                        new Order[]{ sellM(100), sellL(202, 100) } );
 
+    private final Orderbook book_Ex_5 = new Orderbook( new Order[]{ buyL(202, 300), buyL(201, 200) },
+                                                       new Order[]{ sellL(198, 200), sellL(199, 300) } );
 
     /**
      * There is exactly one limit at which the highest order volume can be executed and which has the lowest surplus.
@@ -83,19 +85,31 @@ public class AuctionMatchTest {
      * The auction price either equals the reference price or is fixed according to the limit nearest to the reference
      * price.
      */
-    // TODO (FRa) : (FRa) : add test where ref price is exactly in the middle of 2 possible limits, check rules
     @Test
-    public void testAuctionPriceEqualsReferencePrice_Ex4_1() {
-
-        PriceDeterminationResult result_1 = determinePrice(book_Ex_4, 199D);
-        Assert.assertEquals( "If the reference price is € 199, the auction price will be € 199.",
-                199D, result_1.getAuctionPrice(), ROUNDING_DELTA );
-
-        PriceDeterminationResult result_2 = determinePrice(book_Ex_4, 200D);
-        Assert.assertEquals( "If the reference price is € 200, the auction price will be € 199.",
-                199D, result_2.getAuctionPrice(), ROUNDING_DELTA );
+    public void testAuctionPriceEqualsReferencePrice_Ex4() {
+        assertAuction("If the reference price is € 199, the auction price will be € 199.", book_Ex_4, 199D, 199D, 0, 0);
+        assertAuction("If the reference price is € 200, the auction price will be € 199.", book_Ex_4, 200D, 199D, 0, 0);
     }
 
+    /**
+     * The auction price either equals the reference price or is fixed according to the limit
+     * nearest to the reference price:
+     */
+    @Test
+    public void testSeveralPossibleLimitsAndNoSurplus_Ex5() {
+        assertAuction("If the reference price is € 200, the auction price will be € 201.", book_Ex_5, 200D, 201D, 0, 0);
+        assertAuction("If the reference price is € 202, the auction price will be € 201.", book_Ex_5, 202D, 201D, 0, 0);
+        assertAuction("If the reference price is € 198, the auction price will be € 199.", book_Ex_5, 198D, 199D, 0, 0);
+    }
+
+
+    private void assertAuction(String msg, Orderbook ob, double referencePrice,
+                               double expectedAuctionPrice, int expectedAskSurplus, int expectedBidSurplus) {
+        PriceDeterminationResult result_1 = determinePrice(ob, referencePrice);
+        Assert.assertEquals(msg, expectedAuctionPrice, result_1.getAuctionPrice(), ROUNDING_DELTA);
+        Assert.assertEquals(expectedAskSurplus, result_1.getAskSurplus());
+        Assert.assertEquals(expectedBidSurplus, result_1.getBidSurplus());
+    }
 
     private PriceDeterminationResult determinePrice( Orderbook orderbook ) {
         PriceDeterminationPhase phase = new DefaultPriceDeterminationPhase(orderbook);

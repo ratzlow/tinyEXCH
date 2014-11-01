@@ -92,7 +92,7 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
 
                 if      (bidOffset < askOffset) auctionPrice = bidPrice;
                 else if (askOffset < bidOffset) auctionPrice = askPrice;
-                else throw new AuctionException("Cannot determine auction price! Price offset bid/ask - reference price are equal");
+                else                            auctionPrice = Math.max(bidPrice, askPrice);
             }
 
         } else {
