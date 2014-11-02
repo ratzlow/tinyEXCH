@@ -34,6 +34,9 @@ public class AuctionMatchTest {
     private final Orderbook book_Ex_5 = new Orderbook( new Order[]{ buyL(202, 300), buyL(201, 200) },
                                                        new Order[]{ sellL(198, 200), sellL(199, 300) } );
 
+    private final Orderbook book_Ex_6 = new Orderbook( new Order[]{ buyM(900)},
+                                                       new Order[]{ sellM(800)} );
+
     /**
      * There is exactly one limit at which the highest order volume can be executed and which has the lowest surplus.
      * Corresponding to this limit, the auction price is fixed at € 200.
@@ -102,13 +105,22 @@ public class AuctionMatchTest {
         assertAuction("If the reference price is € 198, the auction price will be € 199.", book_Ex_5, 198D, 199D, 0, 0);
     }
 
+    /**
+     * Only market orders are executable in the order book.
+     */
+    @Test
+    public void testOnlyMarketOrdersExecutableInOrderbook_Ex6() {
+        assertAuction("The auction price is equal to the reference price=250", book_Ex_6, 250D, 250D, 0, 100);
+        assertAuction("The auction price is equal to the reference price=99", book_Ex_6, 99D, 99D, 0, 100);
+    }
+
 
     private void assertAuction(String msg, Orderbook ob, double referencePrice,
                                double expectedAuctionPrice, int expectedAskSurplus, int expectedBidSurplus) {
         PriceDeterminationResult result_1 = determinePrice(ob, referencePrice);
         Assert.assertEquals(msg, expectedAuctionPrice, result_1.getAuctionPrice(), ROUNDING_DELTA);
-        Assert.assertEquals(expectedAskSurplus, result_1.getAskSurplus());
-        Assert.assertEquals(expectedBidSurplus, result_1.getBidSurplus());
+        Assert.assertEquals("AskSurplus", expectedAskSurplus, result_1.getAskSurplus());
+        Assert.assertEquals("BidSurplus", expectedBidSurplus, result_1.getBidSurplus());
     }
 
     private PriceDeterminationResult determinePrice( Orderbook orderbook ) {

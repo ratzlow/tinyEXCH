@@ -3,10 +3,10 @@ package net.tinyexch.exchange.trading.form.auction;
 import net.tinyexch.ob.Orderbook;
 import net.tinyexch.ob.match.Priorities;
 import net.tinyexch.order.Order;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static net.tinyexch.ob.match.Algos.*;
 
@@ -21,6 +21,7 @@ import static net.tinyexch.ob.match.Algos.*;
  */
 public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultPriceDeterminationPhase.class);
     public static final Comparator<Order> SELL_PRICE_ORDERING = Priorities.PRICE;
     public static final Comparator<Order> BUY_PRICE_ORDERING = Priorities.PRICE.reversed();
 
@@ -59,19 +60,49 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
         List<Order> bidOrders = orderbook.getBuySide().getBest( BUY_PRICE_ORDERING);
         List<Order> askOrders = orderbook.getSellSide().getBest( SELL_PRICE_ORDERING);
 
-        double[] bidPrices = bidOrders.stream().mapToDouble(Order::getPrice).toArray();
-        double[] askPrices = askOrders.stream().mapToDouble(Order::getPrice).toArray();
+        PriceDeterminationResult result = null;
+        if ( !bidOrders.isEmpty() && !askOrders.isEmpty() ) {
+            LOGGER.info("Orders on both sides available!");
+            result = calcResultWithAvailableOrders(bidOrders, askOrders);
 
-        double askSearchPrice = askOrders.get(0).getPrice();
+        } else if ( bidOrders.isEmpty() && !askOrders.isEmpty() ) {
+            // TODO (FRa) : (FRa) : implement
+        } else if ( !bidOrders.isEmpty() && askOrders.isEmpty() ) {
+            // TODO (FRa) : (FRa) : implement
+
+        } else {
+            LOGGER.info("No orders available, fallback to use supplied referencePrice as auctionPrice!");
+            int bidQty = getMatchableQuantity(new ArrayList<>(orderbook.getBuySide().getOrders()), o -> true );
+            int askQty = getMatchableQuantity(new ArrayList<>(orderbook.getSellSide().getOrders()), o -> true );
+
+            result = new PriceDeterminationResult(0, 0, bidQty, askQty,
+            referencePrice.orElseThrow(
+                    () -> new IllegalStateException("No orders or reference price available to derive a price!"))
+            );
+        }
+
+        Objects.requireNonNull( result, "No price derived from given orderbook and reference price!" );
+        return result;
+    }
+
+
+    private PriceDeterminationResult calcResultWithAvailableOrders(List<Order> bidOrders, List<Order> askOrders) {
+        PriceDeterminationResult result;
+        double[] bidPrices = bidOrders.stream().mapToDouble(Order::getPrice).toArray();
+        double bidSearchPrice = bidOrders.isEmpty() ? 0 : bidOrders.get(0).getPrice();
+
+        double[] askPrices = askOrders.stream().mapToDouble(Order::getPrice).toArray();
+        double askSearchPrice = askOrders.isEmpty() ? 0 : askOrders.get(0).getPrice();
+
         double worstMatchableBidPrice = searchClosestBid(askSearchPrice, bidPrices);
-        double bidSearchPrice = bidOrders.get(0).getPrice();
         double worstMatchableAskPrice = searchClosestAsk(bidSearchPrice, askPrices);
 
         int askQty = getMatchableQuantity(askOrders, order -> order.getPrice() <= worstMatchableAskPrice );
         int bidQty = getMatchableQuantity(bidOrders, order -> order.getPrice() >= worstMatchableBidPrice );
         double auctionPrice = calcAuctionPrice(worstMatchableBidPrice, worstMatchableAskPrice, bidQty, askQty);
 
-        return new PriceDeterminationResult( worstMatchableBidPrice, worstMatchableAskPrice, bidQty, askQty, auctionPrice );
+        result = new PriceDeterminationResult( worstMatchableBidPrice, worstMatchableAskPrice, bidQty, askQty, auctionPrice );
+        return result;
     }
 
 

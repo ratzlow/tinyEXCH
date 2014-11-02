@@ -89,7 +89,8 @@ public final class Algos {
                                     ToDoubleBiFunction<Double, Double> sameDistanceResolver,
                                     DoublePredicate withinBoundaries ) {
 
-        Objects.requireNonNull(prices, "Prices must not be empty!");
+        if ( prices == null || prices.length == 0) throw new IllegalArgumentException("Prices must not be empty!");
+
         LOGGER.debug("bestPrice={} inputPrices={}", searchPrice, Arrays.toString(prices));
         if (prices.length == 1) return prices[0];
 
