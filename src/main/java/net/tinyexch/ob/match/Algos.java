@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleBiFunction;
@@ -48,14 +48,14 @@ public final class Algos {
      * @param bidPrices ordered bid prices with best bid (highest) coming first
      * @return worst ask price still in the market
      */
-    public static double searchClosestBid(double askSearchPrice, double[] bidPrices ) {
+    public static Optional<Double> searchClosestBid(double askSearchPrice, double[] bidPrices ) {
         return searchClosest(askSearchPrice, bidPrices, bid -> bid >= askSearchPrice);
     }
 
     /**
      * Same as #searchClosestBid(double, double[]) but with opposite semantics
      */
-    public static double searchClosestAsk(double bidSearchPrice, double[] askPrices ) {
+    public static Optional<Double> searchClosestAsk(double bidSearchPrice, double[] askPrices ) {
         return searchClosest(bidSearchPrice, askPrices, ask -> ask <= bidSearchPrice);
     }
 
@@ -65,7 +65,7 @@ public final class Algos {
      * @param withinBoundaries specifies what price is within a valid price range
      * @return closest price from #prices to #bestPrice but #withinBoundaries
      */
-    static double searchClosest(double bestPrice, double[] prices, DoublePredicate withinBoundaries ) {
+    static Optional<Double> searchClosest(double bestPrice, double[] prices, DoublePredicate withinBoundaries ) {
         // TODO (FRa) : (FRa) : replace with equivalent binSearch
         return sequentialSearchClosest( bestPrice, prices, Math::min, withinBoundaries );
     }
@@ -85,14 +85,16 @@ public final class Algos {
      * @param withinBoundaries
      * @return
      */
-    private static double sequentialSearchClosest( final double searchPrice, double[] prices,
+    private static Optional<Double> sequentialSearchClosest( final double searchPrice, double[] prices,
                                     ToDoubleBiFunction<Double, Double> sameDistanceResolver,
                                     DoublePredicate withinBoundaries ) {
 
         if ( prices == null || prices.length == 0) throw new IllegalArgumentException("Prices must not be empty!");
 
         LOGGER.debug("bestPrice={} inputPrices={}", searchPrice, Arrays.toString(prices));
-        if (prices.length == 1) return prices[0];
+
+        if (prices.length > 0 && !withinBoundaries.test(prices[0])) return Optional.empty();
+        if (prices.length == 1)                                     return Optional.of(prices[0]);
 
         double closestPrice = prices[0];
         double minDistance = Math.abs(searchPrice - closestPrice);
@@ -119,6 +121,6 @@ public final class Algos {
         } while ( i < prices.length && !distanceIncreased);
 
         LOGGER.debug("Stopped evaluation at prices[{}]={}", i-1, prices[i-1]);
-        return closestPrice;
+        return Optional.of(closestPrice);
     }
 }

@@ -1,5 +1,6 @@
 package net.tinyexch.exchange.trading.form.auction;
 
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 /**
@@ -15,11 +16,11 @@ public class PriceDeterminationResult {
     final static BiFunction<Integer, Integer, Integer> askSurplusFunc =
             (matchableBidQty, matchableAskQty) -> matchableBidQty < matchableAskQty ? matchableAskQty - matchableBidQty : 0;
 
-    private final double bidPrice;
-    private final double askPrice;
+    private final Optional<Double> bidPrice;
+    private final Optional<Double> askPrice;
     private final int matchableBidQty;
     private final int matchableAskQty;
-    private final double auctionPrice;
+    private final Optional<Double> auctionPrice;
     private final int bidSurplus;
     private final int askSurplus;
 
@@ -28,10 +29,12 @@ public class PriceDeterminationResult {
     //----------------------------------------------------
 
     public PriceDeterminationResult() {
-        this(0, 0, 0, 0, 0 );
+        this(Optional.<Double>empty(), Optional.<Double>empty(), 0, 0, Optional.<Double>empty());
     }
 
-    public PriceDeterminationResult(double bidPrice, double askPrice, int matchableBidQty, int matchableAskQty, double auctionPrice ) {
+    public PriceDeterminationResult(Optional<Double> bidPrice, Optional<Double> askPrice,
+                                    int matchableBidQty, int matchableAskQty,
+                                    Optional<Double> auctionPrice ) {
         this.bidPrice = bidPrice;
         this.askPrice = askPrice;
         this.matchableBidQty = matchableBidQty;
@@ -49,11 +52,11 @@ public class PriceDeterminationResult {
     public int getBidSurplus() { return bidSurplus; }
     public int getAskSurplus() { return askSurplus; }
 
-    public double getBidPrice() {
+    public Optional<Double> getBidPrice() {
         return bidPrice;
     }
 
-    public double getAskPrice() {
+    public Optional<Double> getAskPrice() {
         return askPrice;
     }
 
@@ -65,7 +68,7 @@ public class PriceDeterminationResult {
         return matchableAskQty;
     }
 
-    public double getAuctionPrice() {
+    public Optional<Double> getAuctionPrice() {
         return auctionPrice;
     }
 }

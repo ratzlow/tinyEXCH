@@ -27,6 +27,10 @@ public class OrderFactory {
         return newOrder( Side.BUY, 0, qty, OrderType.MARKET );
     }
 
+    public static Order buyH(double price, int qty) {
+        return newOrder( Side.BUY, price, qty, OrderType.HIDDEN );
+    }
+
     public static Order sellM(int qty) {
         return newOrder( Side.SELL, 0, qty, OrderType.MARKET );
     }

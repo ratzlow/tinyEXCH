@@ -5,9 +5,9 @@ import net.tinyexch.order.OrderType;
 import net.tinyexch.order.Trade;
 
 import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * The data structure holding one side (buy or sell) of an order book. An incoming order will be matched against the
@@ -25,6 +25,7 @@ public class OrderbookSide {
 
     private final List<Order> marketOrders = new ArrayList<>();
     private final List<Order> limitOrders = new ArrayList<>();
+    private final List<Order> hiddenOrders = new ArrayList<>();
 
     public Optional<Trade> match( Order otherSide ) {
         return Optional.empty();
@@ -40,6 +41,9 @@ public class OrderbookSide {
             case LIMIT:
                 limitOrders.add( order );
                 break;
+            case HIDDEN:
+                hiddenOrders.add( order );
+                break;
             default:
                 String msg = "OrderType '" + order.getOrderType() + "' not considered for orderBook addition!";
                 throw new OrderbookException(msg);
@@ -47,14 +51,13 @@ public class OrderbookSide {
     }
 
     public Collection<Order> getOrders() {
-        // TODO (FRa) : (FRa) : replace with jdk8 supplier of unmodifiable list
-        return Collections.unmodifiableCollection(
-                Stream.concat(marketOrders.stream(), limitOrders.stream()).collect(Collectors.toList())
-        );
+        return Collections.unmodifiableCollection(Stream.of(marketOrders, limitOrders, hiddenOrders)
+                .flatMap(orders -> orders.stream()).collect(toList()));
     }
 
     public List<Order> getBest( Comparator<Order> byPrios ) {
-        List<Order> sortedOrders = new ArrayList<>(limitOrders);
+        List<Order> sortedOrders = Stream.of(limitOrders, hiddenOrders)
+                                         .flatMap(orders -> orders.stream()).collect(toList());
         Collections.sort(sortedOrders, byPrios );
         return Collections.unmodifiableList(sortedOrders);
     }
