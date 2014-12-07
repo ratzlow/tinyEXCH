@@ -133,6 +133,14 @@ Otex
 - How much flexibility do you really need to meet future requirements? Hallo@RE/Architects
 
 ----
+## Alternative technology stacks
+- Storm https://storm.apache.org/
+- Akka
+- Rx (RxJava)
+- VERT.X http://vertx.io/
+- 
+
+----
 
 ## Resources
 - Martin Thompson http://www.infoq.com/news/2014/10/thompson-reactive-manifesto-2
