@@ -16,12 +16,14 @@
 - comprises typical legacy software properties:
     - testabillity
     - _special engineering_ in contrast to _JAP_
-    - built upon the idioms/technology available at this time (incl. C++, Python, XSLT)
+    - built upon the idioms/technology available at this time (incl. C++, Python (language, runtime mix), XSLT)
     - high fluctuation in staff --> numbers?
 
 -----
 
-## Evolution of idioms
+## Evolution of idioms (high level)
+**TODO: Compare potential of conventional vs. alternative approaches in respect to throughput, concurrency, latency**
+
 - CQRS
     - event sourcing
     - eventual consistency
@@ -34,17 +36,22 @@
 - processing model
     - traditional: sync APIs
     - back in town: async msg passing // actually: very well established by somehow forgotten
+- testabillity
+
 
 -----
 
 ## Evolution of technology
+**TODO: compare dimensions maintainability, error-proneness, comprehensibility, conventional vs. alternative
+(How likely is it your own concurrency utils are properly tested with all edge cases?)**
+
 - persistence
     - traditional: RDBMS, ORM, DAO
     - alternative: journal, serialization
 - transaction definition
     - traditional: TX management API around TX resources
     - alternative: driven by unit of work, isolation=Serialized if single threaded
-- messaging
+- reliable messaging
     - traditional: MOM with central broker
     - alternative: brokerless
     - // TCP guarantees delivery: utilize it!
@@ -62,6 +69,10 @@
     - productivity (turn-around-times)
     - stability
     - understandability
+- Problems
+    - getting staff with right skill and mind set
+    - not sacrificing principles in favour of quick wins (software debts)
+    - if you start with a legacy app: mgmt backup on the long run
 
 ----
 
