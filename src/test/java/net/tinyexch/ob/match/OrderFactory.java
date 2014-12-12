@@ -4,6 +4,8 @@ import net.tinyexch.order.Order;
 import net.tinyexch.order.OrderType;
 import net.tinyexch.order.Side;
 
+import java.time.Instant;
+
 /**
  * Create simple orders for test purpose.
  *
@@ -11,12 +13,19 @@ import net.tinyexch.order.Side;
  * @since 2014-10-29
  */
 public class OrderFactory {
+    public static final String timePattern = "HH:mm:ss";
 
     private static int clientOrderIdSequence = 0;
 
-
     public static Order buyL(double price, int qty) {
         return newOrder( Side.BUY, price, qty, OrderType.LIMIT );
+    }
+
+    /**
+     * @param timestamp #timePattern
+     */
+    public static Order buyL(double price, int qty, Instant timestamp ) {
+        return newOrder( Side.BUY, price, qty, OrderType.LIMIT ).setTimestamp(timestamp);
     }
 
     public static Order sellL(double price, int qty) {
@@ -28,7 +37,7 @@ public class OrderFactory {
     }
 
     public static Order buyH(double price, int qty) {
-        return newOrder( Side.BUY, price, qty, OrderType.HIDDEN );
+        return newOrder(Side.BUY, price, qty, OrderType.HIDDEN);
     }
 
     public static Order sellM(int qty) {

@@ -4,9 +4,15 @@ import net.tinyexch.exchange.trading.form.auction.DefaultPriceDeterminationPhase
 import net.tinyexch.exchange.trading.form.auction.PriceDeterminationPhase;
 import net.tinyexch.exchange.trading.form.auction.PriceDeterminationResult;
 import net.tinyexch.ob.Orderbook;
+import net.tinyexch.order.Execution;
 import net.tinyexch.order.Order;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
 
 import static net.tinyexch.ob.TestConstants.ROUNDING_DELTA;
 import static net.tinyexch.ob.match.OrderFactory.*;
@@ -125,6 +131,41 @@ public class AuctionMatchTest {
         Assert.assertEquals( "No matching bid qty expected!", 0, result.getMatchableBidQty(), ROUNDING_DELTA);
     }
 
+    /**
+     * If all prices are equal than match by time prio.
+     */
+    @Test
+    public void testPartialExecutionInAcutionWithTimePrio_Ex7() {
+        Order buy_1 = buyL(200, 300, time(9, 0, 0));
+        Order buy_2 = buyL(200, 300, time(9, 1, 0));
+        Orderbook book = new Orderbook( new Order[] {buy_1, buy_2},
+                                        new Order[] { sellL(200, 400)} );
+
+        PriceDeterminationResult result = determinePrice(book);
+        Assert.assertEquals( "BidSurplus", 200, result.getBidSurplus(), ROUNDING_DELTA);
+        Assert.assertEquals( "AskSurplus", 0, result.getAskSurplus(), ROUNDING_DELTA);
+        Assert.assertEquals( "AuctionPrice", 200, result.getAuctionPrice().get(), ROUNDING_DELTA);
+
+        List<Execution> executions = result.getExecutions();
+        Assert.assertEquals("Executions", 2, executions.size());
+
+        Execution firstExec = executions.get(0);
+        Assert.assertEquals( 300, firstExec.getExecutionQty() );
+        Assert.assertEquals( buy_1.getClientOrderID(), firstExec.getBuy().getClientOrderID() );
+        Assert.assertEquals( 300, firstExec.getBuy().getOrderQty() );
+        Assert.assertEquals( 300, firstExec.getBuy().getCumQty() );
+        Assert.assertEquals( 400, firstExec.getSell().getOrderQty() );
+        Assert.assertEquals( 300, firstExec.getSell().getCumQty() );
+
+        Execution secondExec = executions.get(1);
+        Assert.assertEquals( 100, secondExec.getExecutionQty() );
+        Assert.assertEquals( buy_2.getClientOrderID(), secondExec.getBuy().getClientOrderID() );
+        Assert.assertEquals( 300, secondExec.getBuy().getOrderQty() );
+        Assert.assertEquals( 100, secondExec.getBuy().getCumQty() );
+        Assert.assertEquals( 400, secondExec.getSell().getOrderQty() );
+        Assert.assertEquals( 400, secondExec.getSell().getCumQty() );
+    }
+
 
     private void assertAuction(String msg, Orderbook ob, double referencePrice,
                                double expectedAuctionPrice, int expectedAskSurplus, int expectedBidSurplus) {
@@ -154,5 +195,9 @@ public class AuctionMatchTest {
 
     private Double getBidPrice(PriceDeterminationResult result) {
         return result.getBidPrice().get();
+    }
+
+    private Instant time(int hour, int min, int sec) {
+        return LocalDateTime.now().withHour(hour).withMinute(min).withSecond(sec).toInstant(ZoneOffset.UTC);
     }
 }

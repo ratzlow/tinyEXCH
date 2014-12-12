@@ -1,6 +1,8 @@
 package net.tinyexch.exchange.trading.form.auction;
 
-import java.util.Optional;
+import net.tinyexch.order.Execution;
+
+import java.util.*;
 import java.util.function.BiFunction;
 
 /**
@@ -23,18 +25,23 @@ public class PriceDeterminationResult {
     private final Optional<Double> auctionPrice;
     private final int bidSurplus;
     private final int askSurplus;
+    private final List<Execution> executions;
 
     //----------------------------------------------------
     // constructors
     //----------------------------------------------------
 
     public PriceDeterminationResult() {
-        this(Optional.<Double>empty(), Optional.<Double>empty(), 0, 0, Optional.<Double>empty());
+        this(Optional.<Double>empty(), Optional.<Double>empty(), 0, 0, Optional.<Double>empty(), Collections.emptyList());
     }
 
     public PriceDeterminationResult(Optional<Double> bidPrice, Optional<Double> askPrice,
                                     int matchableBidQty, int matchableAskQty,
-                                    Optional<Double> auctionPrice ) {
+                                    Optional<Double> auctionPrice,
+                                    List<Execution> executions ) {
+
+        Objects.requireNonNull( executions, "No null list for executions allowed!" );
+
         this.bidPrice = bidPrice;
         this.askPrice = askPrice;
         this.matchableBidQty = matchableBidQty;
@@ -42,6 +49,7 @@ public class PriceDeterminationResult {
         this.auctionPrice = auctionPrice;
         this.bidSurplus = bidSurplusFunc.apply(matchableBidQty, matchableAskQty);
         this.askSurplus = askSurplusFunc.apply(matchableBidQty, matchableAskQty);
+        this.executions = executions;
     }
 
 
@@ -71,4 +79,6 @@ public class PriceDeterminationResult {
     public Optional<Double> getAuctionPrice() {
         return auctionPrice;
     }
+
+    public List<Execution> getExecutions() { return executions; }
 }
