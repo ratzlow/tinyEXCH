@@ -1,6 +1,11 @@
 apply plugin: 'java'
 apply plugin: 'idea'
 
+apply plugin: 'pmd'
+apply plugin: 'findbugs'
+apply plugin: 'jacoco'
+apply plugin: 'sonar-runner'
+
 sourceCompatibility = 1.8
 version = '0.5'
 
@@ -17,12 +22,6 @@ dependencies {
 
     testCompile 'junit:junit:4.11'
 }
-
-/*
-apply plugin: 'pmd'
-apply plugin: 'findbugs'
-apply plugin: 'jacoco'
-apply plugin: 'sonar-runner'
 
 tasks.withType(FindBugs) {
     reports {
@@ -43,4 +42,3 @@ sonarRunner {
         property 'sonar.binaries', 'build/classes/main'
     }
 }
-*/
