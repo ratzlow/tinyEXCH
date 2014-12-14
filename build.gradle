@@ -2,7 +2,6 @@ apply plugin: 'java'
 apply plugin: 'idea'
 
 apply plugin: 'pmd'
-apply plugin: 'findbugs'
 apply plugin: 'jacoco'
 apply plugin: 'sonar-runner'
 
@@ -23,14 +22,6 @@ dependencies {
     testCompile 'junit:junit:4.11'
 }
 
-tasks.withType(FindBugs) {
-    reports {
-        xml.enabled = true
-        html.enabled = false
-        ignoreFailures = true
-    }
-}
-
 sonarRunner {
     sonarProperties {
         property 'sonar.host.url', 'http://localhost:9000'
@@ -42,3 +33,15 @@ sonarRunner {
         property 'sonar.binaries', 'build/classes/main'
     }
 }
+
+
+/*
+apply plugin: 'findbugs'
+tasks.withType(FindBugs) {
+    reports {
+        xml.enabled = true
+        html.enabled = false
+        ignoreFailures = true
+    }
+}
+*/
