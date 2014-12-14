@@ -96,20 +96,14 @@ public final class NewOrderValidators {
      * @link chap 2, 14.
      */
     public final NewOrderValidator gtdCheck = new NewOrderValidator() {
-        final String hint = "GTD order is not within valid range";
 
         @Override
         public Optional<ErrorCode> validate(Order order) {
-            Optional<ErrorCode> result = Optional.empty();
             TimeInForce timeInForce = order.getTimeInForce();
+            boolean invalidGtdOrder = timeInForce == TimeInForce.GTD && !isValidGtd(order);
+            boolean invalidDayOrder = timeInForce == TimeInForce.DAY && !isValidDay(order);
 
-            if ( (timeInForce == TimeInForce.GTD && !isValidGtd(order)) ||
-                 (timeInForce == TimeInForce.DAY && !isValidDay(order)) ) {
-
-                result = Optional.of(createErrorCode(order));
-            }
-
-            return result;
+            return invalidGtdOrder || invalidDayOrder ?  Optional.of(createErrorCode(order)) : Optional.empty();
         }
 
         private boolean isValidDay(Order order) {
@@ -130,7 +124,7 @@ public final class NewOrderValidators {
         }
 
         private ErrorCode createErrorCode(Order order) {
-            return new ErrorCode(ErrorCode.Type.REJECT, order, hint, RejectReason.GTD);
+            return new ErrorCode(ErrorCode.Type.REJECT, order, "GTD order is not within valid range", RejectReason.GTD);
         }
     };
 

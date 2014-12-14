@@ -87,7 +87,8 @@ public final class TradingPhaseTrigger {
         }
         long offsetMillis = fixedTime.get().getLong(ChronoField.MILLI_OF_DAY) - from.getLong(ChronoField.MILLI_OF_DAY);
 
-        assert (offsetMillis >= 0);
+        assert offsetMillis >= 0;
+
         return Duration.ofMillis( offsetMillis );
     }
 

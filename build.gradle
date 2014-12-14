@@ -1,8 +1,11 @@
 apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: 'pmd'
+apply plugin: 'findbugs'
+apply plugin: 'jacoco'
 
 sourceCompatibility = 1.8
-version = '1.0'
+version = '0.5'
 
 repositories {
     mavenCentral()
@@ -16,4 +19,12 @@ dependencies {
     compile 'log4j:log4j:1.2.17'
 
     testCompile 'junit:junit:4.11'
+}
+
+tasks.withType(FindBugs) {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+        ignoreFailures = true
+    }
 }

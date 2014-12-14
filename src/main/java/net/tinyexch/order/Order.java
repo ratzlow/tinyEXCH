@@ -156,8 +156,7 @@ public class Order {
         return clientOrderID;
     }
 
-    @Override
-    public Order clone() {
+    public Order mutableClone() {
         return new Order(timestamp, clientOrderID, side, orderQty, cumQty, expirationDate, timeInForce, orderType, price);
     }
 

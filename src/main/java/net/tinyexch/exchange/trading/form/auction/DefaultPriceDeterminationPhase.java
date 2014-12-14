@@ -67,12 +67,6 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
             LOGGER.info("Orders on both sides available!");
             result = calcResultWithAvailableOrders(bidOrders, askOrders, referencePrice);
 
-        } else if ( bidOrders.isEmpty() && !askOrders.isEmpty() ) {
-            // TODO (FRa) : (FRa) : implement
-
-        } else if ( !bidOrders.isEmpty() && askOrders.isEmpty() ) {
-            // TODO (FRa) : (FRa) : implement
-
         } else {
             LOGGER.info("No orders available, fallback to use supplied referencePrice as auctionPrice!");
             int bidQty = getMatchableQuantity(new ArrayList<>(orderbook.getBuySide().getOrders()), o -> true );
@@ -169,10 +163,10 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
 
             int executionQty = Math.min(executableBidQty, executableAskQty);
 
-            bidToMatch = bidToMatch.clone();
+            bidToMatch = bidToMatch.mutableClone();
             bidToMatch.setCumQty( bidToMatch.getCumQty() + executionQty );
 
-            askToMatch = askToMatch.clone();
+            askToMatch = askToMatch.mutableClone();
             askToMatch.setCumQty( askToMatch.getCumQty() + executionQty );
 
             Execution execution = Execution.of().setBuy(bidToMatch).setSell(askToMatch)
