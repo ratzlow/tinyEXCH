@@ -1,17 +1,17 @@
 package net.tinyexch.exchange.trading.form.auction;
 
 import net.tinyexch.exchange.event.NotificationListener;
-import net.tinyexch.exchange.event.produce.StateChangedEvent;
-import net.tinyexch.exchange.trading.form.StateChangeListener;
 import net.tinyexch.exchange.trading.form.TradingForm;
-import net.tinyexch.exchange.trading.model.TradingModelProfile;
 import net.tinyexch.ob.OrderReceiver;
 import net.tinyexch.ob.SubmitType;
 import net.tinyexch.order.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.Set;
 
 import static java.util.Collections.singleton;
 import static net.tinyexch.exchange.trading.form.auction.AuctionState.*;
@@ -39,7 +39,7 @@ public class Auction extends TradingForm<AuctionState> implements OrderReceiver 
     public Auction( NotificationListener notificationListener ) {
         super( notificationListener );
         callPhase = order -> LOGGER.info("Accepted order: {}", order);
-        priceDeterminationPhase = PriceDeterminationResult::new;
+        priceDeterminationPhase = () -> new PriceDeterminationResult();
         orderbookBalancingPhase = () -> {};
     }
 
