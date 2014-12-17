@@ -2,4 +2,5 @@ out/
 tmp/
 build/
 .gradle/
+.idea/
 docs/*.vpp~*

@@ -72,9 +72,9 @@ public class PriceDeterminationResult {
         return matchableBidQty;
     }
 
-    public int getMatchableAskQty() {
-        return matchableAskQty;
-    }
+    public int getMatchableAskQty() { return matchableAskQty; }
+
+    public int getExecutableVolume() { return Math.min(matchableBidQty, matchableAskQty); }
 
     public Optional<Double> getAuctionPrice() {
         return auctionPrice;

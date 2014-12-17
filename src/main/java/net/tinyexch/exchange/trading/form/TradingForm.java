@@ -66,7 +66,7 @@ public abstract class TradingForm<S extends Enum<S>> {
 
         Set<S> nextAllowedStates = allowedTransitions.containsKey(currentState) ?
                 allowedTransitions.get(currentState) :
-                Collections.EMPTY_SET;
+                Collections.emptySet();
         if ( nextAllowedStates.contains(targetState) ) {
             getLogger().info("Change state from {} -> {}", currentState, targetState);
             currentState = targetState;

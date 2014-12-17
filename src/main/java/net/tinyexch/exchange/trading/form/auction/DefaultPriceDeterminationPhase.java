@@ -1,6 +1,7 @@
 package net.tinyexch.exchange.trading.form.auction;
 
 import net.tinyexch.ob.Orderbook;
+import net.tinyexch.ob.OrderbookSide;
 import net.tinyexch.ob.match.Priorities;
 import net.tinyexch.order.Execution;
 import net.tinyexch.order.Order;
@@ -59,18 +60,20 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
     @Override
     public PriceDeterminationResult determinePrice() {
 
-        List<Order> bidOrders = orderbook.getBuySide().getBest(BUY_PRICE_TIME_ORDERING);
-        List<Order> askOrders = orderbook.getSellSide().getBest(SELL_PRICE_TIME_ORDERING);
+        OrderbookSide buySide = orderbook.getBuySide();
+        OrderbookSide sellSide = orderbook.getSellSide();
 
-        PriceDeterminationResult result = null;
-        if ( !bidOrders.isEmpty() && !askOrders.isEmpty() ) {
+        final PriceDeterminationResult result;
+        if ( !buySide.getBest(BUY_PRICE_TIME_ORDERING).isEmpty() &&
+             !sellSide.getBest(SELL_PRICE_TIME_ORDERING).isEmpty() ) {
+
             LOGGER.info("Orders on both sides available!");
-            result = calcResultWithAvailableOrders(bidOrders, askOrders, referencePrice);
+            result = calcResultWithAvailableOrders(buySide, sellSide, referencePrice);
 
         } else {
             LOGGER.info("No orders available, fallback to use supplied referencePrice as auctionPrice!");
-            int bidQty = getMatchableQuantity(new ArrayList<>(orderbook.getBuySide().getOrders()), o -> true );
-            int askQty = getMatchableQuantity(new ArrayList<>(orderbook.getSellSide().getOrders()), o -> true );
+            int bidQty = getMatchableQuantity(new ArrayList<>(buySide.getOrders()), o -> true );
+            int askQty = getMatchableQuantity(new ArrayList<>(sellSide.getOrders()), o -> true );
 
             result = new PriceDeterminationResult(Optional.empty(), Optional.empty(), bidQty, askQty, referencePrice, emptyList());
         }
@@ -79,30 +82,51 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
         return result;
     }
 
-    private PriceDeterminationResult calcResultWithAvailableOrders(List<Order> bidOrders, List<Order> askOrders,
+    /**
+     * Price determination only considers none-market orders and reference price.
+     * Calculation of executable volume will consider market orders as well.
+     *
+     * @param buySide
+     * @param sellSide
+     * @param referencePrice if available
+     * @return
+     */
+    private PriceDeterminationResult calcResultWithAvailableOrders(OrderbookSide buySide,
+                                                                   OrderbookSide sellSide,
                                                                    Optional<Double> referencePrice) {
+        //------------------------------------------------------------------
+        // only consider non-MKT orders to find the price range
+        //------------------------------------------------------------------
+
+        List<Order> bidOrders = buySide.getBest(BUY_PRICE_TIME_ORDERING);
         double[] bidPrices = bidOrders.stream().mapToDouble(Order::getPrice).toArray();
         double bidSearchPrice = bidOrders.isEmpty() ? 0 : bidOrders.get(0).getPrice();
 
+        List<Order> askOrders = sellSide.getBest(SELL_PRICE_TIME_ORDERING);
         double[] askPrices = askOrders.stream().mapToDouble(Order::getPrice).toArray();
         double askSearchPrice = askOrders.isEmpty() ? 0 : askOrders.get(0).getPrice();
 
         Optional<Double> worstMatchableBidPrice = searchClosestBid(askSearchPrice, bidPrices);
         Optional<Double> worstMatchableAskPrice = searchClosestAsk(bidSearchPrice, askPrices);
 
+        //------------------------------------------------------------------
+        // to make a statement of matchable quantities also consider MKT
+        //------------------------------------------------------------------
+
         final int askQty;
         if ( worstMatchableAskPrice.isPresent() ) {
-            askQty = getMatchableQuantity(askOrders, order -> order.getPrice() <= worstMatchableAskPrice.get() );
+            askQty = getMatchableQuantity(sellSide.getOrders(), order -> order.getPrice() <= worstMatchableAskPrice.get() );
         } else { askQty = 0; }
 
         final int bidQty;
         if ( worstMatchableBidPrice.isPresent() ) {
-            bidQty = getMatchableQuantity(bidOrders, order -> order.getPrice() >= worstMatchableBidPrice.get() );
+            bidQty = getMatchableQuantity(buySide.getOrders(), order -> order.getPrice() >= worstMatchableBidPrice.get() );
         } else { bidQty = 0; }
 
         Optional<Double> auctionPrice = referencePrice;
         if (worstMatchableAskPrice.isPresent() && worstMatchableBidPrice.isPresent() ) {
-            double calcAuctionPrice = calcAuctionPrice(worstMatchableBidPrice.get(), worstMatchableAskPrice.get(), bidQty, askQty);
+            double calcAuctionPrice = calcAuctionPrice(worstMatchableBidPrice.get(), bidQty,
+                                                        worstMatchableAskPrice.get(), askQty);
             auctionPrice = Optional.of(calcAuctionPrice);
 
         // if price cannot be derived from crossing book use limit closest to reference price
@@ -110,7 +134,17 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
             auctionPrice = Optional.of( findClosestPriceToReferencePrice( bidSearchPrice, askSearchPrice ) );
         }
 
-        List<Execution> executions = auctionPrice.map( price -> match(bidOrders, bidQty, askOrders, askQty, price)).orElse(emptyList());
+        //------------------------------------------------------------------
+        // Match the orders according to price and executable Qty
+        //------------------------------------------------------------------
+
+        List<Order> orderedBuys = new ArrayList<>(buySide.getOrders());
+        orderedBuys.sort(BUY_PRICE_TIME_ORDERING);
+        List<Order> orderedSells = new ArrayList<>(sellSide.getOrders());
+        orderedSells.sort(SELL_PRICE_TIME_ORDERING);
+
+        List<Execution> executions = auctionPrice.map( price -> match(orderedBuys, bidQty, orderedSells, askQty, price))
+                                                 .orElse(emptyList());
 
         return new PriceDeterminationResult( worstMatchableBidPrice, worstMatchableAskPrice, bidQty, askQty,
                                              auctionPrice, executions );
@@ -188,7 +222,7 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
         return order.getOrderQty() - order.getCumQty();
     }
 
-    private double calcAuctionPrice( double bidPrice, double askPrice, int bidQty, int askQty ) {
+    private double calcAuctionPrice(double bidPrice, int bidQty, double askPrice, int askQty) {
         final double auctionPrice;
         if ( referencePrice.isPresent() ) {
             auctionPrice = findClosestPriceToReferencePrice(bidPrice, askPrice);

@@ -6,16 +6,18 @@ import net.tinyexch.exchange.trading.form.auction.PriceDeterminationResult;
 import net.tinyexch.ob.Orderbook;
 import net.tinyexch.order.Execution;
 import net.tinyexch.order.Order;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static net.tinyexch.ob.TestConstants.ROUNDING_DELTA;
 import static net.tinyexch.ob.match.OrderFactory.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test various matching strategies depending on a given orderbook situation.
@@ -35,11 +37,11 @@ public class AuctionMatchTest {
                                         new Order[]{ sellL(200, 100), sellL(198, 200), sellL(197, 400) } );
 
         PriceDeterminationResult result = determinePrice(book);
-        Assert.assertEquals(200D, getBidPrice(result), ROUNDING_DELTA);
-        Assert.assertEquals(200D, getAskPrice(result), ROUNDING_DELTA);
-        Assert.assertEquals( 0, result.getAskSurplus() );
-        Assert.assertEquals( 0, result.getBidSurplus() );
-        Assert.assertEquals( 200D, getAuctionPrice(result), ROUNDING_DELTA );
+        assertEquals(200D, getBidPrice(result), ROUNDING_DELTA);
+        assertEquals(200D, getAskPrice(result), ROUNDING_DELTA);
+        assertEquals(0, result.getAskSurplus());
+        assertEquals(0, result.getBidSurplus());
+        assertEquals(200D, getAuctionPrice(result), ROUNDING_DELTA);
     }
 
 
@@ -53,11 +55,11 @@ public class AuctionMatchTest {
                                         new Order[]{ sellL(199, 300), sellL(198, 200) } );
 
         PriceDeterminationResult result = determinePrice(book);
-        Assert.assertEquals( 201D, getBidPrice(result), ROUNDING_DELTA);
-        Assert.assertEquals( 199D, getAskPrice(result), ROUNDING_DELTA);
-        Assert.assertEquals( 0, result.getAskSurplus() );
-        Assert.assertEquals( 100, result.getBidSurplus() );
-        Assert.assertEquals( 201D, getAuctionPrice(result), ROUNDING_DELTA );
+        assertEquals(201D, getBidPrice(result), ROUNDING_DELTA);
+        assertEquals(199D, getAskPrice(result), ROUNDING_DELTA);
+        assertEquals(0, result.getAskSurplus());
+        assertEquals(100, result.getBidSurplus());
+        assertEquals(201D, getAuctionPrice(result), ROUNDING_DELTA);
     }
 
 
@@ -71,11 +73,11 @@ public class AuctionMatchTest {
                                         new Order[]{ sellL(199, 400), sellL(198, 200) } );
 
         PriceDeterminationResult result = determinePrice(book);
-        Assert.assertEquals( 201D, getBidPrice(result), ROUNDING_DELTA);
-        Assert.assertEquals( 199D, getAskPrice(result), ROUNDING_DELTA);
-        Assert.assertEquals( 100, result.getAskSurplus() );
-        Assert.assertEquals( 0, result.getBidSurplus() );
-        Assert.assertEquals( 199D, getAuctionPrice(result), ROUNDING_DELTA );
+        assertEquals(201D, getBidPrice(result), ROUNDING_DELTA);
+        assertEquals(199D, getAskPrice(result), ROUNDING_DELTA);
+        assertEquals(100, result.getAskSurplus());
+        assertEquals(0, result.getBidSurplus());
+        assertEquals(199D, getAuctionPrice(result), ROUNDING_DELTA);
     }
 
 
@@ -127,8 +129,8 @@ public class AuctionMatchTest {
         Orderbook book = new Orderbook( new Order[]{ buyH(200, 80), buyL(199, 80)}, new Order[]{sellL(201, 80)} );
 
         PriceDeterminationResult result = determinePrice(book);
-        Assert.assertEquals( "No matching ask qty expected!", 0, result.getMatchableAskQty(), ROUNDING_DELTA);
-        Assert.assertEquals( "No matching bid qty expected!", 0, result.getMatchableBidQty(), ROUNDING_DELTA);
+        assertEquals("No matching ask qty expected!", 0, result.getMatchableAskQty(), ROUNDING_DELTA);
+        assertEquals("No matching bid qty expected!", 0, result.getMatchableBidQty(), ROUNDING_DELTA);
     }
 
     /**
@@ -142,37 +144,68 @@ public class AuctionMatchTest {
                                         new Order[] { sellL(200, 400)} );
 
         PriceDeterminationResult result = determinePrice(book);
-        Assert.assertEquals( "BidSurplus", 200, result.getBidSurplus(), ROUNDING_DELTA);
-        Assert.assertEquals( "AskSurplus", 0, result.getAskSurplus(), ROUNDING_DELTA);
-        Assert.assertEquals( "AuctionPrice", 200, result.getAuctionPrice().get(), ROUNDING_DELTA);
+        assertEquals("BidSurplus", 200, result.getBidSurplus(), ROUNDING_DELTA);
+        assertEquals("AskSurplus", 0, result.getAskSurplus(), ROUNDING_DELTA);
+        assertEquals("AuctionPrice", 200, result.getAuctionPrice().get(), ROUNDING_DELTA);
 
         List<Execution> executions = result.getExecutions();
-        Assert.assertEquals("Executions", 2, executions.size());
+        assertEquals("Executions", 2, executions.size());
 
         Execution firstExec = executions.get(0);
-        Assert.assertEquals( 300, firstExec.getExecutionQty() );
-        Assert.assertEquals( buy_1.getClientOrderID(), firstExec.getBuy().getClientOrderID() );
-        Assert.assertEquals( 300, firstExec.getBuy().getOrderQty() );
-        Assert.assertEquals( 300, firstExec.getBuy().getCumQty() );
-        Assert.assertEquals( 400, firstExec.getSell().getOrderQty() );
-        Assert.assertEquals( 300, firstExec.getSell().getCumQty() );
+        assertEquals(300, firstExec.getExecutionQty());
+        assertEquals(buy_1.getClientOrderID(), firstExec.getBuy().getClientOrderID());
+        assertEquals(300, firstExec.getBuy().getOrderQty());
+        assertEquals(300, firstExec.getBuy().getCumQty());
+        assertEquals(400, firstExec.getSell().getOrderQty());
+        assertEquals(300, firstExec.getSell().getCumQty());
 
         Execution secondExec = executions.get(1);
-        Assert.assertEquals( 100, secondExec.getExecutionQty() );
-        Assert.assertEquals( buy_2.getClientOrderID(), secondExec.getBuy().getClientOrderID() );
-        Assert.assertEquals( 300, secondExec.getBuy().getOrderQty() );
-        Assert.assertEquals( 100, secondExec.getBuy().getCumQty() );
-        Assert.assertEquals( 400, secondExec.getSell().getOrderQty() );
-        Assert.assertEquals( 400, secondExec.getSell().getCumQty() );
+        assertEquals(100, secondExec.getExecutionQty());
+        assertEquals(buy_2.getClientOrderID(), secondExec.getBuy().getClientOrderID());
+        assertEquals(300, secondExec.getBuy().getOrderQty());
+        assertEquals(100, secondExec.getBuy().getCumQty());
+        assertEquals(400, secondExec.getSell().getOrderQty());
+        assertEquals(400, secondExec.getSell().getCumQty());
+    }
+
+    /**
+     * The potential auction prices are 198 EUR and 199 EUR. Since all of them have a
+     * surplus of supply the auction price will be determined at the lowest possible limit 198 EUR.
+     */
+    @Test
+    public void testStrikeMatchPreventsFromUnintendedExecution() {
+        testStrikeMatchPreventsFromUnintendedExecutionInternal(
+            this::determinePrice,
+            result -> assertEquals( "AuctionPrice is lowest limit and no reference price provided",
+                                    198D, result.getAuctionPrice().get(), ROUNDING_DELTA )
+        );
+
+        testStrikeMatchPreventsFromUnintendedExecutionInternal(
+            book -> determinePrice(book, 201D),
+            result -> assertEquals( "AuctionPrice is closest limit to provided reference price",
+                    199D, result.getAuctionPrice().get(), ROUNDING_DELTA )
+        );
+    }
+
+    private void testStrikeMatchPreventsFromUnintendedExecutionInternal(
+            Function<Orderbook, PriceDeterminationResult> determinePrice,
+            Consumer<PriceDeterminationResult> assertAuctionPrice) {
+        Orderbook book = new Orderbook( new Order[]{ buyM(250), buyL(199, 150), buyM(50)},
+                                        new Order[]{ sellM(300), sellL(198, 200)} );
+        PriceDeterminationResult result = determinePrice.apply(book);
+        assertEquals( "AskSurplus", 50, result.getAskSurplus() );
+        assertEquals( "BidSurplus", 0, result.getBidSurplus() );
+        assertEquals("Maximum executable volume", 450, result.getExecutableVolume());
+        assertAuctionPrice.accept(result);
     }
 
 
     private void assertAuction(String msg, Orderbook ob, double referencePrice,
                                double expectedAuctionPrice, int expectedAskSurplus, int expectedBidSurplus) {
         PriceDeterminationResult result = determinePrice(ob, referencePrice);
-        Assert.assertEquals(msg, expectedAuctionPrice, getAuctionPrice(result), ROUNDING_DELTA);
-        Assert.assertEquals("AskSurplus", expectedAskSurplus, result.getAskSurplus());
-        Assert.assertEquals("BidSurplus", expectedBidSurplus, result.getBidSurplus());
+        assertEquals(msg, expectedAuctionPrice, getAuctionPrice(result), ROUNDING_DELTA);
+        assertEquals("AskSurplus", expectedAskSurplus, result.getAskSurplus());
+        assertEquals("BidSurplus", expectedBidSurplus, result.getBidSurplus());
     }
 
     private PriceDeterminationResult determinePrice( Orderbook orderbook ) {

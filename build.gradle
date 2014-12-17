@@ -8,6 +8,10 @@ apply plugin: 'sonar-runner'
 sourceCompatibility = 1.8
 version = '0.5'
 
+compileJava {
+    options.compilerArgs << '-Xlint:unchecked'
+}
+
 repositories {
     mavenCentral()
     maven {

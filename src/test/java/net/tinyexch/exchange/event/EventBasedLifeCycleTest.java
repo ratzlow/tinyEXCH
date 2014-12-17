@@ -237,7 +237,7 @@ public class EventBasedLifeCycleTest {
                 new ContinuousTradingSchedule(startContinuousTradingTime, stopContinuousTradingTime));
 
         // closing auction
-        LocalTime startClosingAuctionTime = stopContinuousTradingTime.plus(200, unit);
+        LocalTime startClosingAuctionTime = stopContinuousTradingTime.plus(300, unit);
         tradingCalendar.addAuction( createAuctionSchedule(startClosingAuctionTime, TradingFormRunType.CLOSING_AUCTION) );
 
         return tradingCalendar;

@@ -1,11 +1,12 @@
 package net.tinyexch.ob.match;
 
 import net.tinyexch.order.Order;
+import net.tinyexch.order.OrderType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
@@ -35,8 +36,9 @@ public final class Algos {
      * @param priceFilter defines the price corridor for matching
      * @return number of shares that could be matched
      */
-    public static int getMatchableQuantity(List<Order> orders, Predicate<? super Order> priceFilter) {
-        return orders.stream().filter( priceFilter ).mapToInt(Order::getOrderQty).sum();
+    public static int getMatchableQuantity(Collection<Order> orders, Predicate<? super Order> priceFilter) {
+        Predicate<Order> marketOrderAlwaysMatch = order -> order.getOrderType() == OrderType.MARKET;
+        return orders.stream().filter( marketOrderAlwaysMatch.or(priceFilter) ).mapToInt(Order::getOrderQty).sum();
     }
 
     /**
