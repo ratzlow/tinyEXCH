@@ -1,7 +1,7 @@
 package net.tinyexch.order;
 
 /**
- * // TODO (FRa) : (FRa) : comment
+ * Specifies how sell side should work the order, especially how to match it.
  *
  * @author ratzlow@gmail.com
  * @since 2014-07-26
@@ -16,7 +16,10 @@ public enum OrderType {
     ICEBERG,
     HIDDEN,
     MIDPOINT,
+
+    /** http://www.fixtradingcommunity.org/pg/discussions/topicpost/165920/xetra-ets-top-of-book */
     STRIKE_MATCH,
+
     TRAILING_STOP,
     ONE_CANCELS_OTHER,
     ODERS_ON_EVENT

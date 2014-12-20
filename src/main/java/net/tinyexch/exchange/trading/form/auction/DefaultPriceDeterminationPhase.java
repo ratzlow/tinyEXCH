@@ -5,10 +5,13 @@ import net.tinyexch.ob.OrderbookSide;
 import net.tinyexch.ob.match.Priorities;
 import net.tinyexch.order.Execution;
 import net.tinyexch.order.Order;
+import net.tinyexch.order.OrderType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 import static net.tinyexch.ob.match.Algos.*;
@@ -28,6 +31,11 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
     public static final Comparator<Order> SELL_PRICE_TIME_ORDERING = Priorities.PRICE.thenComparing(Priorities.TIME);
     public static final Comparator<Order> BUY_PRICE_TIME_ORDERING = Priorities.PRICE.reversed().thenComparing(Priorities.TIME);
 
+    private static final BiFunction<Order, Double, Boolean> SMO_WORSE_PRICE_BUY_FILTER =
+            (Order o, Double auctionPrice) -> o.getOrderType() == OrderType.STRIKE_MATCH && o.getStopPrice() <= auctionPrice;
+    private static final BiFunction<Order, Double, Boolean> SMO_WORSE_PRICE_SELL_FILTER =
+            (Order o, Double auctionPrice) -> o.getOrderType() == OrderType.STRIKE_MATCH && o.getStopPrice() > auctionPrice;
+
     //--------------------------------------------------------
     // state
     //--------------------------------------------------------
@@ -42,16 +50,15 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
     /**
      * @param orderbook to derive a price for the matchable orders
      */
-    public DefaultPriceDeterminationPhase(Orderbook orderbook) {
+    public DefaultPriceDeterminationPhase( Orderbook orderbook ) {
         this.orderbook = orderbook;
         this.referencePrice = Optional.empty();
     }
 
-    public DefaultPriceDeterminationPhase(Orderbook orderbook, Double referencePrice ) {
+    public DefaultPriceDeterminationPhase( Orderbook orderbook, Double referencePrice ) {
         this.orderbook = orderbook;
         this.referencePrice = Optional.of(referencePrice);
     }
-
 
     //--------------------------------------------------------
     // API
@@ -123,7 +130,7 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
             bidQty = getMatchableQuantity(buySide.getOrders(), order -> order.getPrice() >= worstMatchableBidPrice.get() );
         } else { bidQty = 0; }
 
-        Optional<Double> auctionPrice = referencePrice;
+        final Optional<Double> auctionPrice;
         if (worstMatchableAskPrice.isPresent() && worstMatchableBidPrice.isPresent() ) {
             double calcAuctionPrice = calcAuctionPrice(worstMatchableBidPrice.get(), bidQty,
                                                         worstMatchableAskPrice.get(), askQty);
@@ -132,7 +139,17 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
         // if price cannot be derived from crossing book use limit closest to reference price
         } else if ( referencePrice.isPresent()) {
             auctionPrice = Optional.of( findClosestPriceToReferencePrice( bidSearchPrice, askSearchPrice ) );
+
+        } else {
+            auctionPrice = referencePrice;
         }
+
+        //--------------------------------------------------------------------------------------------
+        // Depending on the now derived auction price further orders might be applicable for matching
+        //--------------------------------------------------------------------------------------------
+
+        int executableBuyQty = calcExecutableBuyQty(buySide.getOrders(), bidQty, auctionPrice, SMO_WORSE_PRICE_BUY_FILTER);
+        int executableSellQty = calcExecutableBuyQty(sellSide.getOrders(), askQty, auctionPrice, SMO_WORSE_PRICE_SELL_FILTER);
 
         //------------------------------------------------------------------
         // Match the orders according to price and executable Qty
@@ -143,11 +160,23 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
         List<Order> orderedSells = new ArrayList<>(sellSide.getOrders());
         orderedSells.sort(SELL_PRICE_TIME_ORDERING);
 
-        List<Execution> executions = auctionPrice.map( price -> match(orderedBuys, bidQty, orderedSells, askQty, price))
+        List<Execution> executions = auctionPrice.map( price -> match(orderedBuys, executableBuyQty,
+                                                                        orderedSells, executableSellQty,
+                                                                        price))
                                                  .orElse(emptyList());
 
-        return new PriceDeterminationResult( worstMatchableBidPrice, worstMatchableAskPrice, bidQty, askQty,
+        return new PriceDeterminationResult( worstMatchableBidPrice, worstMatchableAskPrice, executableBuyQty, executableSellQty,
                                              auctionPrice, executions );
+    }
+
+    private int calcExecutableBuyQty(Collection<Order> orders, int priceDetermingQty, Optional<Double> auctionPrice, BiFunction<Order, Double, Boolean> filter) {
+        final int executableQty;
+        if ( auctionPrice.isPresent() ) {
+            executableQty = priceDetermingQty + orders.stream().filter( o -> filter.apply(o, auctionPrice.get()))
+                    .collect(Collectors.summingInt(Order::getOrderQty));
+        } else { executableQty = priceDetermingQty; }
+
+        return executableQty;
     }
 
     /**
@@ -216,7 +245,6 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
     private boolean isOpenForExecution(Queue<Order> orders, Order partialExecuted) {
         return partialExecuted != null || !orders.isEmpty();
     }
-
 
     private int leavesQty( Order order ) {
         return order.getOrderQty() - order.getCumQty();

@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 /**
  * Order to be matched against the other side of the orderbook. For more information regarding the FIX semantic
  *
- *
  * @author ratzlow@gmail.com
  * @since 2014-07-27
  * @link http://www.onixs.biz/fix-dictionary
@@ -15,6 +14,10 @@ import java.time.LocalDateTime;
 public class Order {
 
     private Instant timestamp = Instant.now();
+
+    private DiscretionLimitType discretionLimitType;
+
+    private TradingSessionSubID tradingSessionSubID;
 
     /** @link FIX:11 */
     private final String clientOrderID;
@@ -35,17 +38,23 @@ public class Order {
      */
     private LocalDateTime expirationDate;
 
-    /**
-     * // TODO (FRa) : (FRa) : check what is a sensible default
-     */
     private TimeInForce timeInForce = TimeInForce.DAY;
 
 
     /** @link FIX:40 */
     private OrderType orderType;
 
-    /** @link FIX:44 */
+    /**
+     * Required for limit OrdTypes.
+     * @link FIX:44
+     */
     private double price;
+
+    /**
+     * Required for OrdType = "Stop" or OrdType = "Stop limit".
+     * @link FIX:99
+     */
+    private double stopPrice;
 
 
     //---------------------------------------------------------
@@ -62,9 +71,12 @@ public class Order {
     }
 
     /** copy constructor */
-    private Order(Instant timestamp, String clientOrderID, Side side, int orderQty, int cumQty,
-                 LocalDateTime expirationDate, TimeInForce timeInForce, OrderType orderType, double price) {
+    private Order(Instant timestamp, DiscretionLimitType discretionLimitType, TradingSessionSubID tradingSessionSubID,
+                 String clientOrderID, Side side, int orderQty, int cumQty, LocalDateTime expirationDate,
+                 TimeInForce timeInForce, OrderType orderType, double price, double stopPrice) {
         this.timestamp = timestamp;
+        this.discretionLimitType = discretionLimitType;
+        this.tradingSessionSubID = tradingSessionSubID;
         this.clientOrderID = clientOrderID;
         this.side = side;
         this.orderQty = orderQty;
@@ -73,10 +85,11 @@ public class Order {
         this.timeInForce = timeInForce;
         this.orderType = orderType;
         this.price = price;
+        this.stopPrice = stopPrice;
     }
 
     //---------------------------------------------------------
-    // accessors
+    // set/get property
     //---------------------------------------------------------
 
     public static Order of( String clientOrderID, Side side ) {
@@ -148,6 +161,24 @@ public class Order {
         return this;
     }
 
+    public DiscretionLimitType getDiscretionLimitType() {
+        return discretionLimitType;
+    }
+
+    public Order setDiscretionLimitType(DiscretionLimitType discretionLimitType) {
+        this.discretionLimitType = discretionLimitType;
+        return this;
+    }
+
+    public TradingSessionSubID getTradingSessionSubID() {
+        return tradingSessionSubID;
+    }
+
+    public Order setTradingSessionSubID(TradingSessionSubID tradingSessionSubID) {
+        this.tradingSessionSubID = tradingSessionSubID;
+        return this;
+    }
+
     public double getPrice() {
         return price;
     }
@@ -156,23 +187,35 @@ public class Order {
         return clientOrderID;
     }
 
+    public double getStopPrice() {
+        return stopPrice;
+    }
+
+    public Order setStopPrice(double stopPrice) {
+        this.stopPrice = stopPrice;
+        return this;
+    }
+
     public Order mutableClone() {
-        return new Order(timestamp, clientOrderID, side, orderQty, cumQty, expirationDate, timeInForce, orderType, price);
+        return new Order(timestamp, discretionLimitType, tradingSessionSubID, clientOrderID, side, orderQty, cumQty,
+                expirationDate, timeInForce, orderType, price, stopPrice);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("Order{");
-        sb.append("timestamp=").append(timestamp);
-        sb.append(", clientOrderID='").append(clientOrderID).append('\'');
-        sb.append(", side=").append(side);
-        sb.append(", orderQty=").append(orderQty);
-        sb.append(", cumQty=").append(cumQty);
-        sb.append(", expirationDate=").append(expirationDate);
-        sb.append(", timeInForce=").append(timeInForce);
-        sb.append(", orderType=").append(orderType);
-        sb.append(", price=").append(price);
-        sb.append('}');
-        return sb.toString();
+        return "Order{" +
+                "timestamp=" + timestamp +
+                ", discretionLimitType=" + discretionLimitType +
+                ", tradingSessionSubID=" + tradingSessionSubID +
+                ", clientOrderID='" + clientOrderID + '\'' +
+                ", side=" + side +
+                ", orderQty=" + orderQty +
+                ", cumQty=" + cumQty +
+                ", expirationDate=" + expirationDate +
+                ", timeInForce=" + timeInForce +
+                ", orderType=" + orderType +
+                ", price=" + price +
+                ", stopPrice=" + stopPrice +
+                '}';
     }
 }

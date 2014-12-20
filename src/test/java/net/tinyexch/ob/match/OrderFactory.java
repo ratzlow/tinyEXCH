@@ -1,8 +1,6 @@
 package net.tinyexch.ob.match;
 
-import net.tinyexch.order.Order;
-import net.tinyexch.order.OrderType;
-import net.tinyexch.order.Side;
+import net.tinyexch.order.*;
 
 import java.time.Instant;
 
@@ -13,12 +11,16 @@ import java.time.Instant;
  * @since 2014-10-29
  */
 public class OrderFactory {
-    public static final String timePattern = "HH:mm:ss";
-
     private static int clientOrderIdSequence = 0;
 
     public static Order buyL(double price, int qty) {
         return newOrder( Side.BUY, price, qty, OrderType.LIMIT );
+    }
+
+    public static Order buySMO(double stopPrice, int qty) {
+        return newOrder( Side.BUY, 0, qty, OrderType.STRIKE_MATCH ).setStopPrice(stopPrice)
+                .setDiscretionLimitType(DiscretionLimitType.OR_WORSE)
+                .setTradingSessionSubID(TradingSessionSubID.ClosingOrClosingAuction);
     }
 
     /**

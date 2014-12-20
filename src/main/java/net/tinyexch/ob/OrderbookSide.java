@@ -26,6 +26,7 @@ public class OrderbookSide {
     private final List<Order> marketOrders = new ArrayList<>();
     private final List<Order> limitOrders = new ArrayList<>();
     private final List<Order> hiddenOrders = new ArrayList<>();
+    private final List<Order> strikeMatchOrders = new ArrayList<>();
 
     public Optional<Trade> match( Order otherSide ) {
         return Optional.empty();
@@ -35,6 +36,9 @@ public class OrderbookSide {
 
         final OrderType orderType = order.getOrderType();
         switch (orderType) {
+            case STRIKE_MATCH:
+                strikeMatchOrders.add( order );
+                break;
             case MARKET:
                 marketOrders.add( order );
                 break;
@@ -51,14 +55,20 @@ public class OrderbookSide {
     }
 
     public Collection<Order> getOrders() {
-        return Collections.unmodifiableCollection(Stream.of(marketOrders, limitOrders, hiddenOrders)
+        return Collections.unmodifiableCollection(Stream.of(marketOrders, limitOrders, hiddenOrders, strikeMatchOrders)
                 .flatMap(orders -> orders.stream()).collect(toList()));
     }
 
+    /**
+     * Orders to be used to determine price.
+     *
+     * @param byPrios ensuring "best" comes first
+     * @return orders where best is on top of the book
+     */
     public List<Order> getBest( Comparator<Order> byPrios ) {
         List<Order> sortedOrders = Stream.of(limitOrders, hiddenOrders)
                                          .flatMap(orders -> orders.stream()).collect(toList());
-        Collections.sort(sortedOrders, byPrios );
+        Collections.sort( sortedOrders, byPrios );
         return Collections.unmodifiableList(sortedOrders);
     }
 }

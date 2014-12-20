@@ -2,10 +2,9 @@ package net.tinyexch.ob.validator;
 
 import net.tinyexch.ob.ErrorCode;
 import net.tinyexch.ob.RejectReason;
-import net.tinyexch.order.Order;
-import net.tinyexch.order.OrderType;
-import net.tinyexch.order.TimeInForce;
+import net.tinyexch.order.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.EnumSet;
@@ -137,11 +136,40 @@ public final class NewOrderValidators {
                 code = Optional.of(new ErrorCode(ErrorCode.Type.REJECT, order,
                         "Given order type not support in this trading phase", RejectReason.ORDER_TYPE));
             }
+
             return code;
         }
     };
 
 
+    /**
+     * SMO is only allowed in auctions so that you can use the new TradingSessionSubID to be even more explicit.
+     * DiscretionLimitType=0=Or better identifies a normal discretionary order as opposed to a SMO.
+     * Strike Match Orders are only valid for the Closing Auction of the respective trading day and are deleted during
+     * the end of day processing.
+     */
+    public final NewOrderValidator strikeMatchOrderTypeCheck = new NewOrderValidator() {
+        @Override
+        public Optional<ErrorCode> validate(Order order) {
+            TimeInForce tif = order.getTimeInForce();
+            boolean validTodayOnly = tif == TimeInForce.DAY || (tif == TimeInForce.GTD && isToday(order.getExpirationDate()) );
 
-    public final Stream<NewOrderValidator> newOrderValidators = Stream.of(minSizeCheck, gtdCheck, orderTypeCheck);
+            boolean ok = order.getOrderType() == OrderType.STRIKE_MATCH &&
+                         order.getTradingSessionSubID() == TradingSessionSubID.ClosingOrClosingAuction &&
+                         order.getDiscretionLimitType() == DiscretionLimitType.OR_WORSE &&
+                         order.getStopPrice() > 0 &&
+                         validTodayOnly;
+
+            return ok ? Optional.<ErrorCode>empty() : Optional.of(new ErrorCode(ErrorCode.Type.REJECT, order,
+                    "Insufficient attributes for SMO", RejectReason.ORDER_TYPE));
+        }
+
+        boolean isToday( LocalDateTime dateTime ) {
+            LocalDate tomorrow = LocalDate.now().plusDays(1);
+            return tomorrow.isAfter(dateTime.toLocalDate());
+        }
+    };
+
+    public final Stream<NewOrderValidator> newOrderValidators = Stream.of(minSizeCheck, gtdCheck, orderTypeCheck,
+            strikeMatchOrderTypeCheck);
 }

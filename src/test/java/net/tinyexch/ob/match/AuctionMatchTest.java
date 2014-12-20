@@ -6,7 +6,10 @@ import net.tinyexch.exchange.trading.form.auction.PriceDeterminationResult;
 import net.tinyexch.ob.Orderbook;
 import net.tinyexch.order.Execution;
 import net.tinyexch.order.Order;
+import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -14,6 +17,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static net.tinyexch.ob.TestConstants.ROUNDING_DELTA;
 import static net.tinyexch.ob.match.OrderFactory.*;
@@ -26,6 +30,8 @@ import static org.junit.Assert.assertEquals;
  * @since 2014-10-12
  */
 public class AuctionMatchTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuctionMatchTest.class);
 
     /**
      * There is exactly one limit at which the highest order volume can be executed and which has the lowest surplus.
@@ -173,11 +179,14 @@ public class AuctionMatchTest {
      * surplus of supply the auction price will be determined at the lowest possible limit 198 EUR.
      */
     @Test
-    public void testStrikeMatchPreventsFromUnintendedExecution() {
+    public void testWithAndWithOutReferencePrice() {
+        LOGGER.info("show how OB would behave if trader placed MKT order. The order would be executed " +
+                    "to a lower value of 200 EUR");
+
         testStrikeMatchPreventsFromUnintendedExecutionInternal(
             this::determinePrice,
-            result -> assertEquals( "AuctionPrice is lowest limit and no reference price provided",
-                                    198D, result.getAuctionPrice().get(), ROUNDING_DELTA )
+            result -> assertEquals("AuctionPrice is lowest limit and no reference price provided",
+                    198D, result.getAuctionPrice().get(), ROUNDING_DELTA)
         );
 
         testStrikeMatchPreventsFromUnintendedExecutionInternal(
@@ -185,6 +194,45 @@ public class AuctionMatchTest {
             result -> assertEquals( "AuctionPrice is closest limit to provided reference price",
                     199D, result.getAuctionPrice().get(), ROUNDING_DELTA )
         );
+    }
+
+    @Test
+    public void testStrikeMatchPreventsFromUnintendedExecution_NoExecution() {
+        LOGGER.info("Trader places now strike match order. Expected result: order doesn't get executed.");
+        Order smoBuy = buySMO(200, 50);
+        Orderbook smoBook = new Orderbook( new Order[]{ buyM(250), buyL(199, 150), smoBuy},
+                                           new Order[]{ sellM(300), sellL(198, 200)} );
+        PriceDeterminationResult result = determinePrice(smoBook);
+        assertEquals( "AskSurplus", 100, result.getAskSurplus() );
+        assertEquals( "BidSurplus", 0, result.getBidSurplus() );
+        assertEquals( "Maximum executable volume", 400, result.getExecutableVolume());
+        assertEquals( "Auction price", 198, result.getAuctionPrice().get(), ROUNDING_DELTA);
+
+        boolean smoOrderExecuted = isOrderExecuted(smoBuy, result.getExecutions());
+        Assert.assertFalse("SMO must not be executed as the stop price is higher than auction price", smoOrderExecuted);
+    }
+
+    @Test
+    public void testStrikeMatchPreventsFromUnintendedExecution_ExecutedAsWorseThanLimit() {
+        LOGGER.info("Trader places now strike match order. Expected result: order gets executed as auction price " +
+                    "is higher (worse) than stop limit!");
+        Order smoBuy = buySMO(197, 50);
+        Orderbook smoBook = new Orderbook( new Order[]{ buyM(250), buyL(199, 150), smoBuy},
+                                           new Order[]{ sellM(300), sellL(198, 200)} );
+        PriceDeterminationResult result = determinePrice(smoBook);
+        assertEquals( "Auction price", 198, result.getAuctionPrice().get(), ROUNDING_DELTA);
+        assertEquals( "BidSurplus", 0, result.getBidSurplus() );
+        assertEquals( "AskSurplus", 50, result.getAskSurplus() );
+        assertEquals( "Maximum executable volume", 450, result.getExecutableVolume());
+
+        boolean smoOrderExecuted = isOrderExecuted(smoBuy, result.getExecutions());
+        Assert.assertTrue("SMO must be executed as the stop price is worse than auction price", smoOrderExecuted);
+    }
+
+    private boolean isOrderExecuted(Order smoBuy, List<Execution> executions) {
+        return executions.stream()
+                    .flatMap(e -> Stream.of(e.getBuy().getClientOrderID(), e.getSell().getClientOrderID()))
+                    .anyMatch(id -> smoBuy.getClientOrderID().equals(id));
     }
 
     private void testStrikeMatchPreventsFromUnintendedExecutionInternal(

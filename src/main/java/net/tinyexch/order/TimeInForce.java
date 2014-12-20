@@ -1,10 +1,11 @@
 package net.tinyexch.order;
 
 /**
- * // TODO (FRa) : (FRa) : link to FIX protocol
+ * How long is an order valid for execution.
  *
  * @author ratzlow@gmail.com
  * @since 2014-07-27
+ * @link FIX:59
  */
 public enum TimeInForce {
     DAY,

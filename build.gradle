@@ -1,9 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'idea'
 
-apply plugin: 'pmd'
-apply plugin: 'jacoco'
-apply plugin: 'sonar-runner'
 
 sourceCompatibility = 1.8
 version = '0.5'
@@ -26,6 +23,13 @@ dependencies {
     testCompile 'junit:junit:4.11'
 }
 
+
+
+/*
+apply plugin: 'pmd'
+apply plugin: 'jacoco'
+apply plugin: 'sonar-runner'
+
 sonarRunner {
     sonarProperties {
         property 'sonar.host.url', 'http://localhost:9000'
@@ -38,8 +42,6 @@ sonarRunner {
     }
 }
 
-
-/*
 apply plugin: 'findbugs'
 tasks.withType(FindBugs) {
     reports {
