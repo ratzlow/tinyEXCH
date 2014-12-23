@@ -3,7 +3,7 @@ package net.tinyexch.exchange.trading.form.auction;
 import net.tinyexch.ob.Orderbook;
 import net.tinyexch.ob.OrderbookSide;
 import net.tinyexch.ob.match.Priorities;
-import net.tinyexch.order.Execution;
+import net.tinyexch.order.Trade;
 import net.tinyexch.order.Order;
 import net.tinyexch.order.OrderType;
 import org.slf4j.Logger;
@@ -160,7 +160,7 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
         List<Order> orderedSells = new ArrayList<>(sellSide.getOrders());
         orderedSells.sort(SELL_PRICE_TIME_ORDERING);
 
-        List<Execution> executions = auctionPrice.map( price -> match(orderedBuys, executableBuyQty,
+        List<Trade> executions = auctionPrice.map( price -> match(orderedBuys, executableBuyQty,
                                                                         orderedSells, executableSellQty,
                                                                         price))
                                                  .orElse(emptyList());
@@ -187,7 +187,7 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
      * @param auctionPrice the execution price for all matches
      * @return the executions of crossing given orders
      */
-    private List<Execution> match( List<Order> bestBids, int bidQtyToMatch,
+    private List<Trade> match( List<Order> bestBids, int bidQtyToMatch,
                                    List<Order> bestAsks, int askQtyToMatch,
                                    double auctionPrice ) {
 
@@ -195,7 +195,7 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
         Queue<Order> bestAskOrders = new LinkedList<>(bestAsks);
         int alreadyMatchedQty = 0;
 
-        final List<Execution> executions = new ArrayList<>();
+        final List<Trade> executions = new ArrayList<>();
         Order bidToMatch = null;
         Order askToMatch = null;
         while ( alreadyMatchedQty < askQtyToMatch && alreadyMatchedQty < bidQtyToMatch &&
@@ -232,7 +232,7 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
             askToMatch = askToMatch.mutableClone();
             askToMatch.setCumQty( askToMatch.getCumQty() + executionQty );
 
-            Execution execution = Execution.of().setBuy(bidToMatch).setSell(askToMatch)
+            Trade execution = Trade.of().setBuy(bidToMatch).setSell(askToMatch)
                                                 .setExecutionQty(executionQty).setPrice(auctionPrice);
             executions.add( execution );
 

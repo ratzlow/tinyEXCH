@@ -4,16 +4,13 @@ import net.tinyexch.exchange.trading.form.auction.DefaultPriceDeterminationPhase
 import net.tinyexch.exchange.trading.form.auction.PriceDeterminationPhase;
 import net.tinyexch.exchange.trading.form.auction.PriceDeterminationResult;
 import net.tinyexch.ob.Orderbook;
-import net.tinyexch.order.Execution;
 import net.tinyexch.order.Order;
+import net.tinyexch.order.Trade;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -154,10 +151,10 @@ public class AuctionMatchTest {
         assertEquals("AskSurplus", 0, result.getAskSurplus(), ROUNDING_DELTA);
         assertEquals("AuctionPrice", 200, result.getAuctionPrice().get(), ROUNDING_DELTA);
 
-        List<Execution> executions = result.getExecutions();
+        List<Trade> executions = result.getExecutions();
         assertEquals("Executions", 2, executions.size());
 
-        Execution firstExec = executions.get(0);
+        Trade firstExec = executions.get(0);
         assertEquals(300, firstExec.getExecutionQty());
         assertEquals(buy_1.getClientOrderID(), firstExec.getBuy().getClientOrderID());
         assertEquals(300, firstExec.getBuy().getOrderQty());
@@ -165,7 +162,7 @@ public class AuctionMatchTest {
         assertEquals(400, firstExec.getSell().getOrderQty());
         assertEquals(300, firstExec.getSell().getCumQty());
 
-        Execution secondExec = executions.get(1);
+        Trade secondExec = executions.get(1);
         assertEquals(100, secondExec.getExecutionQty());
         assertEquals(buy_2.getClientOrderID(), secondExec.getBuy().getClientOrderID());
         assertEquals(300, secondExec.getBuy().getOrderQty());
@@ -229,7 +226,7 @@ public class AuctionMatchTest {
         Assert.assertTrue("SMO must be executed as the stop price is worse than auction price", smoOrderExecuted);
     }
 
-    private boolean isOrderExecuted(Order smoBuy, List<Execution> executions) {
+    private boolean isOrderExecuted(Order smoBuy, List<Trade> executions) {
         return executions.stream()
                     .flatMap(e -> Stream.of(e.getBuy().getClientOrderID(), e.getSell().getClientOrderID()))
                     .anyMatch(id -> smoBuy.getClientOrderID().equals(id));
@@ -276,9 +273,5 @@ public class AuctionMatchTest {
 
     private Double getBidPrice(PriceDeterminationResult result) {
         return result.getBidPrice().get();
-    }
-
-    private Instant time(int hour, int min, int sec) {
-        return LocalDateTime.now().withHour(hour).withMinute(min).withSecond(sec).toInstant(ZoneOffset.UTC);
     }
 }

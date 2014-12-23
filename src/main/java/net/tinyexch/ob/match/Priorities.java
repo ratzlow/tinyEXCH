@@ -48,5 +48,13 @@ public enum Priorities implements Comparator<Order> {
         public Comparator<Order> reversed() {
             return MARKET_ALWAYS_BEST.thenComparing( BY_PRICE.reversed());
         }
+    },
+
+    /**
+     * Strict ordering by {@link net.tinyexch.order.Order#getStopPrice()} with lowest price first.
+     */
+    STOP_PRICE {
+        @Override
+        public int compare(Order o1, Order o2) { return Double.compare(o1.getStopPrice(), o2.getStopPrice()); }
     }
 }
