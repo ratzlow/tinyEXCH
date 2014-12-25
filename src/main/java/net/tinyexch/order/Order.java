@@ -104,6 +104,8 @@ public class Order {
         return orderQty;
     }
 
+    public int getLeavesQty() { return orderQty - cumQty; }
+
     public Order setSide(Side side) {
         this.side = side;
         return this;

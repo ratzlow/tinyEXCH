@@ -207,15 +207,15 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
                     isOpenForExecution(bestBidOrders, bidToMatch),
                     isOpenForExecution(bestAskOrders, askToMatch) );
 
-            if ( bidToMatch == null || leavesQty(bidToMatch) == 0) {
+            if ( bidToMatch == null || bidToMatch.getLeavesQty() == 0) {
                 bidToMatch = bestBidOrders.poll();
             }
-            int leaveBidQty = leavesQty(bidToMatch);
+            int leaveBidQty = bidToMatch.getLeavesQty();
 
-            if ( askToMatch == null || leavesQty(askToMatch) == 0 ) {
+            if ( askToMatch == null || askToMatch.getLeavesQty() == 0 ) {
                 askToMatch = bestAskOrders.poll();
             }
-            int leaveAskQty = leavesQty(askToMatch);
+            int leaveAskQty = askToMatch.getLeavesQty();
 
             int openBidQty = bidQtyToMatch - alreadyMatchedQty;
             int executableBidQty = Math.min(leaveBidQty, openBidQty);
@@ -245,9 +245,6 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
         return partialExecuted != null || !orders.isEmpty();
     }
 
-    private int leavesQty( Order order ) {
-        return order.getOrderQty() - order.getCumQty();
-    }
 
     private double calcAuctionPrice(double bidPrice, int bidQty, double askPrice, int askQty) {
         final double auctionPrice;

@@ -4,17 +4,18 @@ import net.tinyexch.exchange.event.DefaultNotificationListener;
 import net.tinyexch.exchange.event.produce.VolatilityInterruptionEventHandler;
 import net.tinyexch.exchange.trading.form.continuous.ContinuousTrading;
 import net.tinyexch.ob.SubmitType;
+import net.tinyexch.ob.match.Match;
 import net.tinyexch.ob.match.MatchEngine;
 import net.tinyexch.order.Order;
 import net.tinyexch.order.OrderType;
 import net.tinyexch.order.Side;
 import net.tinyexch.order.Trade;
-import org.junit.Test;
 import org.junit.Assert;
+import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Test life cycle of volatility interruptions in continuous trading.
@@ -31,7 +32,7 @@ public class VolatilityInterruptionInContTradingTest {
         Order sell = Order.of(Integer.valueOf(2).toString(), Side.BUY).setOrderType(OrderType.LIMIT);
 
         Trade trade = new Trade(buy, sell, 14.6, 20, 0);
-        MatchEngine matchEngine = ( order, otherSide) -> Optional.of( trade );
+        MatchEngine matchEngine = ( order, otherSide) -> new Match( order, Collections.singletonList(trade) );
 
         List<VolatilityInterruption> raisedInterruptions = new ArrayList<>();
         VolatilityInterruptionEventHandler interruptionEventHandler = new VolatilityInterruptionEventHandler() {

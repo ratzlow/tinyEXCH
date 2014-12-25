@@ -3,15 +3,14 @@ package net.tinyexch.ob.match;
 import net.tinyexch.ob.Orderbook;
 import net.tinyexch.order.Order;
 import net.tinyexch.order.Trade;
-import org.junit.Ignore;
+import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Optional;
+import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
 import static net.tinyexch.ob.SubmitType.NEW;
 import static net.tinyexch.ob.match.OrderFactory.*;
-import static org.junit.Assert.assertFalse;
 
 /**
  * Test code against sample orderbook constellations as described in chap 13.2.2
@@ -19,7 +18,6 @@ import static org.junit.Assert.assertFalse;
  * @author ratzlow@gmail.com
  * @since 2014-12-23
  */
-@Ignore
 public class ContinuousMatchTest {
 
     /**
@@ -34,10 +32,10 @@ public class ContinuousMatchTest {
         // orderbook is empty
         Orderbook ob = new Orderbook(matchEngine);
         Order standingMarketOrder = buyM(orderQty, time(9, 1, 0));
-        Optional<Trade> emptyTrade = ob.submit(standingMarketOrder, NEW);
+        List<Trade> emptyTrade = ob.submit(standingMarketOrder, NEW);
 
         // no trade generated as there is nothing to match
-        assertFalse(emptyTrade.isPresent());
+        Assert.assertTrue( emptyTrade.isEmpty() );
 
         // order recorded in the book
         assertEquals( 1, ob.getBuySide().getOrders().size() );
@@ -47,12 +45,12 @@ public class ContinuousMatchTest {
 
         // new order added which should lead to an execution, leaving the OB empty
         Order immediatelyExecutedOrder = sellM(orderQty);
-        Trade trade = ob.submit(immediatelyExecutedOrder, NEW).get();
-        assertEquals(referencePrice, trade.getExecutionPrice());
-        assertEquals(orderQty, trade.getExecutionQty());
-        assertEquals( 0, ob.getSellSide().getOrders().size());
-        assertEquals( 0, ob.getBuySide().getOrders().size() );
+        Trade trade = ob.submit(immediatelyExecutedOrder, NEW).get(0);
+        assertEquals( referencePrice, trade.getPrice());
+        assertEquals( orderQty, trade.getExecutionQty());
         assertEquals( standingMarketOrder.getClientOrderID(), trade.getBuy().getClientOrderID() );
         assertEquals( immediatelyExecutedOrder.getClientOrderID(), trade.getSell().getClientOrderID() );
+        assertEquals( "sell side", 0, ob.getSellSide().getOrders().size() );
+        assertEquals( "buy side", 0, ob.getBuySide().getOrders().size() );
     }
 }

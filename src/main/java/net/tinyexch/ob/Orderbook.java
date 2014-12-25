@@ -1,11 +1,14 @@
 package net.tinyexch.ob;
 
+import net.tinyexch.ob.match.Match;
 import net.tinyexch.ob.match.MatchEngine;
 import net.tinyexch.ob.match.Priorities;
 import net.tinyexch.order.Order;
 import net.tinyexch.order.Side;
 import net.tinyexch.order.Trade;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -37,12 +40,14 @@ public class Orderbook {
     /**
      * Contains all bid/buy orders
      */
-    private final OrderbookSide buySide = new OrderbookSide( BUY_PRICE_ORDERING, Priorities.TIME, BUY_STOPPRICE_ORDERING );
+    private final OrderbookSide buySide =
+            new OrderbookSide( Side.BUY, BUY_PRICE_ORDERING, Priorities.TIME, BUY_STOPPRICE_ORDERING );
 
     /**
      * Contains all ask/sell orders
      */
-    private final OrderbookSide sellSide = new OrderbookSide(SELL_PRICE_ORDERING, Priorities.TIME, SELL_STOPPRICE_ORDERING );
+    private final OrderbookSide sellSide =
+            new OrderbookSide( Side.SELL, SELL_PRICE_ORDERING, Priorities.TIME, SELL_STOPPRICE_ORDERING );
 
 
     //------------------------------------------------------------------------------------------------------------------
@@ -68,27 +73,27 @@ public class Orderbook {
     // mutable state changing during runtime
     //------------------------------------------------------------------------------------------------------------------
 
-    public Optional<Trade> submit( Order order, SubmitType submitType ) {
+    public List<Trade> submit( Order order, SubmitType submitType ) {
         // pre condition
         Objects.requireNonNull(order, "Order must not be null!");
 
-        final Optional<Trade> trade;
+        final List<Trade> trades;
         if ( submitType == NEW ) {
-            trade = match(order);
+            trades = match(order).getTrades();
 
         } else if ( submitType == MODIFY ) {
             cancel(order);
-            trade = match(order);
+            trades = match(order).getTrades();
 
         } else if ( submitType == CANCEL ) {
             cancel(order);
-            trade = Optional.empty();
+            trades = Collections.emptyList();
 
         } else {
             throw new OrderbookException("Invalid submit type " + submitType + " for " + order );
         }
 
-        return trade;
+        return trades;
     }
 
 
@@ -119,7 +124,7 @@ public class Orderbook {
         throw new IllegalStateException("Not yet implemented!");
     }
 
-    private Optional<Trade> match( Order order ) {
+    private Match match(Order order) {
         final OrderbookSide thisSide;
         final OrderbookSide otherSide;
         if ( order.getSide() == Side.BUY ) {
@@ -130,10 +135,9 @@ public class Orderbook {
             otherSide = buySide;
         }
 
-        Optional<Trade> match = matchEngine.match( order, otherSide );
-        // TODO (FRa) : (FRa) : jdk8 use optional.flatmap
+        Match match = matchEngine.match( order, otherSide );
         // TODO (FRa) : (FRa) : check round/odd lots handling
-        boolean fullyMatched = match.isPresent() && match.get().getRoundLots() == order.getOrderQty();
+        boolean fullyMatched = order.getLeavesQty() - match.getExecutedQuantity() == 0;
         if ( !fullyMatched ) {
             thisSide.add( order );
         }

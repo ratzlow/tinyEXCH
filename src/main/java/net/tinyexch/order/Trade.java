@@ -27,7 +27,6 @@ public final class Trade {
     private Order buy;
     private Order sell;
 
-    private double executionPrice;
 
     //----------- quantities----------------
     /** A round lot is composed of round lot parts or multiples thereof */
@@ -48,7 +47,7 @@ public final class Trade {
     public Trade( Order buy, Order sell, double executionPrice, int roundLots, int oddLots ) {
         this.buy = buy;
         this.sell = sell;
-        this.executionPrice = executionPrice;
+        this.price = executionPrice;
         this.roundLots = roundLots;
         this.oddLots = oddLots;
     }
@@ -60,10 +59,6 @@ public final class Trade {
     //---------------------------------------------------
     // getters & setters
     //---------------------------------------------------
-
-    public double getExecutionPrice() {
-        return executionPrice;
-    }
 
     public int getRoundLots() {
         return roundLots;
@@ -136,7 +131,6 @@ public final class Trade {
         sb.append(", executionQty=").append(executionQty);
         sb.append(", buy=").append(buy);
         sb.append(", sell=").append(sell);
-        sb.append(", executionPrice=").append(executionPrice);
         sb.append(", roundLots=").append(roundLots);
         sb.append(", oddLots=").append(oddLots);
         sb.append('}');

@@ -2,10 +2,8 @@ package net.tinyexch.ob.match;
 
 import net.tinyexch.ob.OrderbookSide;
 import net.tinyexch.order.Order;
-import net.tinyexch.order.Trade;
 
 import java.util.Comparator;
-import java.util.Optional;
 
 /**
  * Knows the applicable matching rules to match against the other side of the book.
@@ -25,9 +23,7 @@ public interface MatchEngine {
     public static final Comparator<Order> SELL_PRICE_TIME_ORDERING = SELL_PRICE_ORDERING.thenComparing(Priorities.TIME);
     public static final Comparator<Order> BUY_PRICE_TIME_ORDERING = BUY_PRICE_ORDERING.thenComparing(Priorities.TIME);
 
+    static final MatchEngine NO_OP = (order, otherOrderbookSide) -> Match.NO_MATCH;
 
-
-    static final MatchEngine NO_OP = (order, otherOrderbookSide) -> Optional.empty();
-
-    Optional<Trade> match(Order order, OrderbookSide toMatchAgainst);
+    Match match(Order order, OrderbookSide otherSide);
 }

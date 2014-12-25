@@ -2,6 +2,7 @@ package net.tinyexch.ob;
 
 import net.tinyexch.order.Order;
 import net.tinyexch.order.OrderType;
+import net.tinyexch.order.Side;
 import net.tinyexch.order.Trade;
 
 import java.util.*;
@@ -28,13 +29,15 @@ public class OrderbookSide {
     private final Queue<Order> hiddenOrders;
     private final Queue<Order> strikeMatchOrders;
     private final Comparator<Order> priceTimeOrdering;
+    private final Side side;
 
     //-----------------------------------------------------------------------------------------------
     // constructors
     //-----------------------------------------------------------------------------------------------
 
 
-    public OrderbookSide( Comparator<Order> byPrice, Comparator<Order> byTime, Comparator<Order> byTriggerPrice ) {
+    public OrderbookSide( Side side, Comparator<Order> byPrice, Comparator<Order> byTime, Comparator<Order> byTriggerPrice ) {
+        this.side = side;
         priceTimeOrdering = byPrice.thenComparing(byTime);
         marketOrders = new PriorityQueue<>(byTime);
         limitOrders = new PriorityQueue<>(priceTimeOrdering);
@@ -88,5 +91,25 @@ public class OrderbookSide {
                                          .flatMap(Collection::stream).collect(toList());
         Collections.sort( sortedOrders, this.priceTimeOrdering );
         return Collections.unmodifiableList(sortedOrders);
+    }
+
+    public Queue<Order> getMarketOrders() {
+        return marketOrders;
+    }
+
+    public Queue<Order> getLimitOrders() {
+        return limitOrders;
+    }
+
+    public Queue<Order> getHiddenOrders() {
+        return hiddenOrders;
+    }
+
+    public Queue<Order> getStrikeMatchOrders() {
+        return strikeMatchOrders;
+    }
+
+    public Side getSide() {
+        return side;
     }
 }

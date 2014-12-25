@@ -12,10 +12,7 @@ import net.tinyexch.order.Trade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Collections.singleton;
 import static net.tinyexch.exchange.trading.form.continuous.ContinuousTradingState.RUNNING;
@@ -66,16 +63,16 @@ public class ContinuousTrading extends TradingForm<ContinuousTradingState> {
 
     public void submit(Order order, SubmitType submitType) {
 
-        Optional<Trade> submitResult = getOrderbook().submit(order, submitType);
+        List<Trade> trades = getOrderbook().submit(order, submitType);
 
         // TODO (FRa) : (FRa) : is this applicable?! too functional?
         // check for volatility interruptions apply for auction and continuous trading
-        submitResult.ifPresent( this::checkVolatilityInterruption );
+        trades.forEach( this::checkVolatilityInterruption );
     }
 
     private void checkVolatilityInterruption(Trade trade) {
         Optional<VolatilityInterruption> interruptionEvent =
-                volatilityInterruptionGuard.checkIndicativePrice(trade.getExecutionPrice());
+                volatilityInterruptionGuard.checkIndicativePrice(trade.getPrice());
 
         if (interruptionEvent.isPresent() ) {
             getLogger().info("Volatility interruption occurred on: {}", interruptionEvent );
@@ -85,7 +82,7 @@ public class ContinuousTrading extends TradingForm<ContinuousTradingState> {
             boolean midpointInvolved = trade.getBuy().getOrderType() == OrderType.MIDPOINT ||
                                        trade.getSell().getOrderType() == OrderType.MIDPOINT;
             if ( !midpointInvolved ) {
-                volatilityInterruptionGuard.updateDynamicRefPrice(trade.getExecutionPrice());
+                volatilityInterruptionGuard.updateDynamicRefPrice(trade.getPrice());
             }
         }
     }
