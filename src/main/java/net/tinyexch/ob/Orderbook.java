@@ -1,6 +1,7 @@
 package net.tinyexch.ob;
 
 import net.tinyexch.ob.match.MatchEngine;
+import net.tinyexch.ob.match.Priorities;
 import net.tinyexch.order.Order;
 import net.tinyexch.order.Side;
 import net.tinyexch.order.Trade;
@@ -10,6 +11,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static net.tinyexch.ob.SubmitType.*;
+import static net.tinyexch.ob.match.MatchEngine.*;
 
 /**
  * Captures all orders for a given {@link net.tinyexch.ob.Listing}. It can be run in different
@@ -35,12 +37,12 @@ public class Orderbook {
     /**
      * Contains all bid/buy orders
      */
-    private final OrderbookSide buySide = new OrderbookSide();
+    private final OrderbookSide buySide = new OrderbookSide( BUY_PRICE_ORDERING, Priorities.TIME, BUY_STOPPRICE_ORDERING );
 
     /**
      * Contains all ask/sell orders
      */
-    private final OrderbookSide sellSide = new OrderbookSide();
+    private final OrderbookSide sellSide = new OrderbookSide(SELL_PRICE_ORDERING, Priorities.TIME, SELL_STOPPRICE_ORDERING );
 
 
     //------------------------------------------------------------------------------------------------------------------

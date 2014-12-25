@@ -11,7 +11,7 @@ import static java.util.stream.Collectors.toList;
 
 /**
  * The data structure holding one side (buy or sell) of an order book. An incoming order will be matched against the
- * opposite side.
+ * opposite side. Main priority for matching is derived by the {@link net.tinyexch.order.OrderType}
  * // TODO (FRa) : (FRa) : seggragate
      // stop
      // iceberg
@@ -23,10 +23,29 @@ import static java.util.stream.Collectors.toList;
  */
 public class OrderbookSide {
 
-    private final List<Order> marketOrders = new ArrayList<>();
-    private final List<Order> limitOrders = new ArrayList<>();
-    private final List<Order> hiddenOrders = new ArrayList<>();
-    private final List<Order> strikeMatchOrders = new ArrayList<>();
+    private final Queue<Order> marketOrders;
+    private final Queue<Order> limitOrders;
+    private final Queue<Order> hiddenOrders;
+    private final Queue<Order> strikeMatchOrders;
+    private final Comparator<Order> priceTimeOrdering;
+
+    //-----------------------------------------------------------------------------------------------
+    // constructors
+    //-----------------------------------------------------------------------------------------------
+
+
+    public OrderbookSide( Comparator<Order> byPrice, Comparator<Order> byTime, Comparator<Order> byTriggerPrice ) {
+        priceTimeOrdering = byPrice.thenComparing(byTime);
+        marketOrders = new PriorityQueue<>(byTime);
+        limitOrders = new PriorityQueue<>(priceTimeOrdering);
+        hiddenOrders = new PriorityQueue<>(priceTimeOrdering);
+        strikeMatchOrders = new PriorityQueue<>( byTriggerPrice);
+    }
+
+
+    //-----------------------------------------------------------------------------------------------
+    // public API
+    //-----------------------------------------------------------------------------------------------
 
     public Optional<Trade> match( Order otherSide ) {
         return Optional.empty();
@@ -56,19 +75,18 @@ public class OrderbookSide {
 
     public Collection<Order> getOrders() {
         return Collections.unmodifiableCollection(Stream.of(marketOrders, limitOrders, hiddenOrders, strikeMatchOrders)
-                .flatMap(orders -> orders.stream()).collect(toList()));
+                .flatMap(Collection::stream).collect(toList()));
     }
 
     /**
-     * Orders to be used to determine price.
+     * Orders to consider if price needs to be derived.
      *
-     * @param byPrios ensuring "best" comes first
      * @return orders where best is on top of the book
      */
-    public List<Order> getBest( Comparator<Order> byPrios ) {
+    public List<Order> getBest() {
         List<Order> sortedOrders = Stream.of(limitOrders, hiddenOrders)
-                                         .flatMap(orders -> orders.stream()).collect(toList());
-        Collections.sort( sortedOrders, byPrios );
+                                         .flatMap(Collection::stream).collect(toList());
+        Collections.sort( sortedOrders, this.priceTimeOrdering );
         return Collections.unmodifiableList(sortedOrders);
     }
 }

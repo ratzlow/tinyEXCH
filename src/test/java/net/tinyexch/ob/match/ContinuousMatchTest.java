@@ -3,6 +3,7 @@ package net.tinyexch.ob.match;
 import net.tinyexch.ob.Orderbook;
 import net.tinyexch.order.Order;
 import net.tinyexch.order.Trade;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Optional;
@@ -18,6 +19,7 @@ import static org.junit.Assert.assertFalse;
  * @author ratzlow@gmail.com
  * @since 2014-12-23
  */
+@Ignore
 public class ContinuousMatchTest {
 
     /**

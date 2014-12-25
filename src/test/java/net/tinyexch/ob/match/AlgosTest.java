@@ -1,6 +1,5 @@
 package net.tinyexch.ob.match;
 
-import net.tinyexch.exchange.trading.form.auction.DefaultPriceDeterminationPhase;
 import net.tinyexch.ob.Orderbook;
 import net.tinyexch.order.Order;
 import org.junit.Assert;
@@ -66,8 +65,8 @@ public class AlgosTest {
             new Order[]{ newOrder(SELL, 200, 100, LIMIT), newOrder(SELL, 198, 200, LIMIT), newOrder(SELL, 197, 400, LIMIT)}
         );
 
-        List<Order> orderedBuys = ob.getBuySide().getBest(DefaultPriceDeterminationPhase.BUY_PRICE_TIME_ORDERING);
-        List<Order> orderedSells = ob.getSellSide().getBest(DefaultPriceDeterminationPhase.SELL_PRICE_TIME_ORDERING);
+        List<Order> orderedBuys = ob.getBuySide().getBest();
+        List<Order> orderedSells = ob.getSellSide().getBest();
 
         Assert.assertArrayEquals(new Double[]{202D, 201D, 200D},
                 orderedBuys.stream().map(Order::getPrice).collect(Collectors.toList()).toArray());

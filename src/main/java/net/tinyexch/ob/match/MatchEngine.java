@@ -4,6 +4,7 @@ import net.tinyexch.ob.OrderbookSide;
 import net.tinyexch.order.Order;
 import net.tinyexch.order.Trade;
 
+import java.util.Comparator;
 import java.util.Optional;
 
 /**
@@ -14,6 +15,17 @@ import java.util.Optional;
  */
 @FunctionalInterface
 public interface MatchEngine {
+
+    public static final Comparator<Order> SELL_PRICE_ORDERING = Priorities.PRICE;
+    public static final Comparator<Order> BUY_PRICE_ORDERING = Priorities.PRICE.reversed();
+
+    public static final Comparator<Order> SELL_STOPPRICE_ORDERING = Priorities.STOP_PRICE;
+    public static final Comparator<Order> BUY_STOPPRICE_ORDERING = Priorities.STOP_PRICE.reversed();
+
+    public static final Comparator<Order> SELL_PRICE_TIME_ORDERING = SELL_PRICE_ORDERING.thenComparing(Priorities.TIME);
+    public static final Comparator<Order> BUY_PRICE_TIME_ORDERING = BUY_PRICE_ORDERING.thenComparing(Priorities.TIME);
+
+
 
     static final MatchEngine NO_OP = (order, otherOrderbookSide) -> Optional.empty();
 

@@ -2,7 +2,7 @@ package net.tinyexch.exchange.trading.form.auction;
 
 import net.tinyexch.ob.Orderbook;
 import net.tinyexch.ob.OrderbookSide;
-import net.tinyexch.ob.match.Priorities;
+import net.tinyexch.ob.match.MatchEngine;
 import net.tinyexch.order.Trade;
 import net.tinyexch.order.Order;
 import net.tinyexch.order.OrderType;
@@ -28,8 +28,7 @@ import static net.tinyexch.ob.match.Algos.*;
 public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultPriceDeterminationPhase.class);
-    public static final Comparator<Order> SELL_PRICE_TIME_ORDERING = Priorities.PRICE.thenComparing(Priorities.TIME);
-    public static final Comparator<Order> BUY_PRICE_TIME_ORDERING = Priorities.PRICE.reversed().thenComparing(Priorities.TIME);
+
 
     private static final BiFunction<Order, Double, Boolean> SMO_WORSE_PRICE_BUY_FILTER =
             (Order o, Double auctionPrice) -> o.getOrderType() == OrderType.STRIKE_MATCH && o.getStopPrice() <= auctionPrice;
@@ -71,8 +70,8 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
         OrderbookSide sellSide = orderbook.getSellSide();
 
         final PriceDeterminationResult result;
-        if ( !buySide.getBest(BUY_PRICE_TIME_ORDERING).isEmpty() &&
-             !sellSide.getBest(SELL_PRICE_TIME_ORDERING).isEmpty() ) {
+        if ( !buySide.getBest().isEmpty() &&
+             !sellSide.getBest().isEmpty() ) {
 
             LOGGER.info("Orders on both sides available!");
             result = calcResultWithAvailableOrders(buySide, sellSide, referencePrice);
@@ -105,11 +104,11 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
         // only consider non-MKT orders to find the price range
         //------------------------------------------------------------------
 
-        List<Order> bidOrders = buySide.getBest(BUY_PRICE_TIME_ORDERING);
+        List<Order> bidOrders = buySide.getBest();
         double[] bidPrices = bidOrders.stream().mapToDouble(Order::getPrice).toArray();
         double bidSearchPrice = bidOrders.isEmpty() ? 0 : bidOrders.get(0).getPrice();
 
-        List<Order> askOrders = sellSide.getBest(SELL_PRICE_TIME_ORDERING);
+        List<Order> askOrders = sellSide.getBest();
         double[] askPrices = askOrders.stream().mapToDouble(Order::getPrice).toArray();
         double askSearchPrice = askOrders.isEmpty() ? 0 : askOrders.get(0).getPrice();
 
@@ -156,9 +155,9 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
         //------------------------------------------------------------------
 
         List<Order> orderedBuys = new ArrayList<>(buySide.getOrders());
-        orderedBuys.sort(BUY_PRICE_TIME_ORDERING);
+        orderedBuys.sort(MatchEngine.BUY_PRICE_TIME_ORDERING);
         List<Order> orderedSells = new ArrayList<>(sellSide.getOrders());
-        orderedSells.sort(SELL_PRICE_TIME_ORDERING);
+        orderedSells.sort(MatchEngine.SELL_PRICE_TIME_ORDERING);
 
         List<Trade> executions = auctionPrice.map( price -> match(orderedBuys, executableBuyQty,
                                                                         orderedSells, executableSellQty,
