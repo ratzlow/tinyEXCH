@@ -37,24 +37,31 @@ public class ContinuousMatchEngine implements MatchEngine {
 
 
     private List<Trade> matchMarket(Order order, OrderbookSide otherSide) {
-        int openQty = order.getOrderQty() - order.getCumQty();
         List<Trade> trades = new ArrayList<>();
 
-        while ( openQty > 0 && isLiquidityAvailable(otherSide) ) {
+        int leavesQty = order.getLeavesQty();
+        while ( leavesQty > 0 && isLiquidityAvailable(otherSide) ) {
             Trade trade;
+            Side side = otherSide.getSide();
             if ( !otherSide.getMarketOrders().isEmpty() ) {
                 Order otherSideOrder = otherSide.getMarketOrders().poll();
-                trade = createTrade( order, otherSideOrder, otherSide.getSide(), referencePrice );
+                trade = createTrade( order, otherSideOrder, side, referencePrice );
+
+            } else if ( !otherSide.getLimitOrders().isEmpty() ) {
+                Order otherSideOrder = otherSide.getLimitOrders().poll();
+                trade = createTrade( order, otherSideOrder, side, otherSideOrder.getPrice() );
 
             } else {
                 throw new UnsupportedOperationException("Matching not implemented! order to match: " + order);
             }
 
+            leavesQty =- trade.getExecutionQty();
             trades.add( trade );
         }
 
         return trades;
     }
+
 
     private Trade createTrade(Order order, Order otherSideOrder, Side otherSide, double price ) {
         Order buy = otherSide == Side.BUY ? otherSideOrder.mutableClone() : order.mutableClone();

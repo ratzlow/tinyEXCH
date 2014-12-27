@@ -52,6 +52,10 @@ public class OrderFactory {
         return newOrder( Side.SELL, 0, qty, OrderType.MARKET );
     }
 
+    public static Order sellM(int qty, Instant timestamp ) {
+        return newOrder( Side.SELL, 0, qty, OrderType.MARKET ).setTimestamp(timestamp);
+    }
+
     public static Order newOrder(Side side, double price, int qty, OrderType type ) {
         return Order.of( Integer.toString(++clientOrderIdSequence), side ).setPrice(price)
                 .setOrderQty(qty).setOrderType(type);
