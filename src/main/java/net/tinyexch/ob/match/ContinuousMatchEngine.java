@@ -55,7 +55,7 @@ public class ContinuousMatchEngine implements MatchEngine {
                 throw new UnsupportedOperationException("Matching not implemented! order to match: " + order);
             }
 
-            leavesQty =- trade.getExecutionQty();
+            leavesQty -= trade.getExecutionQty();
             trades.add( trade );
         }
 
