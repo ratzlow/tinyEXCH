@@ -36,6 +36,10 @@ public class OrderFactory {
         return newOrder( Side.SELL, price, qty, OrderType.LIMIT );
     }
 
+    public static Order sellL(double price, int qty, Instant timestamp) {
+        return newOrder( Side.SELL, price, qty, OrderType.LIMIT ).setTimestamp(timestamp);
+    }
+
     public static Order buyM(int qty) {
         return newOrder( Side.BUY, 0, qty, OrderType.MARKET );
     }
