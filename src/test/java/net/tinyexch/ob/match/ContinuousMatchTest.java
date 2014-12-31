@@ -2,7 +2,6 @@ package net.tinyexch.ob.match;
 
 import net.tinyexch.ob.Orderbook;
 import net.tinyexch.ob.OrderbookSide;
-import net.tinyexch.ob.SubmitType;
 import net.tinyexch.ob.TestConstants;
 import net.tinyexch.order.Order;
 import net.tinyexch.order.Side;
@@ -10,14 +9,13 @@ import net.tinyexch.order.Trade;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static org.junit.Assert.*;
 import static net.tinyexch.ob.SubmitType.NEW;
 import static net.tinyexch.ob.match.OrderFactory.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test code against sample orderbook constellations as described in chap 13.2.2
@@ -27,41 +25,16 @@ import static net.tinyexch.ob.match.OrderFactory.*;
  */
 public class ContinuousMatchTest {
 
-    private final double referencePrice = 200;
-    private final MatchEngine matchEngine = new ContinuousMatchEngine(referencePrice);
-    private final int orderQty = 6000;
+    private static final double REFERENCE_PRICE = 200;
+    private static final int ORDER_QTY = 6000;
+    private static final MatchEngine MATCH_ENGINE = new ContinuousMatchEngine(REFERENCE_PRICE);
+
     private Orderbook ob;
-
-
-
-
-    // TODO (FRa) : (FRa) : port to groovy
-    @Test
-    public void testOrderWithManyPartialExecutions() {
-        Orderbook ob = new Orderbook(new ContinuousMatchEngine(referencePrice));
-        int shareNo = 1_000;
-        Stream.iterate(0, i -> i++).limit(shareNo).forEach( i -> ob.submit(buyM(1), SubmitType.NEW) );
-        Long buyQty = ob.getBuySide().getOrders().stream().collect(Collectors.summingLong(Order::getOrderQty));
-        assertEquals(shareNo, buyQty.longValue());
-
-        Order bigSellOrder = sellM(shareNo);
-        List<Trade> trades = ob.submit(bigSellOrder, SubmitType.NEW);
-        assertEquals( shareNo, trades.size() );
-        assertEquals( 0, ob.getBuySide().getOrders().size() );
-        assertEquals( 0, ob.getSellSide().getOrders().size() );
-        for (Trade trade : trades) {
-            assertEquals(1, trade.getExecutionQty());
-            assertEquals(referencePrice, trade.getPrice(), TestConstants.ROUNDING_DELTA);
-            assertEquals(bigSellOrder.getClientOrderID(), trade.getSell().getClientOrderID());
-        }
-        Set<String> buyOrderIDs = trades.stream().map(trade -> trade.getBuy().getClientOrderID()).collect(Collectors.toSet());
-        assertEquals(shareNo, buyOrderIDs.size());
-    }
 
 
     @Before
     public void init() {
-        ob = new Orderbook(matchEngine);
+        ob = new Orderbook(MATCH_ENGINE);
     }
 
     /**
@@ -70,9 +43,9 @@ public class ContinuousMatchTest {
      */
     @Test
     public void testOnlyMarketOrdersOnOtherSide_Ex1() {
-        Order standingOrder = buyM(orderQty, time(9, 1, 0));
-        Order incomingOrder = sellM(orderQty);
-        matchIncomingMarketOrder(standingOrder, incomingOrder, referencePrice);
+        Order standingOrder = buyM(ORDER_QTY, time(9, 1, 0));
+        Order incomingOrder = sellM(ORDER_QTY);
+        matchIncomingMarketOrder(standingOrder, incomingOrder, REFERENCE_PRICE);
     }
 
     /**
@@ -82,8 +55,8 @@ public class ContinuousMatchTest {
     @Test
     public void testOnlyBuyLimitOrderOnOtherSide_Ex2() {
         int highestBidLimit = 201;
-        Order standingOrder = buyL(highestBidLimit, orderQty, time(9, 1, 0));
-        Order incomingOrder = sellM(orderQty);
+        Order standingOrder = buyL(highestBidLimit, ORDER_QTY, time(9, 1, 0));
+        Order incomingOrder = sellM(ORDER_QTY);
         matchIncomingMarketOrder(standingOrder, incomingOrder, highestBidLimit);
     }
 
@@ -94,33 +67,121 @@ public class ContinuousMatchTest {
     @Test
     public void testOnlyAskLimitOrderOnOtherSide_Ex3() {
         int lowestAskLimit = 199;
-        Order standingOrder = sellL(lowestAskLimit, orderQty, time(9, 1, 0));
-        Order incomingOrder = buyM(orderQty);
+        Order standingOrder = sellL(lowestAskLimit, ORDER_QTY, time(9, 1, 0));
+        Order incomingOrder = buyM(ORDER_QTY);
         matchIncomingMarketOrder(standingOrder, incomingOrder, lowestAskLimit);
     }
 
     /**
      * A market order meets an order book with market orders and limit orders on the other side of the order book.
      * The incoming ask market order is executed against the bid market order in the order book at the reference
-     * price of € 200 (see principle 1)
+     * price of € 200.
+     * ==> principle 1
      */
     @Test
-    public void testMarketAndLimitOrderOnOtherSide_Ex4() {
-        Order standingMarket = buyM(orderQty, time(9, 1, 0));
-        Order standingLimit = buyL(195D, orderQty, time(9, 1, 0));
-        ob.submit(standingMarket, SubmitType.NEW);
-        ob.submit(standingLimit, SubmitType.NEW);
+    public void testStandingMarketAndLimitOrderBestBidBelowRefPrice_Ex4() {
+        testStandingMarketAndLimitOrderBid(195D, REFERENCE_PRICE);
+    }
 
-        Order incomingOrder = sellM(orderQty);
-        List<Trade> trades = ob.submit(incomingOrder, SubmitType.NEW);
-        assertEquals( 1, trades.size() );
-        assertEquals( 1, ob.getBuySide().getOrders().size() );
-        assertEquals( 0, ob.getSellSide().getOrders().size() );
+
+    /**
+     * A market order meets an order book with market orders and limit orders on the other side of the order book.
+     * The reference price is € 200. It is lower than the highest bid limit. The incoming ask market order is executed
+     * against the bid market order in the order book at the highest bid limit of € 202.
+     * ==> principle 2
+     */
+    @Test
+    public void testStandingMarketAndLimitOrderBestBidAboveRefPrice_Ex5() {
+        double standingLimitPrice = 202D;
+        testStandingMarketAndLimitOrderBid(standingLimitPrice, standingLimitPrice);
+    }
+
+
+    /**
+     * A market order meets an order book with market orders and limit orders on the other side of the order book.
+     * The reference price is € 200. It is lower than or equal to the lowest ask limit.
+     * The incoming bid market order is executed against the ask market order in the order book at the reference
+     * price of € 200.
+     * ==> principle 1
+     */
+    @Test
+    public void testStandingMarketAndLimitOrderBestAskAboveRefPrice_Ex6() {
+        testStandingMarketAndLimitOrderSell(202, REFERENCE_PRICE);
+    }
+
+
+    /**
+     * A market order meets an order book with market orders and limit orders on the other side of the order book.
+     * The reference price is € 200. It is higher than the lowest ask limit.
+     * The incoming bid market order is executed against the ask market order in the order book at the lowest
+     * ask limit of € 195.
+     * ==> principle 2
+     */
+    @Test
+    public void testStandingMarketAndLimitOrderBestAskBelowRefPrice_Ex7() {
+        int standingLimitPrice = 195;
+        testStandingMarketAndLimitOrderSell(standingLimitPrice, standingLimitPrice);
+    }
+
+
+    /**
+     * A market order meets an order book in which there are no orders.
+     * The incoming bid market order is entered in the order book. A price is not determined and no orders are executed.
+     * The order is left in the book
+     */
+    @Test
+    public void testNoOrderOnOtherSide_Ex8() {
+        Order standingMarket = buyM(ORDER_QTY);
+        List<Trade> trades = ob.submit(standingMarket, NEW);
+
+        assertEquals( 0, trades.size() );
+        Collection<Order> allBuyOrders = ob.getBuySide().getOrders();
+        assertEquals(1, allBuyOrders.size());
+        assertEquals(standingMarket.getClientOrderID(), allBuyOrders.iterator().next().getClientOrderID());
+    }
+
+    //
+    // test helper methods
+    //
+
+    private void testStandingMarketAndLimitOrderSell(double standingLimitPrice, double expectedExecutionPrice) {
+        Order standingMarket = sellM(ORDER_QTY, time(9, 1, 0));
+        Order standingLimit = sellL(standingLimitPrice, 1000, time(9, 2, 0));
+        ob.submit(standingMarket, NEW);
+        ob.submit(standingLimit, NEW);
+
+        Order incomingOrder = buyM(ORDER_QTY);
+        List<Trade> trades = ob.submit(incomingOrder, NEW);
+        assertEquals( 1, trades.size());
+        assertEquals( 0, ob.getBuySide().getOrders().size() );
+        assertEquals( 1, ob.getSellSide().getOrders().size());
 
         Trade trade = trades.get(0);
-        assertEquals( referencePrice, trade.getPrice(), TestConstants.ROUNDING_DELTA );
-        assertEquals( orderQty, trade.getExecutionQty() );
-        assertEquals( standingMarket.getClientOrderID(), trade.getBuy().getClientOrderID() );
+        assertEquals( expectedExecutionPrice, trade.getPrice(), TestConstants.ROUNDING_DELTA );
+        assertEquals(ORDER_QTY, trade.getExecutionQty() );
+        assertEquals( "The market order has precedence to be executed",
+                        standingMarket.getClientOrderID(), trade.getSell().getClientOrderID() );
+        assertEquals( incomingOrder.getClientOrderID(), trade.getBuy().getClientOrderID() );
+    }
+
+
+    private void testStandingMarketAndLimitOrderBid(double standingLimitPrice, double expectedExecutionPrice) {
+        Order standingMarket = buyM(ORDER_QTY, time(9, 1, 0));
+        Order standingLimit = buyL(standingLimitPrice, 1000, time(9, 2, 0));
+        ob.submit(standingMarket, NEW);
+        ob.submit(standingLimit, NEW);
+
+        Order incomingOrder = sellM(ORDER_QTY);
+        List<Trade> trades = ob.submit(incomingOrder, NEW);
+        assertEquals( 1, trades.size());
+        assertEquals( 1, ob.getBuySide().getOrders().size() );
+        assertEquals( 0, ob.getSellSide().getOrders().size());
+
+        Trade trade = trades.get(0);
+        assertEquals( expectedExecutionPrice, trade.getPrice(), TestConstants.ROUNDING_DELTA );
+        assertEquals(ORDER_QTY, trade.getExecutionQty() );
+        assertEquals( "The market order has precedence to be executed",
+                        standingMarket.getClientOrderID(), trade.getBuy().getClientOrderID() );
         assertEquals( incomingOrder.getClientOrderID(), trade.getSell().getClientOrderID() );
     }
 
@@ -157,7 +218,7 @@ public class ContinuousMatchTest {
         assertEquals( 1, trades.size() );
         Trade trade = trades.get(0);
         assertEquals( expectedExecutionPrice, trade.getPrice(), TestConstants.ROUNDING_DELTA);
-        assertEquals( orderQty, trade.getExecutionQty());
+        assertEquals(ORDER_QTY, trade.getExecutionQty());
         assertEquals( buy.getClientOrderID(), trade.getBuy().getClientOrderID() );
         assertEquals( sell.getClientOrderID(), trade.getSell().getClientOrderID() );
         assertEquals( "incoming buy side", 0, ob.getBuySide().getOrders().size() );

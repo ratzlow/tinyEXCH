@@ -11,10 +11,17 @@ import java.util.*;
 /**
  * Strategy to match new incoming orders against given orderbook.
  *
+ * Principle 1: Market orders are given the reference price as a ”virtual” price. On this basis,
+ * execution is carried out at the reference price provided that this does not violate price/time priority.
+ *
+ * Principle 2: If orders cannot be executed at the reference price, they are executed in accordance with price/time
+ * priority by means of price determination above or below the reference price (non-executed bid market orders or
+ * ask market orders) i.e. the price is determined by a limit within the order book or a limit of an incoming order.
+ *
  * @author ratzlow@gmail.com
  * @since 2014-12-23
  */
-// TODO (FRa) : (FRa) : consider TimeInForce for partial matching
+// TODO (FRa) : (FRa) : consider TimeInForce for partial matching (e.g FOK, ...)
 public class ContinuousMatchEngine implements MatchEngine {
     private final double referencePrice;
 
@@ -43,13 +50,21 @@ public class ContinuousMatchEngine implements MatchEngine {
         while ( leavesQty > 0 && isLiquidityAvailable(otherSide) ) {
             Trade trade;
             Side side = otherSide.getSide();
-            if ( !otherSide.getMarketOrders().isEmpty() ) {
+            boolean hasMarketOrders = !otherSide.getMarketOrders().isEmpty();
+            boolean hasLimitOrders = !otherSide.getLimitOrders().isEmpty();
+            if ( hasMarketOrders && !hasLimitOrders ) {
                 Order otherSideOrder = otherSide.getMarketOrders().poll();
                 trade = createTrade( order, otherSideOrder, side, referencePrice );
 
-            } else if ( !otherSide.getLimitOrders().isEmpty() ) {
+            } else if ( !hasMarketOrders && hasLimitOrders ) {
                 Order otherSideOrder = otherSide.getLimitOrders().poll();
                 trade = createTrade( order, otherSideOrder, side, otherSideOrder.getPrice() );
+
+            } else if ( hasMarketOrders && hasLimitOrders ) {
+                Order otherSideOrder = otherSide.getMarketOrders().poll();
+                double bestPriceOnOtherSide = otherSide.getLimitOrders().peek().getPrice();
+                double executionPrice = calcExecutionPrice(side, bestPriceOnOtherSide);
+                trade = createTrade( order, otherSideOrder, side, executionPrice );
 
             } else {
                 throw new UnsupportedOperationException("Matching not implemented! order to match: " + order);
@@ -60,6 +75,18 @@ public class ContinuousMatchEngine implements MatchEngine {
         }
 
         return trades;
+    }
+
+
+    private double calcExecutionPrice(Side otherSide, double bestPriceOnOtherSide ) {
+        final double executionPrice;
+        if (otherSide == Side.BUY) {
+            executionPrice = referencePrice >= bestPriceOnOtherSide ? referencePrice : bestPriceOnOtherSide;
+        } else {
+            executionPrice = referencePrice <= bestPriceOnOtherSide ? referencePrice : bestPriceOnOtherSide;
+        }
+
+        return executionPrice;
     }
 
 
