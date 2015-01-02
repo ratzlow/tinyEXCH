@@ -14,19 +14,24 @@ import java.util.stream.Collectors;
  * @since 2014-12-25
  */
 public class Match {
+    public enum State { ACCEPT, REJECT }
+
     public static final Match NO_MATCH = new Match();
 
     private final Order matchedOrder;
     private final List<Trade> trades;
+    private final State state;
 
     private Match() {
         matchedOrder = null;
         trades = Collections.emptyList();
+        state = State.REJECT;
     }
 
-    public Match(Order matchedOrder, List<Trade> trades) {
+    public Match(Order matchedOrder, List<Trade> trades, State state ) {
         this.matchedOrder = matchedOrder;
         this.trades = trades;
+        this.state = state;
     }
 
     public int getExecutedQuantity() {
@@ -40,6 +45,8 @@ public class Match {
     public List<Trade> getTrades() {
         return trades;
     }
+
+    public State getState() { return state; }
 
     @Override
     public String toString() {

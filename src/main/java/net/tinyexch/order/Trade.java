@@ -23,6 +23,12 @@ public final class Trade {
     /** @link FIX:32 */
     private int executionQty;
 
+    /** @link FIX:150 */
+    private ExecType execType;
+
+    /** @link FIX:103 */
+    private String orderRejectReason;
+
     // TODO (FRa) : (FRa) : this is very insufficient as the Trade reports look very different for both sides
     private Order buy;
     private Order sell;
@@ -122,6 +128,24 @@ public final class Trade {
         return this;
     }
 
+    public ExecType getExecType() {
+        return execType;
+    }
+
+    public Trade setExecType(ExecType execType) {
+        this.execType = execType;
+        return this;
+    }
+
+    public String getOrderRejectReason() {
+        return orderRejectReason;
+    }
+
+    public Trade setOrderRejectReason(String orderRejectReason) {
+        this.orderRejectReason = orderRejectReason;
+        return this;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("Trade{");
@@ -133,6 +157,8 @@ public final class Trade {
         sb.append(", sell=").append(sell);
         sb.append(", roundLots=").append(roundLots);
         sb.append(", oddLots=").append(oddLots);
+        sb.append(", execType=").append(execType);
+        sb.append(", orderRejectReason=").append(orderRejectReason);
         sb.append('}');
         return sb.toString();
     }

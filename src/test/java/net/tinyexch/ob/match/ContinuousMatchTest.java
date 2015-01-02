@@ -2,7 +2,9 @@ package net.tinyexch.ob.match;
 
 import net.tinyexch.ob.Orderbook;
 import net.tinyexch.ob.OrderbookSide;
+import net.tinyexch.ob.RejectReason;
 import net.tinyexch.ob.TestConstants;
+import net.tinyexch.order.ExecType;
 import net.tinyexch.order.Order;
 import net.tinyexch.order.Side;
 import net.tinyexch.order.Trade;
@@ -15,6 +17,7 @@ import java.util.List;
 import static net.tinyexch.ob.SubmitType.NEW;
 import static net.tinyexch.ob.match.OrderFactory.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -36,6 +39,10 @@ public class ContinuousMatchTest {
     public void init() {
         ob = new Orderbook(MATCH_ENGINE);
     }
+
+    //-------------------------------------------------------------------------------------------
+    // Scenarios where standing orders face an incoming MARKET order
+    //-------------------------------------------------------------------------------------------
 
     /**
      * A market order meets an order book with market orders only on the other side of the order book.
@@ -138,6 +145,44 @@ public class ContinuousMatchTest {
         Collection<Order> allBuyOrders = ob.getBuySide().getOrders();
         assertEquals(1, allBuyOrders.size());
         assertEquals(standingMarket.getClientOrderID(), allBuyOrders.iterator().next().getClientOrderID());
+    }
+
+
+    //-------------------------------------------------------------------------------------------
+    // Scenarios where standing orders face an incoming MARKET_TO_LIMIT order
+    //-------------------------------------------------------------------------------------------
+
+
+    // TODO (FRa) : (FRa) : Any unexecuted part of a market-to- limit order is entered into the order book with a limit
+    // TODO (FRa) : (FRa) : equal to the price of the first partial execution.
+    /**
+     * A market-to-limit order meets an order book with market orders only on the other side of the order book.
+     * The market-to-limit order is rejected. A price is not determined and no orders are executed.
+     */
+    @Test
+    public void testMarketOrdersOnlyOnOtherSide_Ex9() {
+        Order standingMarket = buyM(ORDER_QTY);
+        ob.submit(standingMarket, NEW );
+        Runnable checkOrderbook = () -> {
+            assertEquals( 0, ob.getSellSide().getOrders().size());
+            assertEquals( 1, ob.getBuySide().getOrders().size());
+            assertEquals( standingMarket.getClientOrderID(), ob.getBuySide().getOrders().iterator().next().getClientOrderID() );
+        };
+        // before MtL order is submited
+        checkOrderbook.run();
+
+        Order incoming = sellMtoL(ORDER_QTY);
+        List<Trade> trades = ob.submit(incoming, NEW);
+        assertEquals( 1, trades.size() );
+        Trade rejectMsg = trades.iterator().next();
+        assertEquals( ExecType.REJECTED, rejectMsg.getExecType() );
+        assertEquals( RejectReason.INSUFFICIENT_OB_CONSTELLATION.getMsg(), rejectMsg.getOrderRejectReason() );
+        assertEquals( incoming.getClientOrderID(), rejectMsg.getSell().getClientOrderID() );
+        assertNull(rejectMsg.getBuy());
+        assertNull( rejectMsg.getBuy() );
+
+        // validate nothing has altered the OB
+        checkOrderbook.run();
     }
 
     //

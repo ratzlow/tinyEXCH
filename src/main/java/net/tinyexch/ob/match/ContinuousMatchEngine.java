@@ -1,10 +1,9 @@
 package net.tinyexch.ob.match;
 
 import net.tinyexch.ob.OrderbookSide;
-import net.tinyexch.order.Order;
-import net.tinyexch.order.OrderType;
-import net.tinyexch.order.Side;
-import net.tinyexch.order.Trade;
+import net.tinyexch.ob.RejectReason;
+import net.tinyexch.ob.match.Match.State;
+import net.tinyexch.order.*;
 
 import java.util.*;
 
@@ -32,26 +31,76 @@ public class ContinuousMatchEngine implements MatchEngine {
     @Override
     public Match match(Order order, OrderbookSide otherSide) {
         final List<Trade> trades;
+        Order remainingOrder = order;
+        State state = State.ACCEPT;
         OrderType orderType = order.getOrderType();
         if ( orderType == OrderType.MARKET ) {
             trades = matchMarket( order, otherSide );
+
+        } else if (orderType == OrderType.MARKET_TO_LIMIT ) {
+            trades = matchMarketToLimit( order, otherSide );
+            remainingOrder = order.getLeavesQty() > 0  ? order.setOrderType(OrderType.MARKET) : order;
+            state = (trades.size() == 1 && trades.get(0).getExecType() == ExecType.REJECTED) ? State.REJECT : State.ACCEPT;
+
         } else {
             trades = Collections.emptyList();
         }
 
-        return new Match(order, trades);
+        return new Match(remainingOrder, trades, state );
+    }
+
+
+    private List<Trade> matchMarketToLimit(Order order, OrderbookSide otherSide) {
+        final List<Trade> trades;
+        boolean hasLimitOrdersOnly = !otherSide.getLimitOrders().isEmpty() && otherSide.getMarketOrders().isEmpty();
+        if ( hasLimitOrdersOnly ) {
+            trades = matchAgainstLimitOrders(order, otherSide );
+
+        } else {
+            final Order buy, sell;
+            if (order.getSide() == Side.BUY) {
+                buy = order;
+                sell = null;
+            } else {
+                buy = null;
+                sell = order;
+            }
+
+            Trade trade = Trade.of().setBuy(buy).setSell(sell).setExecType(ExecType.REJECTED)
+                    .setOrderRejectReason(RejectReason.INSUFFICIENT_OB_CONSTELLATION.getMsg());
+            trades = Collections.singletonList( trade );
+        }
+
+        return trades;
+    }
+
+
+    private List<Trade> matchAgainstLimitOrders( Order order, OrderbookSide otherSide ) {
+        final List<Trade> trades = new ArrayList<>();
+
+        int leavesQty = order.getLeavesQty();
+        while ( leavesQty > 0 && !otherSide.getLimitOrders().isEmpty() ) {
+            Side side = otherSide.getSide();
+            Order otherSideOrder = otherSide.getLimitOrders().poll();
+            Trade trade = createTrade( order, otherSideOrder, side, otherSideOrder.getPrice() );
+
+            leavesQty -= trade.getExecutionQty();
+            trades.add( trade );
+        }
+
+        return trades;
     }
 
 
     private List<Trade> matchMarket(Order order, OrderbookSide otherSide) {
-        List<Trade> trades = new ArrayList<>();
+        final List<Trade> trades = new ArrayList<>();
 
         int leavesQty = order.getLeavesQty();
         while ( leavesQty > 0 && isLiquidityAvailable(otherSide) ) {
-            Trade trade;
             Side side = otherSide.getSide();
             boolean hasMarketOrders = !otherSide.getMarketOrders().isEmpty();
             boolean hasLimitOrders = !otherSide.getLimitOrders().isEmpty();
+            Trade trade;
             if ( hasMarketOrders && !hasLimitOrders ) {
                 Order otherSideOrder = otherSide.getMarketOrders().poll();
                 trade = createTrade( order, otherSideOrder, side, referencePrice );
@@ -98,7 +147,7 @@ public class ContinuousMatchEngine implements MatchEngine {
         buy.setCumQty( buy.getCumQty() + takeQty );
         sell.setCumQty( sell.getCumQty() + takeQty );
 
-        return Trade.of().setBuy(buy).setSell(sell).setExecutionQty(takeQty).setPrice(price);
+        return Trade.of().setBuy(buy).setSell(sell).setExecutionQty(takeQty).setPrice(price).setExecType(ExecType.TRADE);
     }
 
     /**

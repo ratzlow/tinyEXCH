@@ -32,7 +32,7 @@ public class VolatilityInterruptionInContTradingTest {
         Order sell = Order.of(Integer.valueOf(2).toString(), Side.BUY).setOrderType(OrderType.LIMIT);
 
         Trade trade = new Trade(buy, sell, 14.6, 20, 0);
-        MatchEngine matchEngine = ( order, otherSide) -> new Match( order, Collections.singletonList(trade) );
+        MatchEngine matchEngine = ( order, otherSide) -> new Match( order, Collections.singletonList(trade), Match.State.ACCEPT );
 
         List<VolatilityInterruption> raisedInterruptions = new ArrayList<>();
         VolatilityInterruptionEventHandler interruptionEventHandler = new VolatilityInterruptionEventHandler() {
