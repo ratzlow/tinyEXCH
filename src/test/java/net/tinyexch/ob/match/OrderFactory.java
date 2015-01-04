@@ -3,8 +3,11 @@ package net.tinyexch.ob.match;
 import net.tinyexch.order.*;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
 
 /**
  * Create simple orders for test purpose.
@@ -13,6 +16,12 @@ import java.time.ZoneOffset;
  * @since 2014-10-29
  */
 public class OrderFactory {
+    private static final String DATE_PATTERN = "yyyy-MM-dd";
+    private static final String TIME_PATTERN = "HH:mm:ss";
+    private static final String TODAY = LocalDate.now().format(DateTimeFormatter.ofPattern(DATE_PATTERN) );
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_PATTERN + " " + TIME_PATTERN); //
+
+
     private static int clientOrderIdSequence = 0;
 
     public static Order buyL(double price, int qty) {
@@ -26,7 +35,7 @@ public class OrderFactory {
     }
 
     /**
-     * @param timestamp #timePattern
+     * @param timestamp #TIME_PATTERN
      */
     public static Order buyL(double price, int qty, Instant timestamp ) {
         return newOrder( Side.BUY, price, qty, OrderType.LIMIT ).setTimestamp(timestamp);
@@ -73,7 +82,12 @@ public class OrderFactory {
                 .setOrderQty(qty).setOrderType(type);
     }
 
-    public static Instant time(int hour, int min, int sec) {
-        return LocalDateTime.now().withHour(hour).withMinute(min).withSecond(sec).toInstant(ZoneOffset.UTC);
+    /**
+     * @param time formatted according to {@link #TIME_PATTERN}
+     * @return today with given #time
+     */
+    public static Instant time( String time ) {
+        TemporalAccessor temporalAccessor = DATE_TIME_FORMATTER.parse(TODAY + " " + time);
+        return LocalDateTime.from(temporalAccessor).toInstant(ZoneOffset.UTC);
     }
 }

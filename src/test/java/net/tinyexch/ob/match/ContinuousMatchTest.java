@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
  * @author ratzlow@gmail.com
  * @since 2014-12-23
  */
-// TODO (FRa) : (FRa) : add better time parser with pattern
 public class ContinuousMatchTest {
 
     private static final double REFERENCE_PRICE = 200;
@@ -50,7 +49,7 @@ public class ContinuousMatchTest {
      */
     @Test
     public void testOnlyMarketOrdersOnOtherSide_Ex1() {
-        Order standingOrder = buyM(ORDER_QTY, time(9, 1, 0));
+        Order standingOrder = buyM(ORDER_QTY, time("09:01:00"));
         Order incomingOrder = sellM(ORDER_QTY);
         matchIncomingMarketOrder(standingOrder, incomingOrder, REFERENCE_PRICE);
     }
@@ -62,7 +61,7 @@ public class ContinuousMatchTest {
     @Test
     public void testOnlyBuyLimitOrderOnOtherSide_Ex2() {
         int highestBidLimit = 201;
-        Order standingOrder = buyL(highestBidLimit, ORDER_QTY, time(9, 1, 0));
+        Order standingOrder = buyL(highestBidLimit, ORDER_QTY, time("09:01:00"));
         Order incomingOrder = sellM(ORDER_QTY);
         matchIncomingMarketOrder(standingOrder, incomingOrder, highestBidLimit);
     }
@@ -74,7 +73,7 @@ public class ContinuousMatchTest {
     @Test
     public void testOnlyAskLimitOrderOnOtherSide_Ex3() {
         int lowestAskLimit = 199;
-        Order standingOrder = sellL(lowestAskLimit, ORDER_QTY, time(9, 1, 0));
+        Order standingOrder = sellL(lowestAskLimit, ORDER_QTY, time("09:01:00"));
         Order incomingOrder = buyM(ORDER_QTY);
         matchIncomingMarketOrder(standingOrder, incomingOrder, lowestAskLimit);
     }
@@ -152,7 +151,6 @@ public class ContinuousMatchTest {
     // Scenarios where standing orders face an incoming MARKET_TO_LIMIT order
     //-------------------------------------------------------------------------------------------
 
-
     /**
      * A market-to-limit order meets an order book with market orders only on the other side of the order book.
      * The market-to-limit order is rejected. A price is not determined and no orders are executed.
@@ -224,8 +222,8 @@ public class ContinuousMatchTest {
      */
     @Test
     public void testBuyMarketAndLimitOnOtherSideRejection_Ex12() {
-        Order standingMarket = buyM(ORDER_QTY, time(9,1,0));
-        Order standingLimit = buyL(199, ORDER_QTY, time(8, 55,0));
+        Order standingMarket = buyM(ORDER_QTY, time("09:01:00"));
+        Order standingLimit = buyL(199, ORDER_QTY, time("08:55:00"));
         assertEquals( true, ob.submit(standingMarket, NEW).isEmpty() );
         assertEquals( true, ob.submit(standingLimit, NEW).isEmpty() );
 
@@ -269,6 +267,11 @@ public class ContinuousMatchTest {
         checkOrderbookEmpty.run();
     }
 
+    //-------------------------------------------------------------------------------------------
+    // Standing orders face incoming LIMIT order
+    //-------------------------------------------------------------------------------------------
+
+
 
     //
     // test helper methods
@@ -304,8 +307,8 @@ public class ContinuousMatchTest {
     }
 
     private void testStandingMarketAndLimitOrderSell(double standingLimitPrice, double expectedExecutionPrice) {
-        Order standingMarket = sellM(ORDER_QTY, time(9, 1, 0));
-        Order standingLimit = sellL(standingLimitPrice, 1000, time(9, 2, 0));
+        Order standingMarket = sellM(ORDER_QTY, time("09:01:00"));
+        Order standingLimit = sellL(standingLimitPrice, 1000, time("09:02:00"));
         ob.submit(standingMarket, NEW);
         ob.submit(standingLimit, NEW);
 
@@ -325,8 +328,8 @@ public class ContinuousMatchTest {
 
 
     private void testStandingMarketAndLimitOrderBid(double standingLimitPrice, double expectedExecutionPrice) {
-        Order standingMarket = buyM(ORDER_QTY, time(9, 1, 0));
-        Order standingLimit = buyL(standingLimitPrice, 1000, time(9, 2, 0));
+        Order standingMarket = buyM(ORDER_QTY, time("09:01:00"));
+        Order standingLimit = buyL(standingLimitPrice, 1000, time("09:02:00"));
         ob.submit(standingMarket, NEW);
         ob.submit(standingLimit, NEW);
 

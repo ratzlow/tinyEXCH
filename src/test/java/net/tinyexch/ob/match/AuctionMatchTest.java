@@ -141,8 +141,8 @@ public class AuctionMatchTest {
      */
     @Test
     public void testPartialExecutionInAcutionWithTimePrio_Ex7() {
-        Order buy_1 = buyL(200, 300, time(9, 0, 0));
-        Order buy_2 = buyL(200, 300, time(9, 1, 0));
+        Order buy_1 = buyL(200, 300, time("09:00:00"));
+        Order buy_2 = buyL(200, 300, time("09:01:00"));
         Orderbook book = new Orderbook( new Order[] {buy_1, buy_2},
                                         new Order[] { sellL(200, 400)} );
 
