@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
  * @author ratzlow@gmail.com
  * @since 2014-12-23
  */
+// TODO (FRa) : (FRa) : add better time parser with pattern
 public class ContinuousMatchTest {
 
     private static final double REFERENCE_PRICE = 200;
@@ -33,7 +34,6 @@ public class ContinuousMatchTest {
     private static final MatchEngine MATCH_ENGINE = new ContinuousMatchEngine(REFERENCE_PRICE);
 
     private Orderbook ob;
-
 
     @Before
     public void init() {
@@ -153,16 +153,14 @@ public class ContinuousMatchTest {
     //-------------------------------------------------------------------------------------------
 
 
-    // TODO (FRa) : (FRa) : Any unexecuted part of a market-to- limit order is entered into the order book with a limit
-    // TODO (FRa) : (FRa) : equal to the price of the first partial execution.
     /**
      * A market-to-limit order meets an order book with market orders only on the other side of the order book.
      * The market-to-limit order is rejected. A price is not determined and no orders are executed.
      */
     @Test
-    public void testMarketOrdersOnlyOnOtherSide_Ex9() {
+    public void testMarketOrdersOnlyOnOtherSideRejection_Ex9() {
         Order standingMarket = buyM(ORDER_QTY);
-        ob.submit(standingMarket, NEW );
+        ob.submit(standingMarket, NEW);
         Runnable checkOrderbook = () -> {
             assertEquals( 0, ob.getSellSide().getOrders().size());
             assertEquals( 1, ob.getBuySide().getOrders().size());
@@ -173,21 +171,137 @@ public class ContinuousMatchTest {
 
         Order incoming = sellMtoL(ORDER_QTY);
         List<Trade> trades = ob.submit(incoming, NEW);
-        assertEquals( 1, trades.size() );
-        Trade rejectMsg = trades.iterator().next();
-        assertEquals( ExecType.REJECTED, rejectMsg.getExecType() );
-        assertEquals( RejectReason.INSUFFICIENT_OB_CONSTELLATION.getMsg(), rejectMsg.getOrderRejectReason() );
-        assertEquals( incoming.getClientOrderID(), rejectMsg.getSell().getClientOrderID() );
-        assertNull(rejectMsg.getBuy());
-        assertNull( rejectMsg.getBuy() );
+        Trade trade = checkMtoLOrderRejection(trades);
+        assertEquals(incoming.getClientOrderID(), trade.getSell().getClientOrderID());
+        assertNull(trade.getBuy());
 
         // validate nothing has altered the OB
         checkOrderbook.run();
     }
 
+
+    /**
+     * A market-to-limit order meets an order book with limit orders only on the other side of the order book.
+     * Both orders are executed at the highest bid limit of € 200
+     */
+    @Test
+    public void testBuyLimitOrdersOnlyOnOtherSide_Ex10() {
+        Order standingLimit = buyL(REFERENCE_PRICE, ORDER_QTY);
+        Order incoming = sellMtoL(ORDER_QTY);
+
+        ob.submit(standingLimit, NEW );
+        assertEquals( 0, ob.getSellSide().getOrders().size());
+        assertEquals( 1, ob.getBuySide().getOrders().size());
+        assertEquals(standingLimit.getClientOrderID(), ob.getBuySide().getOrders().iterator().next().getClientOrderID());
+
+        testMarketToLimitWithLimitOnlyOnOtherSideOK(ob, standingLimit, incoming,
+                standingLimit.getClientOrderID(), incoming.getClientOrderID());
+    }
+
+
+    /**
+     * A market-to-limit order meets an order book with limit orders only on the other side of the order book
+     * Both orders are executed at the lowest ask limit of € 200.
+     */
+    @Test
+    public void testSellLimitOrdersOnlyOnOtherSide_Ex11() {
+        Order standingLimit = sellL(REFERENCE_PRICE, ORDER_QTY);
+        Order incoming = buyMtoL(ORDER_QTY);
+
+        ob.submit(standingLimit, NEW );
+        assertEquals( 1, ob.getSellSide().getOrders().size());
+        assertEquals( 0, ob.getBuySide().getOrders().size());
+        assertEquals( standingLimit.getClientOrderID(), ob.getSellSide().getOrders().iterator().next().getClientOrderID());
+
+
+        testMarketToLimitWithLimitOnlyOnOtherSideOK(ob, standingLimit, incoming,
+                incoming.getClientOrderID(), standingLimit.getClientOrderID());
+    }
+
+    /**
+     * A market-to-limit order meets an order book with market orders and limit orders on the other side of the order book
+     * The market-to-limit order is rejected. A price is not determined and no orders are executed
+     */
+    @Test
+    public void testBuyMarketAndLimitOnOtherSideRejection_Ex12() {
+        Order standingMarket = buyM(ORDER_QTY, time(9,1,0));
+        Order standingLimit = buyL(199, ORDER_QTY, time(8, 55,0));
+        assertEquals( true, ob.submit(standingMarket, NEW).isEmpty() );
+        assertEquals( true, ob.submit(standingLimit, NEW).isEmpty() );
+
+        // check standing order
+        final Runnable checkOrderbook = () -> {
+            assertEquals(1, ob.getBuySide().getLimitOrders().size());
+            assertEquals(1, ob.getBuySide().getMarketOrders().size());
+        };
+        checkOrderbook.run();
+
+        Order incoming = sellMtoL(ORDER_QTY);
+        List<Trade> trades = ob.submit(incoming, NEW);
+        Trade trade = checkMtoLOrderRejection(trades);
+        assertEquals( incoming.getClientOrderID(), trade.getSell().getClientOrderID() );
+        assertNull( trade.getBuy() );
+
+        // check OB is unchanged
+        checkOrderbook.run();
+    }
+
+
+    /**
+     * A market-to-limit order meets an order book in which there are no orders on the other side of the order book.
+     * The market-to-limit order is rejected. A price is not determined and no orders are executed.
+     */
+    @Test
+    public void testSellMarketAndLimitOnOtherSideRejection_Ex13() {
+        Runnable checkOrderbookEmpty = () -> {
+            assertTrue(ob.getBuySide().getOrders().isEmpty());
+            assertTrue(ob.getSellSide().getOrders().isEmpty());
+        };
+        checkOrderbookEmpty.run();
+
+        Order incoming = sellMtoL(ORDER_QTY);
+        List<Trade> trades = ob.submit(incoming, NEW);
+        Trade trade = checkMtoLOrderRejection(trades);
+        assertEquals( incoming.getClientOrderID(), trade.getSell().getClientOrderID() );
+        assertNull( trade.getBuy() );
+
+        // check OB is unchanged
+        checkOrderbookEmpty.run();
+    }
+
+
     //
     // test helper methods
     //
+
+
+    private Trade checkMtoLOrderRejection( List<Trade> trades ) {
+        assertEquals( 1, trades.size() );
+        Trade trade = trades.iterator().next();
+        assertEquals(ExecType.REJECTED, trade.getExecType());
+        assertEquals(RejectReason.INSUFFICIENT_OB_CONSTELLATION.getMsg(), trade.getOrderRejectReason());
+        assertEquals( 0, trade.getExecutionQty() );
+        assertEquals(0, trade.getPrice(), TestConstants.ROUNDING_DELTA);
+
+        return trade;
+    }
+
+
+    private void testMarketToLimitWithLimitOnlyOnOtherSideOK( Orderbook ob, Order standingLimit, Order incoming,
+                                                              String expectedTradeBuyOrderID,
+                                                              String expectedTradeSellOrderID) {
+        List<Trade> trades = ob.submit(incoming, NEW);
+        assertEquals( 1, trades.size() );
+        Trade trade = trades.iterator().next();
+        assertEquals( expectedTradeBuyOrderID, trade.getBuy().getClientOrderID());
+        assertEquals( expectedTradeSellOrderID, trade.getSell().getClientOrderID() );
+        assertEquals( ORDER_QTY, trade.getExecutionQty() );
+        assertEquals( standingLimit.getPrice(), trade.getPrice(), TestConstants.ROUNDING_DELTA);
+
+        // validate nothing has altered the OB
+        assertEquals( 0, ob.getSellSide().getOrders().size());
+        assertEquals( 0, ob.getBuySide().getOrders().size());
+    }
 
     private void testStandingMarketAndLimitOrderSell(double standingLimitPrice, double expectedExecutionPrice) {
         Order standingMarket = sellM(ORDER_QTY, time(9, 1, 0));

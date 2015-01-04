@@ -39,7 +39,9 @@ public class ContinuousMatchEngine implements MatchEngine {
 
         } else if (orderType == OrderType.MARKET_TO_LIMIT ) {
             trades = matchMarketToLimit( order, otherSide );
-            remainingOrder = order.getLeavesQty() > 0  ? order.setOrderType(OrderType.MARKET) : order;
+            if (order.getLeavesQty() > 0 && !trades.isEmpty()) {
+                remainingOrder = createRemainingOrder(order, trades);
+            }
             state = (trades.size() == 1 && trades.get(0).getExecType() == ExecType.REJECTED) ? State.REJECT : State.ACCEPT;
 
         } else {
@@ -47,6 +49,12 @@ public class ContinuousMatchEngine implements MatchEngine {
         }
 
         return new Match(remainingOrder, trades, state );
+    }
+
+    private Order createRemainingOrder(Order unexecutedOrderPart, List<Trade> trades) {
+        Trade firstTrade = trades.get(0);
+        double newApplicableLimitPrice = firstTrade.getPrice();
+        return unexecutedOrderPart.setOrderType(OrderType.LIMIT).setPrice(newApplicableLimitPrice);
     }
 
 

@@ -44,6 +44,10 @@ public class OrderFactory {
         return newOrder( Side.BUY, 0, qty, OrderType.MARKET );
     }
 
+    public static Order buyMtoL(int qty) {
+        return newOrder( Side.BUY, 0, qty, OrderType.MARKET_TO_LIMIT );
+    }
+
     public static Order buyM(int qty, Instant timestamp ) {
         return newOrder( Side.BUY, 0, qty, OrderType.MARKET ).setTimestamp(timestamp);
     }
