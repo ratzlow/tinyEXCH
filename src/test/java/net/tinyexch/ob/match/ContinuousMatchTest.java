@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
  * @author ratzlow@gmail.com
  * @since 2014-12-23
  */
+// TODO (FRa) : (FRa) : check if tests are available for all MKT orders which depend on 1. & 2. principle (price <> refPrice)
 public class ContinuousMatchTest {
 
     private static final double REFERENCE_PRICE = 200;
@@ -37,6 +38,7 @@ public class ContinuousMatchTest {
     @Before
     public void init() {
         ob = new Orderbook(MATCH_ENGINE);
+        assertEmptyOrderbook();
     }
 
     //-------------------------------------------------------------------------------------------
@@ -114,7 +116,6 @@ public class ContinuousMatchTest {
     public void testStandingMarketAndLimitOrderBestAskAboveRefPrice_Ex6() {
         testStandingMarketAndLimitOrderSell(202, REFERENCE_PRICE);
     }
-
 
     /**
      * A market order meets an order book with market orders and limit orders on the other side of the order book.
@@ -251,12 +252,6 @@ public class ContinuousMatchTest {
      */
     @Test
     public void testSellMarketAndLimitOnOtherSideRejection_Ex13() {
-        Runnable checkOrderbookEmpty = () -> {
-            assertTrue(ob.getBuySide().getOrders().isEmpty());
-            assertTrue(ob.getSellSide().getOrders().isEmpty());
-        };
-        checkOrderbookEmpty.run();
-
         Order incoming = sellMtoL(ORDER_QTY);
         List<Trade> trades = ob.submit(incoming, NEW);
         Trade trade = checkMtoLOrderRejection(trades);
@@ -264,19 +259,115 @@ public class ContinuousMatchTest {
         assertNull( trade.getBuy() );
 
         // check OB is unchanged
-        checkOrderbookEmpty.run();
+        assertEmptyOrderbook();
     }
 
     //-------------------------------------------------------------------------------------------
     // Standing orders face incoming LIMIT order
     //-------------------------------------------------------------------------------------------
 
+    /**
+     * A limit order meets an order book with market orders only on the other side of the order book.
+     * The reference price is € 200. It is higher than or equal to the lowest ask limit. Both orders are executed at
+     * the reference price of € 200.
+     * ==> see principle 1
+     */
+    @Test
+    public void testBidMarketOnlyOnOtherSide_AskPriceLowerThanRefPrice_Ex14() {
+        double askPrice = 195D;
+        Order standingMarket = buyM(ORDER_QTY, time("09:01:00") );
+        Order incoming = sellL( askPrice, ORDER_QTY );
+        submitLimitOrder(standingMarket, incoming, REFERENCE_PRICE);
+    }
 
+
+    /**
+     * A limit order meets an order book with market orders only on the other side of the order book.
+     * The reference price is € 200. It is lower than the lowest ask limit. Both orders are executed at the lowest ask
+     * limit of € 203.
+     * ==> see principle 2
+     */
+    @Test
+    public void testBidMarketOnlyOnOtherSide_AskPriceGreaterThanRefPrice_Ex15() {
+        double askPrice = 203D;
+        Order standingMarket = buyM(ORDER_QTY, time("09:01:00") );
+        Order incoming = sellL( askPrice, ORDER_QTY );
+        submitLimitOrder(standingMarket, incoming, askPrice);
+    }
+
+    /**
+     * A limit order meets an order book with market orders only on the other side of the order book.
+     * The reference price is € 200. It is lower than or equal to the highest bid limit. Both orders are executed at
+     * the reference price of € 200.
+     * ==> see principle 1
+     */
+    @Test
+    public void testAskMarketOnlyOnOtherSide_BidPriceGreaterThanRefPrice_Ex16() {
+        double bidPrice = 203D;
+        Order standingMarket = sellM(ORDER_QTY, time("09:01:00"));
+        Order incoming = buyL( bidPrice, ORDER_QTY );
+        submitLimitOrder(standingMarket, incoming, REFERENCE_PRICE );
+    }
+
+
+    /**
+     * limit order meets an order book with market orders only on the other side of the order book.
+     * The reference price is € 200. It is higher than the highest bid limit. Both orders are executed at the highest
+     * bid limit of € 199.
+     * ==> see principle 2
+     */
+    @Test
+    public void testAskMarketOnlyOnOtherSide_BidPriceGreaterThanRefPrice_Ex17() {
+        double bidPrice = 199D;
+        Order standingMarket = sellM(ORDER_QTY, time("09:01:00"));
+        Order incoming = buyL( bidPrice, ORDER_QTY );
+        submitLimitOrder(standingMarket, incoming, bidPrice );
+    }
+
+    /**
+     * A limit order meets an order book with limit orders only on the other side of the order book.
+     * The highest bid limit is higher than or equal to the lowest ask limit. Both orders are executed at the highest
+     * bid limit of € 199.
+     */
+    @Test
+    public void testBidLimitOnlyOnOtherSide_AskPriceLowerThanBidPrice_Ex18() {
+        double highestBidLimit = 199D;
+        Order standingLimit = buyL(highestBidLimit, ORDER_QTY, time("09:33:00"));
+        Order incoming = sellL( 198D, ORDER_QTY );
+        submitLimitOrder(standingLimit, incoming, highestBidLimit );
+    }
+
+    /**
+     * A limit order meets an order book with limit orders only on the other side of the order book.
+     * The highest bid limit is higher than or equal to the lowest ask limit. Both orders are executed at the lowest
+     * ask limit of € 199.
+     */
+    @Test
+    public void testAskLimitOnlyOnOtherSide_AskPriceLowerThanBidPrice_Ex19() {
+        double lowestAskLimit = 199D;
+        Order standingLimit = sellL(lowestAskLimit, ORDER_QTY, time("09:33:00"));
+        Order incoming = buyL( 200D, ORDER_QTY);
+        submitLimitOrder( standingLimit, incoming, lowestAskLimit );
+    }
 
     //
     // test helper methods
     //
 
+    private void submitLimitOrder(Order standingOrder, Order incoming, double expectedExecutionPrice) {
+        ob.submit(standingOrder, NEW);
+        List<Trade> trades = ob.submit(incoming, NEW);
+        assertEquals( 1, trades.size() );
+        Trade trade = trades.iterator().next();
+        assertEquals( expectedExecutionPrice, trade.getPrice(), TestConstants.ROUNDING_DELTA );
+        assertEquals( ORDER_QTY, trade.getExecutionQty() );
+        assertEmptyOrderbook();
+    }
+
+    private void assertEmptyOrderbook() {
+        assertEquals( 0, ob.getSellSide().getOrders().size() );
+        assertEquals( 0, ob.getBuySide().getOrders().size() );
+    }
 
     private Trade checkMtoLOrderRejection( List<Trade> trades ) {
         assertEquals( 1, trades.size() );
@@ -302,8 +393,7 @@ public class ContinuousMatchTest {
         assertEquals( standingLimit.getPrice(), trade.getPrice(), TestConstants.ROUNDING_DELTA);
 
         // validate nothing has altered the OB
-        assertEquals( 0, ob.getSellSide().getOrders().size());
-        assertEquals( 0, ob.getBuySide().getOrders().size());
+        assertEmptyOrderbook();
     }
 
     private void testStandingMarketAndLimitOrderSell(double standingLimitPrice, double expectedExecutionPrice) {

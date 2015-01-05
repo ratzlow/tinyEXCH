@@ -34,7 +34,10 @@ public class ContinuousMatchEngine implements MatchEngine {
         Order remainingOrder = order;
         State state = State.ACCEPT;
         OrderType orderType = order.getOrderType();
-        if ( orderType == OrderType.MARKET ) {
+        if ( orderType == OrderType.LIMIT ) {
+            trades = matchLimit(order, otherSide);
+
+        } else if ( orderType == OrderType.MARKET ) {
             trades = matchMarket( order, otherSide );
 
         } else if (orderType == OrderType.MARKET_TO_LIMIT ) {
@@ -45,11 +48,13 @@ public class ContinuousMatchEngine implements MatchEngine {
             state = (trades.size() == 1 && trades.get(0).getExecType() == ExecType.REJECTED) ? State.REJECT : State.ACCEPT;
 
         } else {
-            trades = Collections.emptyList();
+            throw new MatchException("Incoming order has unmatchable order type for continuous trading: " + order);
         }
 
         return new Match(remainingOrder, trades, state );
     }
+
+
 
     private Order createRemainingOrder(Order unexecutedOrderPart, List<Trade> trades) {
         Trade firstTrade = trades.get(0);
@@ -91,6 +96,36 @@ public class ContinuousMatchEngine implements MatchEngine {
             Side side = otherSide.getSide();
             Order otherSideOrder = otherSide.getLimitOrders().poll();
             Trade trade = createTrade( order, otherSideOrder, side, otherSideOrder.getPrice() );
+
+            leavesQty -= trade.getExecutionQty();
+            trades.add( trade );
+        }
+
+        return trades;
+    }
+
+
+    private List<Trade> matchLimit(Order order, OrderbookSide otherSide) {
+        final List<Trade> trades = new ArrayList<>();
+
+        int leavesQty = order.getLeavesQty();
+        while ( leavesQty > 0 && isLiquidityAvailable(otherSide) ) {
+            Side side = otherSide.getSide();
+            boolean hasMarketOrders = !otherSide.getMarketOrders().isEmpty();
+            boolean hasLimitOrders = !otherSide.getLimitOrders().isEmpty();
+            Trade trade;
+            if ( hasMarketOrders && !hasLimitOrders ) {
+                Order otherSideOrder = otherSide.getMarketOrders().poll();
+                double executionPrice = calcExecutionPrice(side, order.getPrice());
+                trade = createTrade( order, otherSideOrder, side, executionPrice );
+
+            } else if ( !hasMarketOrders && hasLimitOrders ) {
+                Order otherSideOrder = otherSide.getLimitOrders().poll();
+                trade = createTrade( order, otherSideOrder, side, otherSideOrder.getPrice() );
+
+            } else {
+                throw new MatchException("Matching not implemented! order to match: " + order);
+            }
 
             leavesQty -= trade.getExecutionQty();
             trades.add( trade );
