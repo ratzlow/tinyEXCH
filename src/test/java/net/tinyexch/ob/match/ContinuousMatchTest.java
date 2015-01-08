@@ -215,7 +215,6 @@ public class ContinuousMatchTest {
         assertEquals( 0, ob.getBuySide().getOrders().size());
         assertEquals( standingLimit.getClientOrderID(), ob.getSellSide().getOrders().iterator().next().getClientOrderID());
 
-
         testMarketToLimitWithLimitOnlyOnOtherSideOK(ob, standingLimit, incoming,
                 incoming.getClientOrderID(), standingLimit.getClientOrderID());
     }

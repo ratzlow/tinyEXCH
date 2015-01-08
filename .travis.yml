@@ -2,3 +2,5 @@ language: java
 
 jdk:
   - oraclejdk8
+
+script: gradle --s check clean
