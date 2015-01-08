@@ -23,7 +23,7 @@ public interface MatchEngine {
     public static final Comparator<Order> SELL_PRICE_TIME_ORDERING = SELL_PRICE_ORDERING.thenComparing(Priorities.TIME);
     public static final Comparator<Order> BUY_PRICE_TIME_ORDERING = BUY_PRICE_ORDERING.thenComparing(Priorities.TIME);
 
-    static final MatchEngine NO_OP = (order, otherOrderbookSide) -> Match.NO_MATCH;
+    static final MatchEngine NO_OP = (order, otherOrderbookSide, thisOrderbookSide ) -> Match.NO_MATCH;
 
-    Match match(Order order, OrderbookSide otherSide);
+    Match match(Order order, OrderbookSide otherSide, OrderbookSide thisSide);
 }

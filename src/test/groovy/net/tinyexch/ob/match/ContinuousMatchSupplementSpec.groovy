@@ -22,8 +22,8 @@ class ContinuousMatchSupplementSpec extends Specification {
         def ob = new Orderbook(matchEngine)
 
         when: "BUY side has: MKT:3000; MKT:3000"
-        def buy_1 = buyM(3000, time(9, 1, 0))
-        def buy_2 = buyM(3000, time(9, 2, 0))
+        def buy_1 = buyM(3000, time("09:01:00"))
+        def buy_2 = buyM(3000, time("09:02:00"))
 
         def trades_1 = ob.submit( buy_1, SubmitType.NEW)
         def trades_2 = ob.submit( buy_2, SubmitType.NEW)
@@ -33,7 +33,7 @@ class ContinuousMatchSupplementSpec extends Specification {
         trades_2.empty
 
         when: "SELL side: place MKT:1000"
-        def sell_1 = sellM(1000, time(9, 3, 0))
+        def sell_1 = sellM(1000, time("09:03:00"))
         def trades_3 = ob.submit(sell_1, SubmitType.NEW)
 
         then: "BUY: 2 orders left; SELL: empty with one partial execution"

@@ -5,7 +5,11 @@ import net.tinyexch.ob.RejectReason;
 import net.tinyexch.ob.match.Match.State;
 import net.tinyexch.order.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Strategy to match new incoming orders against given orderbook.
@@ -29,13 +33,13 @@ public class ContinuousMatchEngine implements MatchEngine {
     }
 
     @Override
-    public Match match(Order order, OrderbookSide otherSide) {
+    public Match match(Order order, OrderbookSide otherSide, OrderbookSide thisSide) {
         final List<Trade> trades;
         Order remainingOrder = order;
         State state = State.ACCEPT;
         OrderType orderType = order.getOrderType();
         if ( orderType == OrderType.LIMIT ) {
-            trades = matchLimit(order, otherSide);
+            trades = matchLimit(order, otherSide, thisSide );
 
         } else if ( orderType == OrderType.MARKET ) {
             trades = matchMarket( order, otherSide );
@@ -105,26 +109,37 @@ public class ContinuousMatchEngine implements MatchEngine {
     }
 
 
-    private List<Trade> matchLimit(Order order, OrderbookSide otherSide) {
+    private List<Trade> matchLimit(Order incomingLimitOrder, OrderbookSide otherSide, OrderbookSide thisSide) {
         final List<Trade> trades = new ArrayList<>();
 
-        int leavesQty = order.getLeavesQty();
-        while ( leavesQty > 0 && isLiquidityAvailable(otherSide) ) {
+        int leavesQty = incomingLimitOrder.getLeavesQty();
+        while ( leavesQty > 0 && isLiquidityAvailable(otherSide, incomingLimitOrder.getPrice()) ) {
             Side side = otherSide.getSide();
             boolean hasMarketOrders = !otherSide.getMarketOrders().isEmpty();
             boolean hasLimitOrders = !otherSide.getLimitOrders().isEmpty();
-            Trade trade;
-            if ( hasMarketOrders && !hasLimitOrders ) {
-                Order otherSideOrder = otherSide.getMarketOrders().poll();
-                double executionPrice = calcExecutionPrice(side, order.getPrice());
-                trade = createTrade( order, otherSideOrder, side, executionPrice );
+
+            final Trade trade;
+            if ( hasMarketOrders && hasLimitOrders ) {
+                Order bestLimitOtherSide = otherSide.getLimitOrders().peek();
+                Order bestLimitThisSide = thisSide.getLimitOrders().peek();
+                double lowestAsk = getBestAskPrice(bestLimitThisSide, bestLimitOtherSide, incomingLimitOrder);
+                double highestBid = getBestBidPrice(bestLimitThisSide, bestLimitOtherSide, incomingLimitOrder);
+                double executionPrice = calcExecutionPrice( otherSide.getSide(), highestBid, lowestAsk );
+
+                Order otherSideMarketOrder = otherSide.getMarketOrders().poll();
+                trade = createTrade( incomingLimitOrder, otherSideMarketOrder, side, executionPrice );
 
             } else if ( !hasMarketOrders && hasLimitOrders ) {
                 Order otherSideOrder = otherSide.getLimitOrders().poll();
-                trade = createTrade( order, otherSideOrder, side, otherSideOrder.getPrice() );
+                trade = createTrade( incomingLimitOrder, otherSideOrder, side, otherSideOrder.getPrice() );
+
+            } else if ( hasMarketOrders && !hasLimitOrders ) {
+                Order otherSideOrder = otherSide.getMarketOrders().poll();
+                double executionPrice = calcExecutionPrice(side, incomingLimitOrder.getPrice());
+                trade = createTrade( incomingLimitOrder, otherSideOrder, side, executionPrice );
 
             } else {
-                throw new MatchException("Matching not implemented! order to match: " + order);
+                throw new MatchException("Matching not implemented! incomingLimitOrder to match: " + incomingLimitOrder);
             }
 
             leavesQty -= trade.getExecutionQty();
@@ -182,6 +197,31 @@ public class ContinuousMatchEngine implements MatchEngine {
     }
 
 
+    private double calcExecutionPrice(Side otherSide, double highestBidLimit, double lowestAskLimit ) {
+        double execPrice = -1;
+        if (otherSide == Side.BUY) {
+            if (referencePrice >= highestBidLimit && referencePrice >= lowestAskLimit ) {
+                execPrice = referencePrice;
+            } else if ( highestBidLimit >= lowestAskLimit && highestBidLimit > referencePrice) {
+                execPrice = highestBidLimit;
+            } else if ( lowestAskLimit > highestBidLimit && lowestAskLimit > referencePrice ) {
+                execPrice = lowestAskLimit;
+            }
+        } else {
+            throw new UnsupportedOperationException("Not yet implemented");
+        }
+
+        if (execPrice == -1) {
+            String msg = String.format(
+                    "Cannot define execution price for limit order. otherSide=%s, highestBidLimit=%f, lowestAskLimit=%f",
+                    otherSide, highestBidLimit, lowestAskLimit);
+            throw new MatchException(msg);
+        }
+
+        return execPrice;
+    }
+
+
     private Trade createTrade(Order order, Order otherSideOrder, Side otherSide, double price ) {
         Order buy = otherSide == Side.BUY ? otherSideOrder.mutableClone() : order.mutableClone();
         Order sell = otherSide == Side.SELL ? otherSideOrder.mutableClone() : order.mutableClone();
@@ -202,5 +242,44 @@ public class ContinuousMatchEngine implements MatchEngine {
                 !otherSide.getLimitOrders().isEmpty() ||
                 !otherSide.getHiddenOrders().isEmpty() ||
                 !otherSide.getHiddenOrders().isEmpty();
+    }
+
+    /**
+     * @param otherSide orderbook side with orders to match against
+     * @param limitPrice of this side order to check if we are in the market (against the other side best limit)
+     * @return true ... order can be crossed with order on the other side
+     */
+    private boolean isLiquidityAvailable(OrderbookSide otherSide, double limitPrice ) {
+
+        boolean hasExecutableLimitOrders = false;
+        if (!otherSide.getLimitOrders().isEmpty()) {
+            Order limitOnOtherSide = otherSide.getLimitOrders().peek();
+            hasExecutableLimitOrders = otherSide.getSide() == Side.BUY ?
+                                            isCrossedPrice(limitOnOtherSide.getPrice(), limitPrice) :
+                                            isCrossedPrice(limitPrice, limitOnOtherSide.getPrice());
+        }
+
+        return !otherSide.getMarketOrders().isEmpty() ||
+                hasExecutableLimitOrders ||
+                !otherSide.getHiddenOrders().isEmpty() ||
+                !otherSide.getHiddenOrders().isEmpty();
+    }
+
+    private boolean isCrossedPrice( double bid, double ask ) {
+        return bid >= ask;
+    }
+
+    private double getBestAskPrice( Order bestThisSide, Order bestOtherSide, Order incoming ) {
+        return getBestPrice(bestThisSide, bestOtherSide, incoming, Side.SELL, SELL_PRICE_ORDERING);
+    }
+
+    private double getBestBidPrice( Order bestThisSide, Order bestOtherSide, Order incoming ) {
+        return getBestPrice(bestThisSide, bestOtherSide, incoming, Side.BUY, BUY_PRICE_ORDERING);
+    }
+
+    private double getBestPrice(Order bestThisSide, Order bestOtherSide, Order incoming, Side side, Comparator<Order> bestFirst ) {
+        return Stream.of(bestThisSide, bestOtherSide, incoming)
+                .filter( o -> o != null ).filter( o -> o.getSide() == side)
+                .sorted(bestFirst).findFirst().get().getPrice();
     }
 }

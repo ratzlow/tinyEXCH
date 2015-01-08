@@ -277,7 +277,7 @@ public class ContinuousMatchTest {
         double askPrice = 195D;
         Order standingMarket = buyM(ORDER_QTY, time("09:01:00") );
         Order incoming = sellL( askPrice, ORDER_QTY );
-        submitLimitOrder(standingMarket, incoming, REFERENCE_PRICE);
+        submitLimitOrder(incoming, REFERENCE_PRICE, standingMarket );
     }
 
 
@@ -292,7 +292,7 @@ public class ContinuousMatchTest {
         double askPrice = 203D;
         Order standingMarket = buyM(ORDER_QTY, time("09:01:00") );
         Order incoming = sellL( askPrice, ORDER_QTY );
-        submitLimitOrder(standingMarket, incoming, askPrice);
+        submitLimitOrder(incoming, askPrice, standingMarket );
     }
 
     /**
@@ -306,7 +306,7 @@ public class ContinuousMatchTest {
         double bidPrice = 203D;
         Order standingMarket = sellM(ORDER_QTY, time("09:01:00"));
         Order incoming = buyL( bidPrice, ORDER_QTY );
-        submitLimitOrder(standingMarket, incoming, REFERENCE_PRICE );
+        submitLimitOrder(incoming, REFERENCE_PRICE, standingMarket );
     }
 
 
@@ -321,7 +321,7 @@ public class ContinuousMatchTest {
         double bidPrice = 199D;
         Order standingMarket = sellM(ORDER_QTY, time("09:01:00"));
         Order incoming = buyL( bidPrice, ORDER_QTY );
-        submitLimitOrder(standingMarket, incoming, bidPrice );
+        submitLimitOrder( incoming, bidPrice, standingMarket );
     }
 
     /**
@@ -334,7 +334,7 @@ public class ContinuousMatchTest {
         double highestBidLimit = 199D;
         Order standingLimit = buyL(highestBidLimit, ORDER_QTY, time("09:33:00"));
         Order incoming = sellL( 198D, ORDER_QTY );
-        submitLimitOrder(standingLimit, incoming, highestBidLimit );
+        submitLimitOrder(incoming, highestBidLimit, standingLimit );
     }
 
     /**
@@ -347,21 +347,105 @@ public class ContinuousMatchTest {
         double lowestAskLimit = 199D;
         Order standingLimit = sellL(lowestAskLimit, ORDER_QTY, time("09:33:00"));
         Order incoming = buyL( 200D, ORDER_QTY);
-        submitLimitOrder( standingLimit, incoming, lowestAskLimit );
+        submitLimitOrder( incoming, lowestAskLimit, standingLimit );
     }
+
+    /**
+     * A limit order meets an order book with limit orders only on the other side of the order book.
+     * The highest bid limit is lower than the lowest ask limit. The incoming ask order is entered into the order
+     * book. A price is not determined and no orders are executed.
+     */
+    @Test
+    public void testLimitOrdersOnOtherSide_LowestAskLessThanHighestBid_Ex20() {
+        Order standingLimit = buyL(199, ORDER_QTY, time("09:33:00"));
+        Order incoming = sellL(200D, ORDER_QTY);
+        ob.submit(standingLimit, NEW);
+        List<Trade> trades = ob.submit(incoming, NEW);
+        assertEquals( 0, trades.size() );
+        assertEquals( 1, ob.getBuySide().getOrders().size() );
+        assertEquals( 1, ob.getSellSide().getOrders().size() );
+    }
+
+
+    /**
+     * A limit order meets an order book with market orders and limit orders on the other side of the order book.
+     * The reference price is € 200. It is higher than or equal to the highest bid limit and higher than or equal to
+     * the lowest ask limit. The incoming ask order is executed against the bid market order in the order book at the
+     * reference price of € 200.
+     * ==> principle 1
+     */
+    // TODO (FRa) : (FRa) : write test cases with orders on both sides, so we can see what happens if on same side orders exist with price
+    @Test
+    public void testMarketAndLimitOrdersOnOtherSide_RefPriceGTBestBuyAndBestAsk_Ex21() {
+        Order standingMarket = buyM(ORDER_QTY, time("09:01:00"));
+        Order standingLimit = buyL(196D, ORDER_QTY, time("09:02:00") );
+        Order incoming = sellL(195D, ORDER_QTY);
+        submitLimitOrder( incoming, REFERENCE_PRICE, () -> assertRemaingLimitOrderInOrderbook(standingLimit),
+                standingMarket, standingLimit );
+    }
+
+    /**
+     * A limit order meets an order book with market orders and limit orders on the other side of the order book.
+     * The reference price is € 200. The highest bid limit is higher than or equal to the lowest ask limit and higher
+     * than the reference price. The incoming ask order is executed against the bid market order in the order book at
+     * the highest bid limit of € 202.
+     * ==> principle 2
+     */
+    @Test
+    public void testMarketAndLimitOrdersOnOtherSide_BestBidGTEBestAskAndGTERefPrice_Ex22() {
+        Order standingMarket = buyM(ORDER_QTY, time("09:01:00"));
+        Order standingLimit = buyL(202D, ORDER_QTY, time("09:02:00") );
+        Order incoming = sellL(199D, ORDER_QTY);
+        submitLimitOrder( incoming, standingLimit.getPrice(), () -> assertRemaingLimitOrderInOrderbook(standingLimit),
+                        standingMarket, standingLimit );
+    }
+
+    /**
+     * A limit order meets an order book with market orders and limit orders on the other side of the order book.
+     * The reference price is € 200. The lowest ask limit is higher than the highest bid limit and the reference price.
+     * The incoming ask order is executed against the bid market order in the order book at the lowest ask limit of € 203.
+     * ==> principle 2
+     */
+    @Test
+    public void testMarketAndLimitOrdersOnOtherSide_BestAskGTBestBidAndGTRefPrice_Ex23() {
+        Order standingMarket = buyM(ORDER_QTY, time("09:01:00"));
+        Order standingLimit = buyL(202D, ORDER_QTY, time("09:02:00") );
+        Order incoming = sellL(203D, ORDER_QTY);
+        submitLimitOrder( incoming, incoming.getPrice(), () -> assertRemaingLimitOrderInOrderbook(standingLimit),
+                        standingMarket, standingLimit );
+    }
+
 
     //
     // test helper methods
     //
 
-    private void submitLimitOrder(Order standingOrder, Order incoming, double expectedExecutionPrice) {
-        ob.submit(standingOrder, NEW);
+    private void submitLimitOrder(Order incoming, double expectedExecutionPrice, Order ... standingOrders ) {
+        Runnable postMatchCheck = this::assertEmptyOrderbook;
+        submitLimitOrder( incoming, expectedExecutionPrice, postMatchCheck, standingOrders );
+    }
+
+    private void submitLimitOrder(Order incoming, double expectedExecutionPrice,
+                                  Runnable postMatchChecks , Order ... standingOrders ) {
+        for ( Order standingOrder : standingOrders ) {
+            List<Trade> trades = ob.submit(standingOrder, NEW);
+            assertEquals( 0, trades.size() );
+        }
         List<Trade> trades = ob.submit(incoming, NEW);
         assertEquals( 1, trades.size() );
         Trade trade = trades.iterator().next();
         assertEquals( expectedExecutionPrice, trade.getPrice(), TestConstants.ROUNDING_DELTA );
-        assertEquals( ORDER_QTY, trade.getExecutionQty() );
-        assertEmptyOrderbook();
+        assertEquals(ORDER_QTY, trade.getExecutionQty());
+        postMatchChecks.run();
+    }
+
+
+    private void assertRemaingLimitOrderInOrderbook( Order standingLimit ) {
+        assertEquals( 0, ob.getSellSide().getOrders().size() );
+        assertEquals( 1, ob.getBuySide().getOrders().size() );
+        Order remainingBuy = ob.getBuySide().getOrders().iterator().next();
+        assertEquals( standingLimit.getClientOrderID(), remainingBuy.getClientOrderID() );
+        assertEquals( standingLimit.getLeavesQty(), remainingBuy.getLeavesQty() );
     }
 
     private void assertEmptyOrderbook() {
