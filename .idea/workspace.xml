@@ -2,18 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list id="68b7f672-a3db-4303-8897-9439573ca816" name="Default" comment="" />
-    <list default="true" id="992caf6a-1eed-41e2-b415-e210a0ead36a" name="tE-23 Continous: basic matching rules" comment="tE-23: Replaced storage of orders in OB with PriorityQueue instead of List. Ensure best orders are always on top">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/Match.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/ContinuousMatchEngine.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/ContinuousMatchEngine.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/ContinuousMatchTest.java" afterPath="$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/ContinuousMatchTest.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/continuous/ContinuousTrading.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/continuous/ContinuousTrading.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/auction/DefaultPriceDeterminationPhase.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/auction/DefaultPriceDeterminationPhase.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/MatchEngine.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/MatchEngine.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/order/Order.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/order/Order.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/Orderbook.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/Orderbook.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/OrderbookSide.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/OrderbookSide.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/tinyexch/order/Trade.java" afterPath="$PROJECT_DIR$/src/main/java/net/tinyexch/order/Trade.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/java/net/tinyexch/ob/price/safeguard/VolatilityInterruptionInContTradingTest.java" afterPath="$PROJECT_DIR$/src/test/java/net/tinyexch/ob/price/safeguard/VolatilityInterruptionInContTradingTest.java" />
+    <list default="true" id="992caf6a-1eed-41e2-b415-e210a0ead36a" name="tE-23 Continous: basic matching rules" comment="tE-23: added support for incoming ask limit orders" />
+    <list id="a1770265-3b6b-4cb0-a798-fc9c93ae12dc" name="ignore" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/compiler.xml" afterPath="$PROJECT_DIR$/.idea/compiler.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/gradle.xml" afterPath="$PROJECT_DIR$/.idea/gradle.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="tinyEXCH.iws" />
@@ -24,6 +16,7 @@
     <ignored path="$PROJECT_DIR$/build/" />
     <ignored path=".idea/dataSources.local.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <file path="$PROJECT_DIR$/.idea/workspace.xml" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -98,23 +91,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="DefaultPriceDeterminationPhase.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/auction/DefaultPriceDeterminationPhase.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="3023" max-vertical-offset="4335">
-              <caret line="217" column="55" selection-start-line="217" selection-start-column="55" selection-end-line="217" selection-end-column="55" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="ContinuousMatchTest.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/ContinuousMatchTest.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="571" max-vertical-offset="930">
-              <caret line="47" column="29" selection-start-line="47" selection-start-column="29" selection-end-line="47" selection-end-column="29" />
+            <state vertical-scroll-proportion="-4.3846154" vertical-offset="5901" max-vertical-offset="8520">
+              <caret line="401" column="0" selection-start-line="401" selection-start-column="0" selection-end-line="401" selection-end-column="0" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -122,12 +103,24 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Trade.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/order/Trade.java">
+      <file leaf-file-name="Priorities.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/Priorities.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1935">
-              <caret line="133" column="0" selection-start-line="133" selection-start-column="0" selection-end-line="133" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="119" max-vertical-offset="825">
+              <caret line="30" column="4" selection-start-line="30" selection-start-column="4" selection-end-line="30" selection-end-column="4" />
               <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="MatchEngine.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/MatchEngine.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="525">
+              <caret line="16" column="81" selection-start-line="16" selection-start-column="81" selection-end-line="16" selection-end-column="81" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -135,52 +128,37 @@
       <file leaf-file-name="ContinuousMatchEngine.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/ContinuousMatchEngine.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="533" max-vertical-offset="1185">
-              <caret line="46" column="0" selection-start-line="46" selection-start-column="0" selection-end-line="46" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="3535" max-vertical-offset="4215">
+              <caret line="284" column="1" selection-start-line="284" selection-start-column="1" selection-end-line="284" selection-end-column="1" />
               <folding>
-                <element signature="e#579#580#0" expanded="true" />
-                <element signature="e#631#632#0" expanded="true" />
+                <element signature="e#1248#1249#0" expanded="true" />
+                <element signature="e#1300#1301#0" expanded="true" />
+                <element signature="e#11600#11601#0" expanded="true" />
+                <element signature="e#11633#11634#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="MatchEngine.java" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/MatchEngine.java">
+      <file leaf-file-name="VolatilityInterruptionInContTradingTest.java" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/price/safeguard/VolatilityInterruptionInContTradingTest.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-0.63907284" vertical-offset="223" max-vertical-offset="525">
-              <caret line="2" column="7" selection-start-line="2" selection-start-column="7" selection-end-line="2" selection-end-column="7" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Match.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/Match.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="870">
-              <caret line="44" column="18" selection-start-line="44" selection-start-column="18" selection-end-line="44" selection-end-column="18" />
-              <folding>
-                <element signature="imports" expanded="true" />
-                <element signature="e#724#725#0" expanded="true" />
-                <element signature="e#817#818#0" expanded="true" />
-                <element signature="e#855#856#0" expanded="true" />
-                <element signature="e#890#891#0" expanded="true" />
-                <element signature="e#928#929#0" expanded="true" />
-                <element signature="e#957#958#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="TimeInForce.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/order/TimeInForce.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="285">
-              <caret line="9" column="12" selection-start-line="9" selection-start-column="12" selection-end-line="9" selection-end-column="12" />
+            <state vertical-scroll-proportion="0.8552632" vertical-offset="25" max-vertical-offset="705">
+              <caret line="34" column="63" selection-start-line="34" selection-start-column="63" selection-end-line="34" selection-end-column="63" />
               <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Stream.java" pinned="false" current-in-tab="false">
+        <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_25.jdk/Contents/Home/src.zip!/java/util/stream/Stream.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="13964" max-vertical-offset="16425">
+              <caret line="998" column="31" selection-start-line="998" selection-start-column="31" selection-end-line="998" selection-end-column="31" />
+              <folding>
+                <element signature="e#45701#45702#0" expanded="true" />
+                <element signature="e#45745#45746#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -188,33 +166,11 @@
       <file leaf-file-name="Orderbook.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/Orderbook.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2220">
-              <caret line="25" column="32" selection-start-line="25" selection-start-column="32" selection-end-line="25" selection-end-column="32" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="1547" max-vertical-offset="2190">
+              <caret line="137" column="67" selection-start-line="137" selection-start-column="67" selection-end-line="137" selection-end-column="67" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#4540#4541#0" expanded="true" />
-                <element signature="e#4611#4612#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Order.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/order/Order.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="1384" max-vertical-offset="3060">
-              <caret line="106" column="57" selection-start-line="106" selection-start-column="57" selection-end-line="106" selection-end-column="57" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ContinuousTrading.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/continuous/ContinuousTrading.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="679" max-vertical-offset="1380">
-              <caret line="84" column="82" selection-start-line="84" selection-start-column="82" selection-end-line="84" selection-end-column="82" />
-              <folding />
             </state>
           </provider>
         </entry>
@@ -245,9 +201,11 @@
             <ExternalSystemSettings>
               <option name="externalProjectPath" value="$PROJECT_DIR$" />
               <option name="externalSystemIdString" value="GRADLE" />
+              <option name="scriptParameters" value="--tests net.tinyexch.*" />
               <option name="taskNames">
                 <list>
-                  <option value="check" />
+                  <option value="cleanTest" />
+                  <option value="test" />
                 </list>
               </option>
             </ExternalSystemSettings>
@@ -259,11 +217,9 @@
             <ExternalSystemSettings>
               <option name="externalProjectPath" value="$PROJECT_DIR$" />
               <option name="externalSystemIdString" value="GRADLE" />
-              <option name="scriptParameters" value="--tests *" />
               <option name="taskNames">
                 <list>
-                  <option value="cleanTest" />
-                  <option value="test" />
+                  <option value="check" />
                 </list>
               </option>
             </ExternalSystemSettings>
@@ -325,78 +281,9 @@
           <value>
             <list>
               <ExternalTaskPojo>
-                <option name="description" value="Assembles classes 'main'." />
-                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="classes" />
-              </ExternalTaskPojo>
-              <ExternalTaskPojo>
-                <option name="description" value="Processes JVM resources 'main:resources'." />
-                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="processResources" />
-              </ExternalTaskPojo>
-              <ExternalTaskPojo>
-                <option name="description" value="Generates Javadoc API documentation for the main source code." />
-                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="javadoc" />
-              </ExternalTaskPojo>
-              <ExternalTaskPojo>
-                <option name="description" value="Run PMD analysis for test classes" />
-                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="pmdTest" />
-              </ExternalTaskPojo>
-              <ExternalTaskPojo>
-                <option name="description" value="Runs the unit tests." />
-                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="test" />
-              </ExternalTaskPojo>
-              <ExternalTaskPojo>
-                <option name="description" value="Deletes the build directory." />
-                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="clean" />
-              </ExternalTaskPojo>
-              <ExternalTaskPojo>
-                <option name="description" value="Compiles Java source 'test:java'." />
-                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="compileTestJava" />
-              </ExternalTaskPojo>
-              <ExternalTaskPojo>
-                <option name="description" value="Assembles a jar archive containing the main classes." />
-                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="jar" />
-              </ExternalTaskPojo>
-              <ExternalTaskPojo>
-                <option name="description" value="Assembles and tests this project." />
-                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="build" />
-              </ExternalTaskPojo>
-              <ExternalTaskPojo>
-                <option name="description" value="Analyzes root project 'tinyEXCH' and its subprojects with Sonar Runner." />
-                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="sonarRunner" />
-              </ExternalTaskPojo>
-              <ExternalTaskPojo>
-                <option name="description" value="Processes JVM resources 'test:resources'." />
-                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="processTestResources" />
-              </ExternalTaskPojo>
-              <ExternalTaskPojo>
-                <option name="description" value="Assembles and tests this project and all projects that depend on it." />
-                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="buildDependents" />
-              </ExternalTaskPojo>
-              <ExternalTaskPojo>
                 <option name="description" value="Assembles and tests this project and all projects it depends on." />
                 <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
                 <option name="name" value="buildNeeded" />
-              </ExternalTaskPojo>
-              <ExternalTaskPojo>
-                <option name="description" value="Run PMD analysis for main classes" />
-                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="pmdMain" />
-              </ExternalTaskPojo>
-              <ExternalTaskPojo>
-                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="jacocoTestReport" />
               </ExternalTaskPojo>
               <ExternalTaskPojo>
                 <option name="description" value="Assembles classes 'test'." />
@@ -404,9 +291,39 @@
                 <option name="name" value="testClasses" />
               </ExternalTaskPojo>
               <ExternalTaskPojo>
+                <option name="description" value="Runs the unit tests." />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="test" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Processes JVM resources 'test:resources'." />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="processTestResources" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
                 <option name="description" value="Runs all checks." />
                 <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
                 <option name="name" value="check" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Compiles Java source 'test:java'." />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="compileTestJava" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Processes JVM resources 'main:resources'." />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="processResources" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Assembles the outputs of this project." />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="assemble" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Deletes the build directory." />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="clean" />
               </ExternalTaskPojo>
               <ExternalTaskPojo>
                 <option name="description" value="Compiles Java source 'main:java'." />
@@ -414,9 +331,29 @@
                 <option name="name" value="compileJava" />
               </ExternalTaskPojo>
               <ExternalTaskPojo>
-                <option name="description" value="Assembles the outputs of this project." />
+                <option name="description" value="Generates Javadoc API documentation for the main source code." />
                 <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="assemble" />
+                <option name="name" value="javadoc" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Assembles and tests this project." />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="build" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Assembles and tests this project and all projects that depend on it." />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="buildDependents" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Assembles a jar archive containing the main classes." />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="jar" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Assembles classes 'main'." />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="classes" />
               </ExternalTaskPojo>
             </list>
           </value>
@@ -426,7 +363,7 @@
     <option name="modificationStamps">
       <map>
         <entry key="$PROJECT_DIR$/../disruptor" value="1392672712000" />
-        <entry key="$PROJECT_DIR$" value="2825686046026" />
+        <entry key="$PROJECT_DIR$" value="2825966087000" />
       </map>
     </option>
     <option name="projectBuildClasspath">
@@ -458,59 +395,59 @@
               <option name="name" value="tinyEXCH" />
               <option name="projectBuildClasspath">
                 <list>
-                  <option value="C:/Apps/gradle-2.2.1/lib/ant-1.9.3.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/ant-launcher-1.9.3.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/gradle-base-services-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/gradle-base-services-groovy-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/gradle-cli-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/gradle-core-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/gradle-docs-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/gradle-launcher-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/gradle-messaging-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/gradle-model-core-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/gradle-model-groovy-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/gradle-native-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/gradle-open-api-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/gradle-resources-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/gradle-tooling-api-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/gradle-ui-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/gradle-wrapper-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/groovy-all-2.3.6.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/ant-antlr-1.9.3.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-announce-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-antlr-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-build-comparison-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-build-init-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-code-quality-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-cunit-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-dependency-management-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-diagnostics-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-ear-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-ide-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-ide-native-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-ivy-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-jacoco-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-javascript-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-jetty-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-language-groovy-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-language-java-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-language-jvm-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-language-native-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-maven-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-osgi-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-platform-base-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-platform-jvm-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-platform-native-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-plugin-development-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-plugin-use-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-plugins-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-publish-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-reporting-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-resources-http-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-scala-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-signing-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/gradle-sonar-2.2.1.jar" />
-                  <option value="C:/Apps/gradle-2.2.1/lib/plugins/ivy-2.2.0.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/ant-1.9.3.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/ant-launcher-1.9.3.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/gradle-base-services-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/gradle-base-services-groovy-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/gradle-cli-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/gradle-core-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/gradle-docs-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/gradle-launcher-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/gradle-messaging-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/gradle-model-core-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/gradle-model-groovy-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/gradle-native-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/gradle-open-api-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/gradle-resources-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/gradle-tooling-api-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/gradle-ui-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/gradle-wrapper-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/groovy-all-2.3.6.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/ant-antlr-1.9.3.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-announce-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-antlr-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-build-comparison-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-build-init-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-code-quality-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-cunit-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-dependency-management-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-diagnostics-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-ear-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-ide-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-ide-native-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-ivy-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-jacoco-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-javascript-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-jetty-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-language-groovy-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-language-java-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-language-jvm-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-language-native-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-maven-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-osgi-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-platform-base-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-platform-jvm-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-platform-native-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-plugin-development-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-plugin-use-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-plugins-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-publish-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-reporting-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-resources-http-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-scala-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-signing-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/gradle-sonar-2.2.1.jar" />
+                  <option value="$USER_HOME$/opt/gradle-2.2.1/lib/plugins/ivy-2.2.0.jar" />
                   <option value="$PROJECT_DIR$/buildSrc/src/main/java" />
                   <option value="$PROJECT_DIR$/buildSrc/src/main/groovy" />
                 </list>
@@ -536,32 +473,40 @@
         <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/Priorities.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/auction/PriceDeterminationResult.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/Algos.java" />
-        <option value="$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/PrioritiesTest.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/TradingForm.java" />
         <option value="$PROJECT_DIR$/src/test/java/net/tinyexch/exchange/event/EventBasedLifeCycleTest.java" />
-        <option value="$PROJECT_DIR$/build.gradle" />
         <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/order/DiscretionLimitType.java" />
-        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/order/OrderType.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/order/TimeInForce.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/validator/NewOrderValidators.java" />
         <option value="$PROJECT_DIR$/src/test/java/net/tinyexch/ob/validator/NewOrderValidatorsTest.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/order/TradingSessionSubID.java" />
         <option value="$PROJECT_DIR$/.gitignore" />
-        <option value="$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/AuctionMatchTest.java" />
-        <option value="$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/OrderFactory.java" />
         <option value="$PROJECT_DIR$/docs/opentasks.md" />
         <option value="$PROJECT_DIR$/src/test/java/net/tinyexch/ob/SortedCollectionTest.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/order/Order.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/auction/DefaultPriceDeterminationPhase.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/OrderbookSide.java" />
+        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/continuous/ContinuousTrading.java" />
+        <option value="$PROJECT_DIR$/README.md" />
+        <option value="$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/PrioritiesTest.java" />
+        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/order/OrderType.java" />
+        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/order/ExecType.java" />
+        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/RejectReason.java" />
+        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/order/Trade.java" />
+        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/MarketOrderMatchLoop.java" />
+        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/AbstractMatchLoop.java" />
+        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/Match.java" />
+        <option value="$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/ContinuousMatchingAuxiliaryTest.java" />
+        <option value="$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/AuctionMatchTest.java" />
+        <option value="$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/OrderFactory.java" />
+        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/MatchException.java" />
+        <option value="$PROJECT_DIR$/build.gradle" />
+        <option value="$PROJECT_DIR$/src/test/groovy/net/tinyexch/ob/match/ContinuousMatchSupplementSpec.groovy" />
+        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/MatchEngine.java" />
+        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/Orderbook.java" />
+        <option value="$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/ContinuousMatchTest.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/ContinuousMatchEngine.java" />
         <option value="$PROJECT_DIR$/src/test/java/net/tinyexch/ob/price/safeguard/VolatilityInterruptionInContTradingTest.java" />
-        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/Match.java" />
-        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/order/Trade.java" />
-        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/continuous/ContinuousTrading.java" />
-        <option value="$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/ContinuousMatchTest.java" />
-        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/Orderbook.java" />
-        <option value="$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/MatchEngine.java" />
       </list>
     </option>
   </component>
@@ -569,10 +514,10 @@
     <detection-done>true</detection-done>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="56" />
-    <option name="y" value="24" />
-    <option name="width" value="1325" />
-    <option name="height" value="805" />
+    <option name="x" value="54" />
+    <option name="y" value="30" />
+    <option name="width" value="1372" />
+    <option name="height" value="800" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -582,134 +527,27 @@
             <id />
           </State>
           <State>
-            <id>Ant inspections</id>
-          </State>
-          <State>
-            <id>Assignment issues</id>
-          </State>
-          <State>
-            <id>Assignment issuesGroovy</id>
-          </State>
-          <State>
-            <id>Class metrics</id>
-          </State>
-          <State>
-            <id>Class structure</id>
-          </State>
-          <State>
-            <id>Code style issues</id>
-          </State>
-          <State>
-            <id>Control FlowGroovy</id>
-          </State>
-          <State>
-            <id>Control flow issues</id>
-          </State>
-          <State>
-            <id>Declaration redundancy</id>
-          </State>
-          <State>
-            <id>Error handling</id>
-          </State>
-          <State>
             <id>Finalization issues</id>
-          </State>
-          <State>
-            <id>General</id>
-          </State>
-          <State>
-            <id>Gradle</id>
-          </State>
-          <State>
-            <id>Groovy</id>
           </State>
           <State>
             <id>Inheritance issues</id>
           </State>
           <State>
-            <id>Internationalization issues</id>
-          </State>
-          <State>
             <id>J2ME issues</id>
-          </State>
-          <State>
-            <id>JUnit issues</id>
           </State>
           <State>
             <id>Java language level migration aids</id>
           </State>
           <State>
-            <id>Javadoc issues</id>
-          </State>
-          <State>
-            <id>Logging issues</id>
-          </State>
-          <State>
-            <id>Method MetricsGroovy</id>
-          </State>
-          <State>
-            <id>Method metrics</id>
-          </State>
-          <State>
             <id>Numeric issues</id>
-          </State>
-          <State>
-            <id>Packaging issues</id>
           </State>
           <State>
             <id>Performance issues</id>
           </State>
           <State>
-            <id>Potentially confusing code constructsGroovy</id>
-          </State>
-          <State>
             <id>Probable bugs</id>
           </State>
-          <State>
-            <id>Probable bugsGradle</id>
-          </State>
-          <State>
-            <id>Properties Files</id>
-          </State>
-          <State>
-            <id>SQL</id>
-          </State>
-          <State>
-            <id>Scala: General</id>
-          </State>
-          <State>
-            <id>Scala: Method signature</id>
-          </State>
-          <State>
-            <id>Serialization issues</id>
-          </State>
-          <State>
-            <id>Spring Model</id>
-          </State>
-          <State>
-            <id>Threading issues</id>
-          </State>
-          <State>
-            <id>Threading issuesGroovy</id>
-          </State>
-          <State>
-            <id>Validity issuesGroovy</id>
-          </State>
-          <State>
-            <id>XML</id>
-          </State>
-          <State>
-            <id>XPath</id>
-          </State>
-          <State>
-            <id>XSLT</id>
-          </State>
         </expanded-state>
-        <selected-state>
-          <State>
-            <id>Abstraction issues</id>
-          </State>
-        </selected-state>
       </profile-state>
     </entry>
   </component>
@@ -773,6 +611,40 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tinyEXCH" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tinyEXCH" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="java" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="net" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tinyexch" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -896,20 +768,6 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="tinyEXCH" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="tinyEXCH" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="docs" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
         </subPane>
         <option name="show-excluded-files" value="false" />
       </pane>
@@ -923,12 +781,12 @@
     <property name="MemberChooser.sorted" value="false" />
     <property name="MemberChooser.showClasses" value="true" />
     <property name="MemberChooser.copyJavadoc" value="false" />
-    <property name="options.lastSelected" value="reference.settingsdialog.project.gradle" />
-    <property name="options.splitter.main.proportions" value="0.3" />
+    <property name="options.lastSelected" value="reference.projectsettings.compiler.javacompiler" />
+    <property name="options.splitter.main.proportions" value="0.21409921" />
     <property name="options.splitter.details.proportions" value="0.2" />
     <property name="options.searchVisible" value="true" />
     <property name="LayoutCode.rearrangeEntriesJava" value="false" />
-    <property name="project.structure.last.edited" value="SDKs" />
+    <property name="project.structure.last.edited" value="Project" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="extract.method.default.visibility" value="private" />
@@ -942,13 +800,14 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../learnAngular/learnAngular.ipr" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="net.tinyexch.exchange.event.consume" />
+      <recent name="net.tinyexch.exchange.runtime" />
+      <recent name="" />
+    </key>
     <key name="CreateClassDialog.RecentsKey">
       <recent name="net.tinyexch.order" />
       <recent name="net.tinyexch.exchange.trading.model" />
-    </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/docs/marketing" />
-      <recent name="$PROJECT_DIR$/docs" />
     </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
       <recent name="net.tinyexch.exchange.event" />
@@ -956,132 +815,31 @@
       <recent name="net.tinyexch.exchange.trading.form" />
       <recent name="net.tinyexch.ob.validator" />
     </key>
-    <key name="CopyClassDialog.RECENTS_KEY">
-      <recent name="net.tinyexch.exchange.event.consume" />
-      <recent name="net.tinyexch.exchange.runtime" />
-      <recent name="" />
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/docs/marketing" />
+      <recent name="$PROJECT_DIR$/docs" />
     </key>
   </component>
-  <component name="RunManager" selected="JUnit.All in tinyEXCH">
-    <configuration default="false" name="net.tinyexch in tinyEXCH" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
-        <pattern>
-          <option name="PATTERN" value="net.tinyexch.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <module name="tinyEXCH" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-      <option name="PACKAGE_NAME" value="net.tinyexch" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="METHOD_NAME" />
-      <option name="TEST_OBJECT" value="package" />
-      <option name="VM_PARAMETERS" value="-ea" />
-      <option name="PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="ENV_VARIABLES" />
-      <option name="PASS_PARENT_ENVS" value="true" />
-      <option name="TEST_SEARCH_SCOPE">
-        <value defaultName="moduleWithDependencies" />
-      </option>
-      <envs />
-      <patterns />
-      <RunnerSettings RunnerId="Cover" />
-      <RunnerSettings RunnerId="Run" />
-      <ConfigurationWrapper RunnerId="Cover" />
-      <ConfigurationWrapper RunnerId="Run" />
-      <method />
-    </configuration>
-    <configuration default="false" name="All in tinyEXCH" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <module name="tinyEXCH" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-      <option name="PACKAGE_NAME" value="" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="METHOD_NAME" />
-      <option name="TEST_OBJECT" value="package" />
-      <option name="VM_PARAMETERS" value="-ea" />
-      <option name="PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="ENV_VARIABLES" />
-      <option name="PASS_PARENT_ENVS" value="true" />
-      <option name="TEST_SEARCH_SCOPE">
-        <value defaultName="moduleWithDependencies" />
-      </option>
-      <envs />
-      <patterns />
-      <RunnerSettings RunnerId="Debug">
-        <option name="DEBUG_PORT" value="" />
-        <option name="TRANSPORT" value="0" />
-        <option name="LOCAL" value="true" />
-      </RunnerSettings>
-      <RunnerSettings RunnerId="Run" />
-      <ConfigurationWrapper RunnerId="Debug" />
-      <ConfigurationWrapper RunnerId="Run" />
-      <method />
-    </configuration>
-    <configuration default="false" name="SortedCollectionTest.testSortedSet" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
-        <pattern>
-          <option name="PATTERN" value="net.tinyexch.ob.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <module name="tinyEXCH" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-      <option name="PACKAGE_NAME" value="net.tinyexch.ob" />
-      <option name="MAIN_CLASS_NAME" value="net.tinyexch.ob.SortedCollectionTest" />
-      <option name="METHOD_NAME" value="testSortedSet" />
-      <option name="TEST_OBJECT" value="method" />
-      <option name="VM_PARAMETERS" value="-ea" />
-      <option name="PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="ENV_VARIABLES" />
-      <option name="PASS_PARENT_ENVS" value="true" />
-      <option name="TEST_SEARCH_SCOPE">
-        <value defaultName="moduleWithDependencies" />
-      </option>
-      <envs />
-      <patterns />
-      <RunnerSettings RunnerId="Run" />
-      <ConfigurationWrapper RunnerId="Run" />
-      <method />
-    </configuration>
-    <configuration default="false" name="ContinuousMatchTest.testOnlyMarketOrdersOnOtherSide_Ex1" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
-        <pattern>
-          <option name="PATTERN" value="net.tinyexch.ob.match.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <module name="tinyEXCH" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-      <option name="PACKAGE_NAME" value="net.tinyexch.ob.match" />
-      <option name="MAIN_CLASS_NAME" value="net.tinyexch.ob.match.ContinuousMatchTest" />
-      <option name="METHOD_NAME" value="testOnlyMarketOrdersOnOtherSide_Ex1" />
-      <option name="TEST_OBJECT" value="method" />
-      <option name="VM_PARAMETERS" value="-ea" />
-      <option name="PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="ENV_VARIABLES" />
-      <option name="PASS_PARENT_ENVS" value="true" />
-      <option name="TEST_SEARCH_SCOPE">
-        <value defaultName="moduleWithDependencies" />
-      </option>
-      <envs />
-      <patterns />
-      <RunnerSettings RunnerId="Debug">
-        <option name="DEBUG_PORT" value="" />
-        <option name="TRANSPORT" value="0" />
-        <option name="LOCAL" value="true" />
-      </RunnerSettings>
-      <RunnerSettings RunnerId="Run" />
-      <ConfigurationWrapper RunnerId="Debug" />
-      <ConfigurationWrapper RunnerId="Run" />
+  <component name="RunManager" selected="JUnit.ContinuousMatchTest">
+    <configuration default="false" name="Tests in 'net'" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="--tests net.*" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="cleanTest" />
+            <option value="test" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <RunnerSettings RunnerId="ExternalSystemTaskRunner" />
+      <ConfigurationWrapper RunnerId="ExternalSystemTaskRunner" />
       <method />
     </configuration>
     <configuration default="false" name="ContinuousMatchTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
@@ -1109,6 +867,95 @@
       <envs />
       <patterns />
       <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Tests in 'net.tinyexch'" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="--tests net.tinyexch.*" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="cleanTest" />
+            <option value="test" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <RunnerSettings RunnerId="ExternalSystemTaskRunner" />
+      <ConfigurationWrapper RunnerId="ExternalSystemTaskRunner" />
+      <method />
+    </configuration>
+    <configuration default="false" name="ContinuousMatchTest.testLimitOrdersOnBothSides_LowestAskLessThanHighestBid_Ex20" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
+        <pattern>
+          <option name="PATTERN" value="net.tinyexch.ob.match.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <module name="tinyEXCH" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" value="net.tinyexch.ob.match" />
+      <option name="MAIN_CLASS_NAME" value="net.tinyexch.ob.match.ContinuousMatchTest" />
+      <option name="METHOD_NAME" value="testLimitOrdersOnBothSides_LowestAskLessThanHighestBid_Ex20" />
+      <option name="TEST_OBJECT" value="method" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="" />
+        <option name="TRANSPORT" value="0" />
+        <option name="LOCAL" value="true" />
+      </RunnerSettings>
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Debug" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="ContinuousMatchTest.testMarketAndLimitOrdersOnOtherSide_BestAskGTBestBidAndGTRefPrice_Ex23" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
+        <pattern>
+          <option name="PATTERN" value="net.tinyexch.ob.match.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <module name="tinyEXCH" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" value="net.tinyexch.ob.match" />
+      <option name="MAIN_CLASS_NAME" value="net.tinyexch.ob.match.ContinuousMatchTest" />
+      <option name="METHOD_NAME" value="testMarketAndLimitOrdersOnOtherSide_BestAskGTBestBidAndGTRefPrice_Ex23" />
+      <option name="TEST_OBJECT" value="method" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="" />
+        <option name="TRANSPORT" value="0" />
+        <option name="LOCAL" value="true" />
+      </RunnerSettings>
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Debug" />
       <ConfigurationWrapper RunnerId="Run" />
       <method />
     </configuration>
@@ -1193,6 +1040,27 @@
       <patterns />
       <method />
     </configuration>
+    <configuration default="false" name="ContinuousMatchSupplementSpec" type="GradleRunConfiguration" factoryName="Gradle">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="--tests net.tinyexch.ob.match.ContinuousMatchSupplementSpec" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="cleanTest" />
+            <option value="test" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <RunnerSettings RunnerId="ExternalSystemTaskRunner" />
+      <ConfigurationWrapper RunnerId="ExternalSystemTaskRunner" />
+      <method />
+    </configuration>
     <configuration default="false" name="ChangeTradingFormInContinuousTradingTest.testChangeToAuctionAfterVolatilityInterruption" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
         <pattern>
@@ -1221,21 +1089,22 @@
       <ConfigurationWrapper RunnerId="Run" />
       <method />
     </configuration>
-    <list size="6">
-      <item index="0" class="java.lang.String" itemvalue="JUnit.ChangeTradingFormInContinuousTradingTest.testChangeToAuctionAfterVolatilityInterruption" />
-      <item index="1" class="java.lang.String" itemvalue="JUnit.net.tinyexch in tinyEXCH" />
-      <item index="2" class="java.lang.String" itemvalue="JUnit.All in tinyEXCH" />
-      <item index="3" class="java.lang.String" itemvalue="JUnit.SortedCollectionTest.testSortedSet" />
-      <item index="4" class="java.lang.String" itemvalue="JUnit.ContinuousMatchTest.testOnlyMarketOrdersOnOtherSide_Ex1" />
-      <item index="5" class="java.lang.String" itemvalue="JUnit.ContinuousMatchTest" />
+    <list size="7">
+      <item index="0" class="java.lang.String" itemvalue="Gradle.ContinuousMatchSupplementSpec" />
+      <item index="1" class="java.lang.String" itemvalue="JUnit.ChangeTradingFormInContinuousTradingTest.testChangeToAuctionAfterVolatilityInterruption" />
+      <item index="2" class="java.lang.String" itemvalue="Gradle.Tests in 'net'" />
+      <item index="3" class="java.lang.String" itemvalue="JUnit.ContinuousMatchTest" />
+      <item index="4" class="java.lang.String" itemvalue="Gradle.Tests in 'net.tinyexch'" />
+      <item index="5" class="java.lang.String" itemvalue="JUnit.ContinuousMatchTest.testLimitOrdersOnBothSides_LowestAskLessThanHighestBid_Ex20" />
+      <item index="6" class="java.lang.String" itemvalue="JUnit.ContinuousMatchTest.testMarketAndLimitOrdersOnOtherSide_BestAskGTBestBidAndGTRefPrice_Ex23" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="JUnit.All in tinyEXCH" />
-        <item index="1" class="java.lang.String" itemvalue="JUnit.ContinuousMatchTest.testOnlyMarketOrdersOnOtherSide_Ex1" />
-        <item index="2" class="java.lang.String" itemvalue="JUnit.ContinuousMatchTest" />
-        <item index="3" class="java.lang.String" itemvalue="JUnit.net.tinyexch in tinyEXCH" />
-        <item index="4" class="java.lang.String" itemvalue="JUnit.SortedCollectionTest.testSortedSet" />
+        <item index="0" class="java.lang.String" itemvalue="JUnit.ContinuousMatchTest" />
+        <item index="1" class="java.lang.String" itemvalue="JUnit.ContinuousMatchTest.testMarketAndLimitOrdersOnOtherSide_BestAskGTBestBidAndGTRefPrice_Ex23" />
+        <item index="2" class="java.lang.String" itemvalue="JUnit.ContinuousMatchTest.testLimitOrdersOnBothSides_LowestAskLessThanHighestBid_Ex20" />
+        <item index="3" class="java.lang.String" itemvalue="Gradle.Tests in 'net.tinyexch'" />
+        <item index="4" class="java.lang.String" itemvalue="Gradle.Tests in 'net'" />
       </list>
     </recent_temporary>
     <configuration name="&lt;template&gt;" type="TestNG" default="true" selected="false">
@@ -1392,6 +1261,7 @@
       <updated>1418775732796</updated>
     </task>
     <task active="true" id="tE-23" summary="Continuous Trading: bacic matching rules">
+      <changelist id="a1770265-3b6b-4cb0-a798-fc9c93ae12dc" name="ignore" comment="" />
       <created>1419372217847</created>
       <option name="issue" value="true" />
       <option name="number" value="23" />
@@ -1399,7 +1269,7 @@
       <option name="type" value="FEATURE" />
       <updated>1419372294090</updated>
       <workItem from="1419372294138" duration="3337000" />
-      <workItem from="1419466148406" duration="17690000" />
+      <workItem from="1419466148406" duration="97211000" />
     </task>
     <task id="LOCAL-00014" summary="tE-23: replaced Execution with Trade, started to restructure prios to be reusable for continuous trading">
       <created>1419372420292</created>
@@ -1413,7 +1283,67 @@
       <option name="project" value="LOCAL" />
       <updated>1419469620573</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="tE-23: add first matching strategy for continuous trading">
+      <created>1419541996595</created>
+      <option name="number" value="00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1419541996595</updated>
+    </task>
+    <task id="LOCAL-00017" summary="tE-23: introduced groovy spoc testframework for simplified scenario testing">
+      <created>1419694100425</created>
+      <option name="number" value="00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1419694100426</updated>
+    </task>
+    <task id="LOCAL-00018" summary="tE-23: fixed bug in match loop">
+      <created>1419809458258</created>
+      <option name="number" value="00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1419809458258</updated>
+    </task>
+    <task id="LOCAL-00019" summary="tE-23: added match examples showing market order precedence">
+      <created>1419857094900</created>
+      <option name="number" value="00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1419857094900</updated>
+    </task>
+    <task id="LOCAL-00020" summary="tE-23: added missing strategies for incoming market orders">
+      <created>1419991357322</created>
+      <option name="number" value="00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1419991357322</updated>
+    </task>
+    <task id="LOCAL-00021" summary="tE-23: added case for market to limit order">
+      <created>1420160312591</created>
+      <option name="number" value="00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1420160312591</updated>
+    </task>
+    <task id="LOCAL-00022" summary="tE-23: added left over case for market to limit order">
+      <created>1420335302435</created>
+      <option name="number" value="00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1420335302435</updated>
+    </task>
+    <task id="LOCAL-00023" summary="tE-23: added method to simplify order submit times">
+      <created>1420398906271</created>
+      <option name="number" value="00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1420398906271</updated>
+    </task>
+    <task id="LOCAL-00024" summary="tE-23: added various match cases">
+      <created>1420419205397</created>
+      <option name="number" value="00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1420419205397</updated>
+    </task>
+    <task id="LOCAL-00025" summary="tE-23: added support for incoming ask limit orders">
+      <created>1420676856768</created>
+      <option name="number" value="00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1420676856768</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <option name="createChangelist" value="false" />
     <option name="createBranch" value="false" />
     <option name="markAsInProgress" value="true" />
@@ -1435,7 +1365,7 @@
     </servers>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="443379000" />
+    <option name="totallyTimeSpent" value="522900000" />
   </component>
   <component name="TodoView" selected-index="0">
     <todo-panel id="selected-file">
@@ -1458,28 +1388,28 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="56" y="24" width="1325" height="805" extended-state="0" />
+    <frame x="54" y="30" width="1372" height="800" extended-state="0" />
     <editor active="false" />
     <layout>
       <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Changes" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.5371669" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Changes" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.53107345" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4005891" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39791358" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32974032" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.457223" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.519774" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.7548387" sideWeight="0.500245" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32924962" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.57879233" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.28190744" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.28017884" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.5316642" sideWeight="0.49975502" order="13" side_tool="false" content_ui="tabs" />
-      <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.16952474" sideWeight="0.5697279" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.16913484" sideWeight="0.5697279" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24775448" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.28838658" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.50631136" sideWeight="0.49975502" order="12" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.13984962" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3079096" sideWeight="0.49975502" order="12" side_tool="false" content_ui="tabs" />
       <window_info id="DSM" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="166" y="132" width="1137" height="580" />
       <window_info id="SBT Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3286517" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Coverage" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.16952474" sideWeight="0.4302721" order="4" side_tool="true" content_ui="tabs" />
@@ -1528,6 +1458,9 @@
       <window_info id="Duplicates" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.58433735" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
     </layout-to-restore>
   </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="*.gitignore" />
+  </component>
   <component name="Vcs.Log.UiProperties">
     <option name="RECENTLY_FILTERED_USER_GROUPS">
       <collection />
@@ -1556,8 +1489,17 @@
     <MESSAGE value="tE-21: Added market order type as criteria for price prio ordering, new example for MKT vs. LMT orders to match w/o ref price" />
     <MESSAGE value="tE-23: replaced Execution with Trade, started to restructure prios to be reusable for continuous trading" />
     <MESSAGE value="tE-23: Replaced storage of orders in OB with PriorityQueue instead of List. Ensure best orders are always on top" />
-    <option name="LAST_COMMIT_MESSAGE" value="tE-23: Replaced storage of orders in OB with PriorityQueue instead of List. Ensure best orders are always on top" />
-    <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
+    <MESSAGE value="tE-23: add first matching strategy for continuous trading" />
+    <MESSAGE value="tE-23: introduced groovy spoc testframework for simplified scenario testing" />
+    <MESSAGE value="tE-23: fixed bug in match loop" />
+    <MESSAGE value="tE-23: added match examples showing market order precedence" />
+    <MESSAGE value="tE-23: added missing strategies for incoming market orders" />
+    <MESSAGE value="tE-23: added case for market to limit order" />
+    <MESSAGE value="tE-23: added left over case for market to limit order" />
+    <MESSAGE value="tE-23: added method to simplify order submit times" />
+    <MESSAGE value="tE-23: added various match cases" />
+    <MESSAGE value="tE-23: added support for incoming ask limit orders" />
+    <option name="LAST_COMMIT_MESSAGE" value="tE-23: added support for incoming ask limit orders" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1575,19 +1517,25 @@
           <option name="timeStamp" value="94" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/ContinuousMatchEngine.java</url>
-          <line>46</line>
+          <url>file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/ContinuousMatchingAuxiliaryTest.java</url>
+          <line>85</line>
           <properties />
-          <option name="timeStamp" value="95" />
+          <option name="timeStamp" value="116" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/ContinuousMatchTest.java</url>
-          <line>47</line>
+          <url>file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/ContinuousMatchEngine.java</url>
+          <line>201</line>
           <properties />
-          <option name="timeStamp" value="96" />
+          <option name="timeStamp" value="123" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/ContinuousMatchEngine.java</url>
+          <line>124</line>
+          <properties />
+          <option name="timeStamp" value="124" />
         </line-breakpoint>
       </breakpoints>
-      <option name="time" value="99" />
+      <option name="time" value="125" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -1596,111 +1544,6 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/auction/Auction.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="328" max-vertical-offset="1470">
-          <caret line="42" column="34" selection-start-line="42" selection-start-column="34" selection-end-line="42" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/auction/OrderbookBalancingPhase.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.13824885" vertical-offset="0" max-vertical-offset="651">
-          <caret line="6" column="37" selection-start-line="6" selection-start-column="37" selection-end-line="6" selection-end-column="37" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/TradingForm.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.37769786" vertical-offset="1365" max-vertical-offset="2750">
-          <caret line="69" column="56" selection-start-line="69" selection-start-column="56" selection-end-line="69" selection-end-column="56" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/PrioritiesTest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1325">
-          <caret line="2" column="0" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/exchange/trading/form/ChangeTradingFormStateTest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2475">
-          <caret line="68" column="0" selection-start-line="68" selection-start-column="0" selection-end-line="68" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/exchange/event/EventBasedLifeCycleTest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="4398" max-vertical-offset="6100">
-          <caret line="221" column="5" selection-start-line="221" selection-start-column="5" selection-end-line="221" selection-end-column="5" />
-          <folding>
-            <element signature="e#11940#11941#0" expanded="false" />
-            <element signature="e#12023#12024#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/auction/PriceDeterminationResult.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1975">
-          <caret line="15" column="55" selection-start-line="15" selection-start-column="55" selection-end-line="15" selection-end-column="55" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/model/TradingFormRunType.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="73" max-vertical-offset="1125">
-          <caret line="16" column="30" selection-start-line="16" selection-start-column="12" selection-end-line="16" selection-end-column="30" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/auction/AuctionState.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="400" max-vertical-offset="1475">
-          <caret line="10" column="12" selection-start-line="10" selection-start-column="12" selection-end-line="10" selection-end-column="12" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/docs/marketing/otex_prezi.md">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.08038585" vertical-offset="0" max-vertical-offset="2200">
-          <caret line="2" column="14" selection-start-line="2" selection-start-column="14" selection-end-line="2" selection-end-column="14" />
-        </state>
-      </provider>
-      <provider editor-type-id="MarkdownPreviewEditor">
-        <state />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/Algos.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="600" max-vertical-offset="3350">
-          <caret line="39" column="99" selection-start-line="39" selection-start-column="99" selection-end-line="39" selection-end-column="99" />
-          <folding>
-            <element signature="imports" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/TradingSegment.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="17" max-vertical-offset="675">
-          <caret line="7" column="6" selection-start-line="7" selection-start-column="6" selection-end-line="7" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/validator/NewOrderValidators.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="3238" max-vertical-offset="4175">
-          <caret line="168" column="59" selection-start-line="168" selection-start-column="19" selection-end-line="168" selection-end-column="59" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/validator/NewOrderValidatorsTest.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3425">
@@ -1718,36 +1561,6 @@
         <state vertical-scroll-proportion="0.27419356" vertical-offset="3" max-vertical-offset="375">
           <caret line="7" column="15" selection-start-line="7" selection-start-column="15" selection-end-line="7" selection-end-column="15" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/order/DiscretionLimitType.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.67741936" vertical-offset="33" max-vertical-offset="405">
-          <caret line="19" column="12" selection-start-line="19" selection-start-column="12" selection-end-line="19" selection-end-column="12" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.259366" vertical-offset="0" max-vertical-offset="347">
-          <caret line="6" column="0" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/build.gradle">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6048387" vertical-offset="75" max-vertical-offset="870">
-          <caret line="20" column="27" selection-start-line="20" selection-start-column="27" selection-end-line="20" selection-end-column="27" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/auction/DefaultOrderbookBalancingPhase.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="285">
-          <caret line="8" column="13" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
         </state>
       </provider>
     </entry>
@@ -1773,14 +1586,6 @@
             <element signature="e#15084#15085#0" expanded="false" />
             <element signature="e#15119#15120#0" expanded="false" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/Priorities.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="128" max-vertical-offset="825">
-          <caret line="30" column="4" selection-start-line="30" selection-start-column="4" selection-end-line="30" selection-end-column="4" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1837,38 +1642,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/OrderFactory.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="563" max-vertical-offset="855">
-          <caret line="56" column="0" selection-start-line="56" selection-start-column="0" selection-end-line="56" selection-end-column="0" />
-          <folding>
-            <element signature="imports" expanded="false" />
-            <element signature="e#384#385#0" expanded="false" />
-            <element signature="e#456#457#0" expanded="false" />
-            <element signature="e#1051#1052#0" expanded="false" />
-            <element signature="e#1124#1125#0" expanded="false" />
-            <element signature="e#1443#1444#0" expanded="false" />
-            <element signature="e#1514#1515#0" expanded="false" />
-            <element signature="e#1556#1557#0" expanded="false" />
-            <element signature="e#1626#1627#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/AuctionMatchTest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="3488" max-vertical-offset="4140">
-          <caret line="237" column="33" selection-start-line="237" selection-start-column="33" selection-end-line="237" selection-end-column="33" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_25.jdk/Contents/Home/src.zip!/java/util/function/Function.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.33333334" vertical-offset="158" max-vertical-offset="1215">
           <caret line="48" column="6" selection-start-line="48" selection-start-column="6" selection-end-line="48" selection-end-column="6" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1896,16 +1674,6 @@
         <state vertical-scroll-proportion="0.35211268" vertical-offset="600" max-vertical-offset="1125">
           <caret line="53" column="17" selection-start-line="53" selection-start-column="17" selection-end-line="53" selection-end-column="17" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/SortedCollectionTest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="675">
-          <caret line="36" column="52" selection-start-line="36" selection-start-column="52" selection-end-line="36" selection-end-column="52" />
-          <folding>
-            <element signature="imports" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1954,8 +1722,8 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="900" max-vertical-offset="4740">
           <caret line="89" column="16" selection-start-line="89" selection-start-column="16" selection-end-line="89" selection-end-column="16" />
           <folding>
-            <element signature="e#3709#3710#0" expanded="true" />
-            <element signature="e#3746#3747#0" expanded="true" />
+            <element signature="e#3709#3710#0" expanded="false" />
+            <element signature="e#3746#3747#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -1965,24 +1733,6 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="525" max-vertical-offset="2535">
           <caret line="57" column="22" selection-start-line="57" selection-start-column="22" selection-end-line="57" selection-end-column="22" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/OrderbookSide.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.86175114" vertical-offset="969" max-vertical-offset="1680">
-          <caret line="112" column="27" selection-start-line="112" selection-start-column="27" selection-end-line="112" selection-end-column="27" />
-          <folding>
-            <element signature="e#3399#3400#0" expanded="true" />
-            <element signature="e#3434#3435#0" expanded="true" />
-            <element signature="e#3478#3479#0" expanded="true" />
-            <element signature="e#3512#3513#0" expanded="true" />
-            <element signature="e#3557#3558#0" expanded="true" />
-            <element signature="e#3592#3593#0" expanded="true" />
-            <element signature="e#3642#3643#0" expanded="true" />
-            <element signature="e#3682#3683#0" expanded="true" />
-            <element signature="e#3738#3739#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1996,84 +1746,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/order/OrderType.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.20737328" vertical-offset="0" max-vertical-offset="651">
-          <caret line="9" column="12" selection-start-line="9" selection-start-column="12" selection-end-line="9" selection-end-column="12" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/Match.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="870">
-          <caret line="44" column="18" selection-start-line="44" selection-start-column="18" selection-end-line="44" selection-end-column="18" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#724#725#0" expanded="true" />
-            <element signature="e#817#818#0" expanded="true" />
-            <element signature="e#855#856#0" expanded="true" />
-            <element signature="e#890#891#0" expanded="true" />
-            <element signature="e#928#929#0" expanded="true" />
-            <element signature="e#957#958#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/exchange/trading/form/continuous/ContinuousTrading.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="679" max-vertical-offset="1380">
           <caret line="84" column="82" selection-start-line="84" selection-start-column="82" selection-end-line="84" selection-end-column="82" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/price/safeguard/VolatilityInterruptionInContTradingTest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.25" vertical-offset="165" max-vertical-offset="705">
-          <caret line="2" column="7" selection-start-line="2" selection-start-column="7" selection-end-line="2" selection-end-column="7" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/order/Trade.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1935">
-          <caret line="133" column="0" selection-start-line="133" selection-start-column="0" selection-end-line="133" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/ContinuousMatchEngine.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="533" max-vertical-offset="1185">
-          <caret line="46" column="0" selection-start-line="46" selection-start-column="0" selection-end-line="46" selection-end-column="0" />
-          <folding>
-            <element signature="e#579#580#0" expanded="true" />
-            <element signature="e#631#632#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/ContinuousMatchTest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="571" max-vertical-offset="930">
-          <caret line="47" column="29" selection-start-line="47" selection-start-column="29" selection-end-line="47" selection-end-column="29" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/Orderbook.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2220">
-          <caret line="25" column="32" selection-start-line="25" selection-start-column="32" selection-end-line="25" selection-end-column="32" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#4540#4541#0" expanded="true" />
-            <element signature="e#4611#4612#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2085,13 +1762,284 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/MatchEngine.java">
+    <entry file="file://$PROJECT_DIR$/README.md">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.63907284" vertical-offset="223" max-vertical-offset="525">
-          <caret line="2" column="7" selection-start-line="2" selection-start-column="7" selection-end-line="2" selection-end-column="7" />
+        <state vertical-scroll-proportion="-10.5" vertical-offset="0" max-vertical-offset="405">
+          <caret line="21" column="22" selection-start-line="21" selection-start-column="22" selection-end-line="21" selection-end-column="22" />
+          <folding />
+        </state>
+      </provider>
+      <provider editor-type-id="MarkdownPreviewEditor">
+        <state />
+      </provider>
+    </entry>
+    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_25.jdk/Contents/Home/src.zip!/java/util/Collections.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.72700727" vertical-offset="5217" max-vertical-offset="76635">
+          <caret line="420" column="23" selection-start-line="420" selection-start-column="23" selection-end-line="420" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/PrioritiesTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.25547445" vertical-offset="35" max-vertical-offset="1155">
+          <caret line="14" column="0" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/TestConstants.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.28467155" vertical-offset="0" max-vertical-offset="685">
+          <caret line="13" column="31" selection-start-line="13" selection-start-column="31" selection-end-line="13" selection-end-column="31" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.13138686" vertical-offset="0" max-vertical-offset="685">
+          <caret line="6" column="0" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/order/DiscretionLimitType.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.48969072" vertical-offset="0" max-vertical-offset="582">
+          <caret line="19" column="12" selection-start-line="19" selection-start-column="12" selection-end-line="19" selection-end-column="12" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/order/ExecType.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="345">
+          <caret line="4" column="2" selection-start-line="4" selection-start-column="2" selection-end-line="4" selection-end-column="2" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/RejectReason.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="390">
+          <caret line="12" column="103" selection-start-line="12" selection-start-column="103" selection-end-line="12" selection-end-column="103" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/Match.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="38" max-vertical-offset="810">
+          <caret line="48" column="43" selection-start-line="48" selection-start-column="43" selection-end-line="48" selection-end-column="43" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/OrderbookSide.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.04" vertical-offset="945" max-vertical-offset="1515">
+          <caret line="74" column="0" selection-start-line="74" selection-start-column="0" selection-end-line="74" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/order/Trade.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="1606" max-vertical-offset="2325">
+          <caret line="29" column="37" selection-start-line="29" selection-start-column="37" selection-end-line="29" selection-end-column="37" />
+          <folding>
+            <element signature="e#2943#2944#0" expanded="true" />
+            <element signature="e#2974#2975#0" expanded="true" />
+            <element signature="e#3130#3131#0" expanded="true" />
+            <element signature="e#3170#3171#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/order/OrderType.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="45" max-vertical-offset="720">
+          <caret line="5" column="0" selection-start-line="5" selection-start-column="0" selection-end-line="7" selection-end-column="19" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/ContinuousMatchingAuxiliaryTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1590">
+          <caret line="29" column="0" selection-start-line="29" selection-start-column="0" selection-end-line="29" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_25.jdk/Contents/Home/src.zip!/java/util/Formatter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="197.1923" vertical-offset="59547" max-vertical-offset="69135">
+          <caret line="3711" column="35" selection-start-line="3711" selection-start-column="31" selection-end-line="3711" selection-end-column="35" />
+          <folding>
+            <element signature="e#82428#82429#0" expanded="true" />
+            <element signature="e#82472#82473#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_25.jdk/Contents/Home/src.zip!/java/time/LocalDate.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="22998" max-vertical-offset="29070">
+          <caret line="1682" column="18" selection-start-line="1682" selection-start-column="18" selection-end-line="1682" selection-end-column="18" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/junit/junit/4.11/28e0ad201304e4a4abf999ca0570b7cffc352c3c/junit-4.11-sources.jar!/org/junit/internal/runners/model/ReflectiveCallable.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="360">
+          <caret line="13" column="0" selection-start-line="13" selection-start-column="0" selection-end-line="13" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_25.jdk/Contents/Home/src.zip!/java/time/format/DateTimeFormatter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-8.192307" vertical-offset="2322" max-vertical-offset="30825">
+          <caret line="263" column="32" selection-start-line="263" selection-start-column="26" selection-end-line="263" selection-end-column="32" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/OrderFactory.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-0.8890555" vertical-offset="623" max-vertical-offset="1290">
+          <caret line="2" column="7" selection-start-line="2" selection-start-column="7" selection-end-line="2" selection-end-column="7" />
+          <folding>
+            <element signature="e#1529#1530#0" expanded="true" />
+            <element signature="e#1602#1603#0" expanded="true" />
+            <element signature="e#1928#1929#0" expanded="true" />
+            <element signature="e#2006#2007#0" expanded="true" />
+            <element signature="e#2328#2329#0" expanded="true" />
+            <element signature="e#2398#2399#0" expanded="true" />
+            <element signature="e#2443#2444#0" expanded="true" />
+            <element signature="e#2522#2523#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/MatchException.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.26986507" vertical-offset="0" max-vertical-offset="667">
+          <caret line="12" column="23" selection-start-line="12" selection-start-column="23" selection-end-line="12" selection-end-column="23" />
+          <folding>
+            <element signature="e#333#334#0" expanded="true" />
+            <element signature="e#363#364#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/AuctionMatchTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.14542729" vertical-offset="1988" max-vertical-offset="4140">
+          <caret line="139" column="25" selection-start-line="139" selection-start-column="25" selection-end-line="139" selection-end-column="25" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/groovy/net/tinyexch/ob/match/ContinuousMatchSupplementSpec.groovy">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.2974239" vertical-offset="308" max-vertical-offset="735">
+          <caret line="33" column="0" selection-start-line="33" selection-start-column="0" selection-end-line="33" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/build.gradle">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.035128806" vertical-offset="0" max-vertical-offset="975">
+          <caret line="1" column="22" selection-start-line="1" selection-start-column="22" selection-end-line="1" selection-end-column="22" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/Orderbook.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="1547" max-vertical-offset="2190">
+          <caret line="137" column="67" selection-start-line="137" selection-start-column="67" selection-end-line="137" selection-end-column="67" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/Priorities.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="119" max-vertical-offset="825">
+          <caret line="30" column="4" selection-start-line="30" selection-start-column="4" selection-end-line="30" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/MatchEngine.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="525">
+          <caret line="16" column="81" selection-start-line="16" selection-start-column="81" selection-end-line="16" selection-end-column="81" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_25.jdk/Contents/Home/src.zip!/java/lang/String.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="33989" max-vertical-offset="45840">
+          <caret line="2925" column="25" selection-start-line="2925" selection-start-column="25" selection-end-line="2925" selection-end-column="25" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_25.jdk/Contents/Home/src.zip!/java/util/stream/Stream.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="13964" max-vertical-offset="16425">
+          <caret line="998" column="31" selection-start-line="998" selection-start-column="31" selection-end-line="998" selection-end-column="31" />
+          <folding>
+            <element signature="e#45701#45702#0" expanded="true" />
+            <element signature="e#45745#45746#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/match/ContinuousMatchTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-4.3846154" vertical-offset="5901" max-vertical-offset="8520">
+          <caret line="401" column="0" selection-start-line="401" selection-start-column="0" selection-end-line="401" selection-end-column="0" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/net/tinyexch/ob/match/ContinuousMatchEngine.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="3535" max-vertical-offset="4215">
+          <caret line="284" column="1" selection-start-line="284" selection-start-column="1" selection-end-line="284" selection-end-column="1" />
+          <folding>
+            <element signature="e#1248#1249#0" expanded="true" />
+            <element signature="e#1300#1301#0" expanded="true" />
+            <element signature="e#11600#11601#0" expanded="true" />
+            <element signature="e#11633#11634#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/net/tinyexch/ob/price/safeguard/VolatilityInterruptionInContTradingTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.8552632" vertical-offset="25" max-vertical-offset="705">
+          <caret line="34" column="63" selection-start-line="34" selection-start-column="63" selection-end-line="34" selection-end-column="63" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -2112,7 +2060,7 @@
       </state>
       <state key="FacetStructureConfigurable.UI">
         <settings>
-          <last-edited>No facets are configured</last-edited>
+          <last-edited>Detection</last-edited>
           <splitter-proportions>
             <option name="proportions">
               <list>
@@ -2153,6 +2101,7 @@
             <option name="proportions">
               <list>
                 <option value="0.2" />
+                <option value="0.6" />
               </list>
             </option>
           </splitter-proportions>
@@ -2160,7 +2109,7 @@
       </state>
       <state key="ProjectLibrariesConfigurable.UI">
         <settings>
-          <last-edited>Gradle: hamcrest-core-1.3</last-edited>
+          <last-edited>Gradle: junit:junit-dep:4.10</last-edited>
           <splitter-proportions>
             <option name="proportions">
               <list>
