@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 /**
  * Strategy to match new incoming orders against given orderbook.
  *
- * Principle 1: Market orders are given the reference price as a ”virtual” price. On this basis,
+ * Principle 1: Market orders are given the reference price as a "virtual" price. On this basis,
  * execution is carried out at the reference price provided that this does not violate price/time priority.
  *
  * Principle 2: If orders cannot be executed at the reference price, they are executed in accordance with price/time
@@ -208,7 +208,13 @@ public class ContinuousMatchEngine implements MatchEngine {
                 execPrice = lowestAskLimit;
             }
         } else {
-            throw new UnsupportedOperationException("Not yet implemented");
+            if (referencePrice <= highestBidLimit && referencePrice <= lowestAskLimit ) {
+                execPrice = referencePrice;
+            } else if (highestBidLimit <= lowestAskLimit && highestBidLimit <= referencePrice) {
+                execPrice = highestBidLimit;
+            } else if ( lowestAskLimit < highestBidLimit && lowestAskLimit < referencePrice) {
+                execPrice = lowestAskLimit;
+            }
         }
 
         if (execPrice == -1) {
