@@ -1,7 +1,7 @@
 **A tiny exchange**
 
 Various public documents are available that describe to a certain degree the
-rules of a stock exchanges. Used references are stored in ./docs.
+rules of a stock exchange. Used references are stored in ./docs.
 
 If you want to see upcoming tasks please visit [http://ratzlow.myjetbrains.com/youtrack/issues/tE](http://ratzlow.myjetbrains.com/youtrack/issues/tE)
 The current build status can be seen on [https://travis-ci.org/ratzlow/tinyEXCH] (https://travis-ci.org/ratzlow/tinyEXCH)
@@ -19,4 +19,4 @@ Far too many!
 - Evaluate technologies and how to apply them in this problem domain
 
 
-If you are interested just drop me a mail.
+If you are interested, just drop me a mail.

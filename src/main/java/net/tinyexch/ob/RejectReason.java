@@ -9,7 +9,8 @@ package net.tinyexch.ob;
 public enum RejectReason {
     MIN_SIZE("Insufficient order size!"),
     GTD("Good til date is not within now - T+n"),
-    ORDER_TYPE("The allowed order type is dependent on the trading model and market!");
+    ORDER_TYPE("The allowed order type is dependent on the trading model and market!"),
+    INSUFFICIENT_OB_CONSTELLATION("The current market situation does not allow the order to be accepted!");
 
     private final String msg;
 

@@ -6,7 +6,11 @@ import net.tinyexch.order.Side;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
@@ -18,6 +22,19 @@ import static java.util.stream.Collectors.toList;
  * @since 2014-12-16
  */
 public class PrioritiesTest {
+
+    @Test
+    public void testOlderTimestampComesFirst() {
+        List<Order> someOrders = createUnsortedOrders(Side.BUY);
+        Collections.shuffle(someOrders);
+        someOrders.sort(Priorities.TIME);
+        Order oldestOrde = someOrders.get(0);
+        Order middle = someOrders.get(1);
+        Order newest = someOrders.get(2);
+
+        Assert.assertTrue(oldestOrde.getTimestamp().isBefore(middle.getTimestamp()));
+        Assert.assertTrue(middle.getTimestamp().isBefore(newest.getTimestamp()));
+    }
 
     @Test
     public void testBuyFirstMarketThanHighestPrice() {
@@ -39,9 +56,16 @@ public class PrioritiesTest {
     }
 
     private List<Order> createUnsortedOrders(Side side) {
-        Order o1 = Order.of("1", side).setPrice(87).setOrderType(OrderType.LIMIT).setOrderQty(18);
-        Order o2 = Order.of("2", side).setPrice(89).setOrderType(OrderType.LIMIT).setOrderQty(20);
-        Order o3 = Order.of("3", side).setOrderType(OrderType.MARKET).setOrderQty(70);
+        Order o1 = Order.of("1", side).setPrice(87).setOrderType(OrderType.LIMIT).setOrderQty(18)
+                .setTimestamp(newTS(1));
+        Order o2 = Order.of("2", side).setPrice(89).setOrderType(OrderType.LIMIT).setOrderQty(20)
+                .setTimestamp(newTS(2));
+        Order o3 = Order.of("3", side).setOrderType(OrderType.MARKET).setOrderQty(70)
+                .setTimestamp(newTS(3));
         return Arrays.asList(o1, o2, o3);
+    }
+
+    private Instant newTS(int secOffset) {
+        return LocalDateTime.now().plusSeconds(secOffset).toInstant(ZoneOffset.UTC);
     }
 }

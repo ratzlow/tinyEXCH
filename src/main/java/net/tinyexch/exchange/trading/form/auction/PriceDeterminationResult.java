@@ -1,6 +1,6 @@
 package net.tinyexch.exchange.trading.form.auction;
 
-import net.tinyexch.order.Execution;
+import net.tinyexch.order.Trade;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -25,7 +25,7 @@ public class PriceDeterminationResult {
     private final Optional<Double> auctionPrice;
     private final int bidSurplus;
     private final int askSurplus;
-    private final List<Execution> executions;
+    private final List<Trade> executions;
 
     //----------------------------------------------------
     // constructors
@@ -38,7 +38,7 @@ public class PriceDeterminationResult {
     public PriceDeterminationResult(Optional<Double> bidPrice, Optional<Double> askPrice,
                                     int matchableBidQty, int matchableAskQty,
                                     Optional<Double> auctionPrice,
-                                    List<Execution> executions ) {
+                                    List<Trade> executions ) {
 
         Objects.requireNonNull( executions, "No null list for executions allowed!" );
 
@@ -80,5 +80,5 @@ public class PriceDeterminationResult {
         return auctionPrice;
     }
 
-    public List<Execution> getExecutions() { return executions; }
+    public List<Trade> getExecutions() { return executions; }
 }

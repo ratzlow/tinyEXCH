@@ -49,6 +49,7 @@ Technical infrastructure
 - processing frameworks/methaphers: disruptor, chronicle, Rx, Storm, Akka
 - Authentification: SSL client side
 - couple change of tradingForm to orderbook.state change
+- test how structures perform under load: e.g. O(n)
 
 
 Setup backlog

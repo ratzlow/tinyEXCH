@@ -2,8 +2,8 @@ package net.tinyexch.exchange.trading.form.auction;
 
 import net.tinyexch.ob.Orderbook;
 import net.tinyexch.ob.OrderbookSide;
-import net.tinyexch.ob.match.Priorities;
-import net.tinyexch.order.Execution;
+import net.tinyexch.ob.match.MatchEngine;
+import net.tinyexch.order.Trade;
 import net.tinyexch.order.Order;
 import net.tinyexch.order.OrderType;
 import org.slf4j.Logger;
@@ -28,8 +28,7 @@ import static net.tinyexch.ob.match.Algos.*;
 public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultPriceDeterminationPhase.class);
-    public static final Comparator<Order> SELL_PRICE_TIME_ORDERING = Priorities.PRICE.thenComparing(Priorities.TIME);
-    public static final Comparator<Order> BUY_PRICE_TIME_ORDERING = Priorities.PRICE.reversed().thenComparing(Priorities.TIME);
+
 
     private static final BiFunction<Order, Double, Boolean> SMO_WORSE_PRICE_BUY_FILTER =
             (Order o, Double auctionPrice) -> o.getOrderType() == OrderType.STRIKE_MATCH && o.getStopPrice() <= auctionPrice;
@@ -71,8 +70,8 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
         OrderbookSide sellSide = orderbook.getSellSide();
 
         final PriceDeterminationResult result;
-        if ( !buySide.getBest(BUY_PRICE_TIME_ORDERING).isEmpty() &&
-             !sellSide.getBest(SELL_PRICE_TIME_ORDERING).isEmpty() ) {
+        if ( !buySide.getBest().isEmpty() &&
+             !sellSide.getBest().isEmpty() ) {
 
             LOGGER.info("Orders on both sides available!");
             result = calcResultWithAvailableOrders(buySide, sellSide, referencePrice);
@@ -105,11 +104,11 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
         // only consider non-MKT orders to find the price range
         //------------------------------------------------------------------
 
-        List<Order> bidOrders = buySide.getBest(BUY_PRICE_TIME_ORDERING);
+        List<Order> bidOrders = buySide.getBest();
         double[] bidPrices = bidOrders.stream().mapToDouble(Order::getPrice).toArray();
         double bidSearchPrice = bidOrders.isEmpty() ? 0 : bidOrders.get(0).getPrice();
 
-        List<Order> askOrders = sellSide.getBest(SELL_PRICE_TIME_ORDERING);
+        List<Order> askOrders = sellSide.getBest();
         double[] askPrices = askOrders.stream().mapToDouble(Order::getPrice).toArray();
         double askSearchPrice = askOrders.isEmpty() ? 0 : askOrders.get(0).getPrice();
 
@@ -156,11 +155,11 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
         //------------------------------------------------------------------
 
         List<Order> orderedBuys = new ArrayList<>(buySide.getOrders());
-        orderedBuys.sort(BUY_PRICE_TIME_ORDERING);
+        orderedBuys.sort(MatchEngine.BUY_PRICE_TIME_ORDERING);
         List<Order> orderedSells = new ArrayList<>(sellSide.getOrders());
-        orderedSells.sort(SELL_PRICE_TIME_ORDERING);
+        orderedSells.sort(MatchEngine.SELL_PRICE_TIME_ORDERING);
 
-        List<Execution> executions = auctionPrice.map( price -> match(orderedBuys, executableBuyQty,
+        List<Trade> executions = auctionPrice.map( price -> match(orderedBuys, executableBuyQty,
                                                                         orderedSells, executableSellQty,
                                                                         price))
                                                  .orElse(emptyList());
@@ -187,7 +186,7 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
      * @param auctionPrice the execution price for all matches
      * @return the executions of crossing given orders
      */
-    private List<Execution> match( List<Order> bestBids, int bidQtyToMatch,
+    private List<Trade> match( List<Order> bestBids, int bidQtyToMatch,
                                    List<Order> bestAsks, int askQtyToMatch,
                                    double auctionPrice ) {
 
@@ -195,7 +194,7 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
         Queue<Order> bestAskOrders = new LinkedList<>(bestAsks);
         int alreadyMatchedQty = 0;
 
-        final List<Execution> executions = new ArrayList<>();
+        final List<Trade> executions = new ArrayList<>();
         Order bidToMatch = null;
         Order askToMatch = null;
         while ( alreadyMatchedQty < askQtyToMatch && alreadyMatchedQty < bidQtyToMatch &&
@@ -208,15 +207,15 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
                     isOpenForExecution(bestBidOrders, bidToMatch),
                     isOpenForExecution(bestAskOrders, askToMatch) );
 
-            if ( bidToMatch == null || leavesQty(bidToMatch) == 0) {
+            if ( bidToMatch == null || bidToMatch.getLeavesQty() == 0) {
                 bidToMatch = bestBidOrders.poll();
             }
-            int leaveBidQty = leavesQty(bidToMatch);
+            int leaveBidQty = bidToMatch.getLeavesQty();
 
-            if ( askToMatch == null || leavesQty(askToMatch) == 0 ) {
+            if ( askToMatch == null || askToMatch.getLeavesQty() == 0 ) {
                 askToMatch = bestAskOrders.poll();
             }
-            int leaveAskQty = leavesQty(askToMatch);
+            int leaveAskQty = askToMatch.getLeavesQty();
 
             int openBidQty = bidQtyToMatch - alreadyMatchedQty;
             int executableBidQty = Math.min(leaveBidQty, openBidQty);
@@ -232,7 +231,7 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
             askToMatch = askToMatch.mutableClone();
             askToMatch.setCumQty( askToMatch.getCumQty() + executionQty );
 
-            Execution execution = Execution.of().setBuy(bidToMatch).setSell(askToMatch)
+            Trade execution = Trade.of().setBuy(bidToMatch).setSell(askToMatch)
                                                 .setExecutionQty(executionQty).setPrice(auctionPrice);
             executions.add( execution );
 
@@ -246,9 +245,6 @@ public class DefaultPriceDeterminationPhase implements PriceDeterminationPhase {
         return partialExecuted != null || !orders.isEmpty();
     }
 
-    private int leavesQty( Order order ) {
-        return order.getOrderQty() - order.getCumQty();
-    }
 
     private double calcAuctionPrice(double bidPrice, int bidQty, double askPrice, int askQty) {
         final double auctionPrice;
