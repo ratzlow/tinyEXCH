@@ -464,7 +464,6 @@ public class ContinuousMatchTest {
                 standingMarket, standingLimit );
     }
 
-
     /**
      * A limit order meets an order book in which there are no orders.
      * The incoming bid order is entered into the order book. A price is not determined and no orders are executed.
@@ -477,6 +476,50 @@ public class ContinuousMatchTest {
         assertEquals( 1, ob.getBuySide().getOrders().size() );
         assertEquals( incoming.getClientOrderID(), ob.getBuySide().getOrders().iterator().next().getClientOrderID() );
         assertEquals( 0, ob.getSellSide().getOrders().size() );
+    }
+
+    //-------------------------------------------------------------------
+    // Partial matching tests
+    //-------------------------------------------------------------------
+
+    /**
+     * Partial execution of a market order. A limit order meets an order book in which there are market orders and
+     * limit orders on the other side of the order book.
+     * The reference price is € 200. The lowest ask limit is higher than the highest bid limit and the reference price.
+     * The incoming ask order can only be partially executed against the bid market order in the order book, which is
+     * carried out at the lowest ask limit of € 203
+     * ==> principle 2
+     */
+    @Test
+    public void testPartialExecBidMarket() {
+        Order standingMarket = buyM(ORDER_QTY, time("09:01:00"));
+        Order standingLimit = buyL(202D, 1000, time("09:02:00"));
+        ob.submit(standingMarket, NEW);
+        ob.submit(standingLimit, NEW);
+        final OrderbookSide orderbookBuySide = ob.getBuySide();
+        Runnable buySideCheck = () -> {
+            assertEquals("limit orders", 1, orderbookBuySide.getLimitOrders().size());
+            assertEquals("market orders", 1, orderbookBuySide.getMarketOrders().size());
+        };
+        buySideCheck.run();
+
+        Order incoming = sellL(203, 1000);
+        // check the trade
+        List<Trade> trades = ob.submit(incoming, NEW);
+        assertEquals( 1, trades.size() );
+        Trade trade = trades.get(0);
+        assertEquals( incoming.getPrice(), trade.getPrice(), TestConstants.ROUNDING_DELTA );
+        assertEquals( 1000, trade.getExecutionQty());
+        assertEquals( ExecType.TRADE, trade.getExecType() );
+        assertEquals( standingMarket.getClientOrderID(), trade.getBuy().getClientOrderID() );
+        assertEquals( 5000, trade.getBuy().getLeavesQty());
+        assertEquals( incoming.getClientOrderID(), trade.getSell().getClientOrderID() );
+
+        // check the book
+        assertEquals(0, ob.getSellSide().getOrders().size());
+        buySideCheck.run();
+        assertEquals(5000, orderbookBuySide.getMarketOrders().iterator().next().getLeavesQty());
+        assertEquals(1000, orderbookBuySide.getLimitOrders().iterator().next().getLeavesQty());
     }
 
     //

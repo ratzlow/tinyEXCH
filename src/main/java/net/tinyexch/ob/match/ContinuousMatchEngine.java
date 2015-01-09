@@ -5,10 +5,7 @@ import net.tinyexch.ob.RejectReason;
 import net.tinyexch.ob.match.Match.State;
 import net.tinyexch.order.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -55,10 +52,8 @@ public class ContinuousMatchEngine implements MatchEngine {
             throw new MatchException("Incoming order has unmatchable order type for continuous trading: " + order);
         }
 
-        return new Match(remainingOrder, trades, state );
+        return new Match( remainingOrder, trades, state );
     }
-
-
 
     private Order createRemainingOrder(Order unexecutedOrderPart, List<Trade> trades) {
         Trade firstTrade = trades.get(0);
@@ -98,7 +93,7 @@ public class ContinuousMatchEngine implements MatchEngine {
         int leavesQty = order.getLeavesQty();
         while ( leavesQty > 0 && !otherSide.getLimitOrders().isEmpty() ) {
             Side side = otherSide.getSide();
-            Order otherSideOrder = otherSide.getLimitOrders().poll();
+            Order otherSideOrder = dequeueConditionally(otherSide.getLimitOrders(), leavesQty);
             Trade trade = createTrade( order, otherSideOrder, side, otherSideOrder.getPrice() );
 
             leavesQty -= trade.getExecutionQty();
@@ -126,15 +121,15 @@ public class ContinuousMatchEngine implements MatchEngine {
                 double highestBid = getBestBidPrice(bestLimitThisSide, bestLimitOtherSide, incomingLimitOrder);
                 double executionPrice = calcExecutionPrice( otherSide.getSide(), highestBid, lowestAsk );
 
-                Order otherSideMarketOrder = otherSide.getMarketOrders().poll();
+                Order otherSideMarketOrder = dequeueConditionally(otherSide.getMarketOrders(), leavesQty);
                 trade = createTrade( incomingLimitOrder, otherSideMarketOrder, side, executionPrice );
 
             } else if ( !hasMarketOrders && hasLimitOrders ) {
-                Order otherSideOrder = otherSide.getLimitOrders().poll();
+                Order otherSideOrder = dequeueConditionally(otherSide.getLimitOrders(), leavesQty);
                 trade = createTrade( incomingLimitOrder, otherSideOrder, side, otherSideOrder.getPrice() );
 
             } else if ( hasMarketOrders && !hasLimitOrders ) {
-                Order otherSideOrder = otherSide.getMarketOrders().poll();
+                Order otherSideOrder = dequeueConditionally(otherSide.getMarketOrders(), leavesQty);
                 double executionPrice = calcExecutionPrice(side, incomingLimitOrder.getPrice());
                 trade = createTrade( incomingLimitOrder, otherSideOrder, side, executionPrice );
 
@@ -149,6 +144,26 @@ public class ContinuousMatchEngine implements MatchEngine {
         return trades;
     }
 
+    /**
+     * Don't remove order from orderbook if it cannot be fully matched, just update it's open Qty.
+     *
+     * @param otherSideQueue the structure applicable for matching
+     * @param incomingOrderLeaveQty the qty to fill for the incoming order
+     * @return the orde from other side, which will remain in the book with an open size if it could not be fully
+     * matched otherwise it will be removed.
+     */
+    private Order dequeueConditionally( Queue<Order> otherSideQueue, int incomingOrderLeaveQty ) {
+        final Order tradedOrder;
+        final Order headOnQueue = otherSideQueue.peek();
+        if ( headOnQueue.getLeavesQty() > incomingOrderLeaveQty ) {
+            tradedOrder = headOnQueue.mutableClone();
+            headOnQueue.setCumQty( headOnQueue.getCumQty() + incomingOrderLeaveQty );
+        } else {
+            tradedOrder = otherSideQueue.poll();
+        }
+
+        return tradedOrder;
+    }
 
     private List<Trade> matchMarket(Order order, OrderbookSide otherSide) {
         final List<Trade> trades = new ArrayList<>();
@@ -160,15 +175,15 @@ public class ContinuousMatchEngine implements MatchEngine {
             boolean hasLimitOrders = !otherSide.getLimitOrders().isEmpty();
             Trade trade;
             if ( hasMarketOrders && !hasLimitOrders ) {
-                Order otherSideOrder = otherSide.getMarketOrders().poll();
+                Order otherSideOrder = dequeueConditionally(otherSide.getMarketOrders(), leavesQty);
                 trade = createTrade( order, otherSideOrder, side, referencePrice );
 
             } else if ( !hasMarketOrders && hasLimitOrders ) {
-                Order otherSideOrder = otherSide.getLimitOrders().poll();
+                Order otherSideOrder = dequeueConditionally(otherSide.getLimitOrders(), leavesQty);
                 trade = createTrade( order, otherSideOrder, side, otherSideOrder.getPrice() );
 
             } else if ( hasMarketOrders && hasLimitOrders ) {
-                Order otherSideOrder = otherSide.getMarketOrders().poll();
+                Order otherSideOrder = dequeueConditionally(otherSide.getMarketOrders(), leavesQty);
                 double bestPriceOnOtherSide = otherSide.getLimitOrders().peek().getPrice();
                 double executionPrice = calcExecutionPrice(side, bestPriceOnOtherSide);
                 trade = createTrade( order, otherSideOrder, side, executionPrice );
