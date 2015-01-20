@@ -108,7 +108,7 @@ public abstract class TradingForm<S extends Enum<S>> {
     protected abstract Logger getLogger();
 
 
-    protected Orderbook getOrderbook() {
+    public Orderbook getOrderbook() {
         return orderbook;
     }
 }

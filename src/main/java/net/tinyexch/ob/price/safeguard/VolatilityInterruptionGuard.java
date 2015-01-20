@@ -1,5 +1,8 @@
 package net.tinyexch.ob.price.safeguard;
 
+import net.tinyexch.order.Order;
+import net.tinyexch.order.OrderType;
+import net.tinyexch.order.Trade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,14 +11,13 @@ import java.util.function.Consumer;
 
 /**
  * {@link net.tinyexch.ob.price.safeguard.VolatilityInterruption} can be thrown in auctions and
- * continuous trading. As far as designated sponsors (market maker) exists the will enter quotes during
+ * continuous trading. As far as designated sponsors (market maker) exists they will enter quotes during
  * volatility interruptions. Executed MidPoint orders are not considered.
  *
  * This class is not thread safe and needs client synchronization when updating deviations or ref prices. It will
  * fire negative prices as price determination component has to ensure valid prices in general.
  *
  * In auction: fire only at end of call phase // TODO (FRa) : (FRa) : test
- *
  *
  * @author ratzlow@gmail.com
  * @since 2014-09-09
@@ -26,7 +28,12 @@ public class VolatilityInterruptionGuard {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(VolatilityInterruptionGuard.class);
 
-    public static final VolatilityInterruptionGuard NO_OP_EMITTER = new VolatilityInterruptionGuard( 0,0,0,0 );
+    public static final VolatilityInterruptionGuard NO_OP = new VolatilityInterruptionGuard( 0,0,0,0 ) {
+        @Override public void updateStaticRefPrice(double newStatRefPrice) {}
+        @Override public void updateDynamicRefPrice(double newDynRefPrice) {}
+        @Override public void updateDynamicRefPrice(Trade trade) { }
+        @Override public Optional<VolatilityInterruption> checkIndicativePrice(double indicativePrice) { return Optional.empty(); }
+    };
 
     /**
      * Deviation ... max percentage deviation symmetrically pos/neg of reference price retrieved as last price in an auction
@@ -52,14 +59,14 @@ public class VolatilityInterruptionGuard {
      * This listener should be invoked on any changes to the reference price to check if the new reference price is
      * within the specified range parameters.
      *
-     * @param staticPriceRangeRefPrice base price that is usually a defines the midpoint stable broader range
+     * @param staticPriceRangeRefPrice base price that usually defines the midpoint stable broader range
      * @param staticPriceDeviationPerc percent by which #staticPriceRangeRefPrice differ in pos + neg direction
      * @param dynamicPriceRangeRefPrice base price changing during (cont) trading usually extending the more stable
      *                                  #staticPriceRangeRefPrice
      * @param dynamicPriceDeviationPerc defines the pos/neg deviation around #dynamicPriceRangeRefPrice
      */
     public VolatilityInterruptionGuard(double staticPriceRangeRefPrice, float staticPriceDeviationPerc,
-                                          double dynamicPriceRangeRefPrice, float dynamicPriceDeviationPerc) {
+                                       double dynamicPriceRangeRefPrice, float dynamicPriceDeviationPerc) {
 
         this.staticRange = new PriceRange(staticPriceRangeRefPrice, staticPriceDeviationPerc);
         this.dynamicRange = new PriceRange(dynamicPriceRangeRefPrice, dynamicPriceDeviationPerc);
@@ -72,12 +79,23 @@ public class VolatilityInterruptionGuard {
     // public API
     //--------------------------------------------------------------------
 
-    public void updateStaticRefPrice(double newStatRefPrice ) {
+    public void updateDynamicRefPrice( Trade trade ) {
+        boolean validUpdateTrigger = isApplicable(trade.getBuy()) && isApplicable(trade.getSell());
+        if ( validUpdateTrigger ) {
+            updateDynamicRefPrice(trade.getPrice());
+        }
+    }
+
+    void updateStaticRefPrice(double newStatRefPrice ) {
         update( newStatRefPrice, newRange -> staticRange = newRange, dynamicRange, staticRange );
     }
 
-    public void updateDynamicRefPrice( double newDynRefPrice ) {
+    void updateDynamicRefPrice( double newDynRefPrice ) {
         update( newDynRefPrice, newRange -> dynamicRange = newRange, staticRange, dynamicRange);
+    }
+
+    private boolean isApplicable( Order order ) {
+        return order == null || order.getOrderType() != OrderType.MIDPOINT;
     }
 
     private void update( double newRefPrice, Consumer<PriceRange> rangeSetter,

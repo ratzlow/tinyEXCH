@@ -7,8 +7,6 @@ import net.tinyexch.order.Order;
 import net.tinyexch.order.Side;
 import net.tinyexch.order.Trade;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -27,6 +25,7 @@ import static net.tinyexch.ob.match.MatchEngine.*;
 // TODO (FRa) : (FRa) : form proper Notif Msg e.g. NewAck, CancelAcc, CancelRej
 // TODO (FRa) : (FRa) : impl 2PC and commmit match only if price checks succeeded; check if this should be drawn into OB to be more efficient
 // TODO (FRa) : (FRa) : use persistent/functional data structures - if possible
+// TODO (FRa) : (FRa) : cancel(): remove from OB and produce CXL-ACK (check FIX what is the response)
 public class Orderbook {
 
     private MatchEngine matchEngine = MatchEngine.NO_OP;
@@ -54,7 +53,6 @@ public class Orderbook {
     // constructors
     //------------------------------------------------------------------------------------------------------------------
 
-
     public Orderbook() {}
 
     public Orderbook( Order[] buys, Order[] sells ) {
@@ -70,30 +68,36 @@ public class Orderbook {
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    // mutable state changing during runtime
+    // mutable state changes during runtime
     //------------------------------------------------------------------------------------------------------------------
 
-    public List<Trade> submit( Order order, SubmitType submitType ) {
-        // pre condition
+    public Match submit( Order order, SubmitType submitType ) {
+        // pre conditions
         Objects.requireNonNull(order, "Order must not be null!");
 
-        final List<Trade> trades;
+        if ( state == OrderbookState.CLOSED ) {
+            String msg = String.format("Cannot accept orders while the orderbook is closed! SubmitType=%s, order=%s",
+                    submitType, order.toString());
+            throw new OrderbookException( msg );
+        }
+
+        final Match match;
         if ( submitType == NEW ) {
-            trades = match(order).getTrades();
+            match = match(order);
 
         } else if ( submitType == MODIFY ) {
             cancel(order);
-            trades = match(order).getTrades();
+            match = match(order);
 
         } else if ( submitType == CANCEL ) {
             cancel(order);
-            trades = Collections.emptyList();
+            match = Match.NO_MATCH;
 
         } else {
             throw new OrderbookException("Invalid submit type " + submitType + " for " + order );
         }
 
-        return trades;
+        return match;
     }
 
 
@@ -119,23 +123,17 @@ public class Orderbook {
     // internal operations
     //------------------------------------------------------------------------------------------------------------------
 
-    // TODO (FRa) : (FRa) : remove from OB and produce CXL-ACK (check FIX what is the response)
     private Optional<Trade> cancel( Order order ) {
-        throw new IllegalStateException("Not yet implemented!");
+        throw new UnsupportedOperationException("Not yet implemented!");
     }
 
     private Match match(Order order) {
-        final OrderbookSide thisSide;
-        final OrderbookSide otherSide;
-        if ( order.getSide() == Side.BUY ) {
-            thisSide = buySide;
-            otherSide = sellSide;
-        } else {
-            thisSide = sellSide;
-            otherSide = buySide;
-        }
+        Side incomingSide = order.getSide();
+        OrderbookSide thisSide = incomingSide == Side.BUY ? buySide : sellSide;
+        OrderbookSide otherSide = incomingSide == Side.BUY ? sellSide : buySide;
 
-        Match match = matchEngine.match( order, otherSide, thisSide );
+        Match match = matchEngine.match(order, otherSide, thisSide);
+
         // TODO (FRa) : (FRa) : check round/odd lots handling
         boolean fullyMatched = order.getLeavesQty() - match.getExecutedQuantity() == 0;
         if ( !fullyMatched && match.getState() == Match.State.ACCEPT ) {

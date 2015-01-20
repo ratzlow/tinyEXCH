@@ -33,7 +33,7 @@ public class TradingModelProfile {
 
     private NewOrderValidators newOrderValidators = new NewOrderValidators();
 
-    private VolatilityInterruptionGuard volatilityInterruptionGuard = VolatilityInterruptionGuard.NO_OP_EMITTER;
+    private VolatilityInterruptionGuard volatilityInterruptionGuard = VolatilityInterruptionGuard.NO_OP;
 
     /** No Op matching */
     private MatchEngine auctionMatchEngine = MatchEngine.NO_OP;

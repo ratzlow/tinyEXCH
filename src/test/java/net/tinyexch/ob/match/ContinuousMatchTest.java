@@ -1,9 +1,7 @@
 package net.tinyexch.ob.match;
 
-import net.tinyexch.ob.Orderbook;
-import net.tinyexch.ob.OrderbookSide;
-import net.tinyexch.ob.RejectReason;
-import net.tinyexch.ob.TestConstants;
+import net.tinyexch.ob.*;
+import net.tinyexch.ob.price.safeguard.VolatilityInterruptionGuard;
 import net.tinyexch.order.ExecType;
 import net.tinyexch.order.Order;
 import net.tinyexch.order.Side;
@@ -34,13 +32,15 @@ public class ContinuousMatchTest {
 
     private static final double REFERENCE_PRICE = 200;
     private static final int ORDER_QTY = 6000;
-    private static final MatchEngine MATCH_ENGINE = new ContinuousMatchEngine(REFERENCE_PRICE);
+    private static final MatchEngine MATCH_ENGINE = new ContinuousMatchEngine(REFERENCE_PRICE, VolatilityInterruptionGuard.NO_OP );
 
     private Orderbook ob;
 
     @Before
     public void init() {
         ob = new Orderbook(MATCH_ENGINE);
+        ob.open();
+        assertEquals(OrderbookState.OPEN, ob.getState());
         assertEmptyOrderbook();
     }
 
@@ -142,7 +142,7 @@ public class ContinuousMatchTest {
     @Test
     public void testNoOrderOnOtherSide_Ex8() {
         Order standingMarket = buyM(ORDER_QTY);
-        List<Trade> trades = ob.submit(standingMarket, NEW);
+        List<Trade> trades = ob.submit(standingMarket, NEW).getTrades();
 
         assertEquals( 0, trades.size() );
         Collection<Order> allBuyOrders = ob.getBuySide().getOrders();
@@ -172,7 +172,7 @@ public class ContinuousMatchTest {
         checkOrderbook.run();
 
         Order incoming = sellMtoL(ORDER_QTY);
-        List<Trade> trades = ob.submit(incoming, NEW);
+        List<Trade> trades = ob.submit(incoming, NEW).getTrades();
         Trade trade = checkMtoLOrderRejection(trades);
         assertEquals(incoming.getClientOrderID(), trade.getSell().getClientOrderID());
         assertNull(trade.getBuy());
@@ -227,8 +227,8 @@ public class ContinuousMatchTest {
     public void testBuyMarketAndLimitOnOtherSideRejection_Ex12() {
         Order standingMarket = buyM(ORDER_QTY, time("09:01:00"));
         Order standingLimit = buyL(199, ORDER_QTY, time("08:55:00"));
-        assertEquals( true, ob.submit(standingMarket, NEW).isEmpty() );
-        assertEquals( true, ob.submit(standingLimit, NEW).isEmpty() );
+        assertEquals(true, ob.submit(standingMarket, NEW).getTrades().isEmpty());
+        assertEquals( true, ob.submit(standingLimit, NEW).getTrades().isEmpty() );
 
         // check standing order
         final Runnable checkOrderbook = () -> {
@@ -238,7 +238,7 @@ public class ContinuousMatchTest {
         checkOrderbook.run();
 
         Order incoming = sellMtoL(ORDER_QTY);
-        List<Trade> trades = ob.submit(incoming, NEW);
+        List<Trade> trades = ob.submit(incoming, NEW).getTrades();
         Trade trade = checkMtoLOrderRejection(trades);
         assertEquals( incoming.getClientOrderID(), trade.getSell().getClientOrderID() );
         assertNull( trade.getBuy() );
@@ -255,7 +255,7 @@ public class ContinuousMatchTest {
     @Test
     public void testSellMarketAndLimitOnOtherSideRejection_Ex13() {
         Order incoming = sellMtoL(ORDER_QTY);
-        List<Trade> trades = ob.submit(incoming, NEW);
+        List<Trade> trades = ob.submit(incoming, NEW).getTrades();
         Trade trade = checkMtoLOrderRejection(trades);
         assertEquals( incoming.getClientOrderID(), trade.getSell().getClientOrderID() );
         assertNull( trade.getBuy() );
@@ -362,7 +362,7 @@ public class ContinuousMatchTest {
         Order standingLimit = buyL(199, ORDER_QTY, time("09:33:00"));
         Order incoming = sellL(200D, ORDER_QTY);
         ob.submit(standingLimit, NEW);
-        List<Trade> trades = ob.submit(incoming, NEW);
+        List<Trade> trades = ob.submit(incoming, NEW).getTrades();
         assertEquals( 0, trades.size() );
         assertEquals( 1, ob.getBuySide().getOrders().size() );
         assertEquals( 1, ob.getSellSide().getOrders().size() );
@@ -471,7 +471,7 @@ public class ContinuousMatchTest {
     @Test
     public void testEmptySellSide_Ex27() {
         Order incoming = buyL(200, ORDER_QTY);
-        List<Trade> trades = ob.submit(incoming, NEW);
+        List<Trade> trades = ob.submit(incoming, NEW).getTrades();
         assertEquals( 0, trades.size());
         assertEquals( 1, ob.getBuySide().getOrders().size() );
         assertEquals( incoming.getClientOrderID(), ob.getBuySide().getOrders().iterator().next().getClientOrderID() );
@@ -479,7 +479,7 @@ public class ContinuousMatchTest {
     }
 
     //-------------------------------------------------------------------
-    // Partial matching tests
+    // Partial matching tests => 13.2.2.2 Further Examples
     //-------------------------------------------------------------------
 
     /**
@@ -505,7 +505,7 @@ public class ContinuousMatchTest {
 
         Order incoming = sellL(203, 1000);
         // check the trade
-        List<Trade> trades = ob.submit(incoming, NEW);
+        List<Trade> trades = ob.submit(incoming, NEW).getTrades();
         assertEquals( 1, trades.size() );
         Trade trade = trades.get(0);
         assertEquals( incoming.getPrice(), trade.getPrice(), TestConstants.ROUNDING_DELTA );
@@ -534,10 +534,10 @@ public class ContinuousMatchTest {
     private void submitLimitOrder(Order incoming, double expectedExecutionPrice,
                                   Runnable postMatchChecks , Order ... standingOrders ) {
         for ( Order standingOrder : standingOrders ) {
-            List<Trade> trades = ob.submit(standingOrder, NEW);
+            List<Trade> trades = ob.submit(standingOrder, NEW).getTrades();
             assertEquals( 0, trades.size() );
         }
-        List<Trade> trades = ob.submit(incoming, NEW);
+        List<Trade> trades = ob.submit(incoming, NEW).getTrades();
         assertEquals( 1, trades.size() );
         Trade trade = trades.iterator().next();
         assertEquals( expectedExecutionPrice, trade.getPrice(), TestConstants.ROUNDING_DELTA );
@@ -581,7 +581,7 @@ public class ContinuousMatchTest {
     private void testMarketToLimitWithLimitOnlyOnOtherSideOK( Orderbook ob, Order standingLimit, Order incoming,
                                                               String expectedTradeBuyOrderID,
                                                               String expectedTradeSellOrderID) {
-        List<Trade> trades = ob.submit(incoming, NEW);
+        List<Trade> trades = ob.submit(incoming, NEW).getTrades();
         assertEquals( 1, trades.size() );
         Trade trade = trades.iterator().next();
         assertEquals( expectedTradeBuyOrderID, trade.getBuy().getClientOrderID());
@@ -600,7 +600,7 @@ public class ContinuousMatchTest {
         ob.submit(standingLimit, NEW);
 
         Order incomingOrder = buyM(ORDER_QTY);
-        List<Trade> trades = ob.submit(incomingOrder, NEW);
+        List<Trade> trades = ob.submit(incomingOrder, NEW).getTrades();
         assertEquals( 1, trades.size());
         assertEquals( 0, ob.getBuySide().getOrders().size() );
         assertEquals( 1, ob.getSellSide().getOrders().size());
@@ -621,7 +621,7 @@ public class ContinuousMatchTest {
         ob.submit(standingLimit, NEW);
 
         Order incomingOrder = sellM(ORDER_QTY);
-        List<Trade> trades = ob.submit(incomingOrder, NEW);
+        List<Trade> trades = ob.submit(incomingOrder, NEW).getTrades();
         assertEquals( 1, trades.size());
         assertEquals( 1, ob.getBuySide().getOrders().size() );
         assertEquals( 0, ob.getSellSide().getOrders().size());
@@ -636,7 +636,7 @@ public class ContinuousMatchTest {
 
 
     private void matchIncomingMarketOrder( Order standingOrder, Order incomingOrder, double expectedExecutionPrice ) {
-        List<Trade> emptyTrade = ob.submit(standingOrder, NEW);
+        List<Trade> emptyTrade = ob.submit(standingOrder, NEW).getTrades();
 
         // no trade generated as there is nothing to match
         assertTrue(emptyTrade.isEmpty());
@@ -663,7 +663,7 @@ public class ContinuousMatchTest {
 
         // new order added which should lead to an execution, leaving the OB empty
 
-        List<Trade> trades = ob.submit(incomingOrder, NEW);
+        List<Trade> trades = ob.submit(incomingOrder, NEW).getTrades();
         assertEquals( 1, trades.size() );
         Trade trade = trades.get(0);
         assertEquals( expectedExecutionPrice, trade.getPrice(), TestConstants.ROUNDING_DELTA);

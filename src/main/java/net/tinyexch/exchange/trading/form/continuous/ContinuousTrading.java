@@ -1,18 +1,21 @@
 package net.tinyexch.exchange.trading.form.continuous;
 
 import net.tinyexch.exchange.event.NotificationListener;
+import net.tinyexch.exchange.event.produce.NewTradeEvent;
 import net.tinyexch.exchange.trading.form.TradingForm;
 import net.tinyexch.ob.SubmitType;
+import net.tinyexch.ob.match.Match;
 import net.tinyexch.ob.match.MatchEngine;
 import net.tinyexch.ob.price.safeguard.VolatilityInterruption;
-import net.tinyexch.ob.price.safeguard.VolatilityInterruptionGuard;
 import net.tinyexch.order.Order;
-import net.tinyexch.order.OrderType;
 import net.tinyexch.order.Trade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static java.util.Collections.singleton;
 import static net.tinyexch.exchange.trading.form.continuous.ContinuousTradingState.RUNNING;
@@ -31,9 +34,6 @@ public class ContinuousTrading extends TradingForm<ContinuousTradingState> {
 
     private boolean volatilityInterrupted = false;
 
-    /** default: no op implementation */
-    private VolatilityInterruptionGuard volatilityInterruptionGuard = VolatilityInterruptionGuard.NO_OP_EMITTER;
-
     //-----------------------------------------------------------------------------
     // constructors
     //-----------------------------------------------------------------------------
@@ -42,10 +42,8 @@ public class ContinuousTrading extends TradingForm<ContinuousTradingState> {
         super(notificationListener);
     }
 
-    public ContinuousTrading( NotificationListener notificationListener, MatchEngine matchEngine,
-                              VolatilityInterruptionGuard volatilityInterruptionGuard) {
+    public ContinuousTrading( NotificationListener notificationListener, MatchEngine matchEngine ) {
         super(notificationListener, matchEngine);
-        this.volatilityInterruptionGuard = volatilityInterruptionGuard;
     }
 
     //-----------------------------------------------------------------------------
@@ -63,27 +61,19 @@ public class ContinuousTrading extends TradingForm<ContinuousTradingState> {
 
     public void submit(Order order, SubmitType submitType) {
 
-        List<Trade> trades = getOrderbook().submit(order, submitType);
+        Match match = getOrderbook().submit(order, submitType);
+        List<Trade> trades = match.getTrades();
+        if ( !trades.isEmpty() ) {
+            trades.stream().forEach(trade -> notificationListener.fire(new NewTradeEvent(trade)));
+        }
 
-        // TODO (FRa) : (FRa) : is this applicable?! too functional?
         // check for volatility interruptions apply for auction and continuous trading
-        trades.forEach( this::checkVolatilityInterruption );
-    }
-
-    private void checkVolatilityInterruption(Trade trade) {
-        Optional<VolatilityInterruption> interruptionEvent =
-                volatilityInterruptionGuard.checkIndicativePrice(trade.getPrice());
-
-        if (interruptionEvent.isPresent() ) {
-            getLogger().info("Volatility interruption occurred on: {}", interruptionEvent );
+        if ( match.getVolatilityInterruption().isPresent() ) {
+            VolatilityInterruption interruption = match.getVolatilityInterruption().get();
+            getLogger().info("Close orderbook! Volatility interruption occurred on: {}", interruption );
             volatilityInterrupted = true;
-            notificationListener.fire(interruptionEvent.get());
-        } else {
-            boolean midpointInvolved = trade.getBuy().getOrderType() == OrderType.MIDPOINT ||
-                                       trade.getSell().getOrderType() == OrderType.MIDPOINT;
-            if ( !midpointInvolved ) {
-                volatilityInterruptionGuard.updateDynamicRefPrice(trade.getPrice());
-            }
+            notificationListener.fire(interruption);
+            getOrderbook().close();
         }
     }
 

@@ -2,6 +2,7 @@ package net.tinyexch.ob.match;
 
 import net.tinyexch.ob.Orderbook;
 import net.tinyexch.ob.TestConstants;
+import net.tinyexch.ob.price.safeguard.VolatilityInterruptionGuard;
 import net.tinyexch.order.ExecType;
 import net.tinyexch.order.Order;
 import net.tinyexch.order.OrderType;
@@ -31,7 +32,8 @@ public class ContinuousMatchingAuxiliaryTest {
     @Test
     public void testOrderWithManyPartialExecutions() {
         final int referencePrice = 200;
-        Orderbook ob = new Orderbook(new ContinuousMatchEngine(referencePrice));
+        Orderbook ob = new Orderbook(new ContinuousMatchEngine(referencePrice, VolatilityInterruptionGuard.NO_OP));
+        ob.open();
         int shareNo = 1_000;
         for (int i = 0; i < shareNo; i++ ) {
             ob.submit(buyM(1), NEW);
@@ -41,7 +43,7 @@ public class ContinuousMatchingAuxiliaryTest {
         assertEquals(shareNo, buyQty.longValue());
 
         Order bigSellOrder = sellM(shareNo);
-        List<Trade> trades = ob.submit(bigSellOrder, NEW);
+        List<Trade> trades = ob.submit(bigSellOrder, NEW).getTrades();
         assertEquals( shareNo, trades.size() );
         assertEquals( 0, ob.getBuySide().getOrders().size() );
         assertEquals( 0, ob.getSellSide().getOrders().size() );
@@ -61,12 +63,13 @@ public class ContinuousMatchingAuxiliaryTest {
     @Test
     public void testUnexecutedMtoLKeptInOrderbook() {
         double referencePrice = 100;
-        Orderbook ob = new Orderbook( new ContinuousMatchEngine(referencePrice) );
+        Orderbook ob = new Orderbook( new ContinuousMatchEngine(referencePrice, VolatilityInterruptionGuard.NO_OP) );
+        ob.open();
         int noStandingBuyOrders = 10;
         final double bestBuyPrice = 100.0;
         for ( int i=0; i < noStandingBuyOrders; i++ ) {
             double price = bestBuyPrice - i;
-            List<Trade> trades = ob.submit(buyL(price, 1), NEW);
+            List<Trade> trades = ob.submit(buyL(price, 1), NEW).getTrades();
             assertTrue( trades.isEmpty() );
         }
         Collection<Order> buyOrders = ob.getBuySide().getOrders();
@@ -82,7 +85,7 @@ public class ContinuousMatchingAuxiliaryTest {
 
         int sellQty = noStandingBuyOrders * 2;
         Order incoming = sellMtoL(sellQty);
-        List<Trade> trades = ob.submit(incoming, NEW);
+        List<Trade> trades = ob.submit(incoming, NEW).getTrades();
         assertEquals( "All standing orders are executed!", noStandingBuyOrders, trades.size() );
 
         Trade firstTrade = trades.get(0);
