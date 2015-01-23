@@ -8,7 +8,9 @@ import net.tinyexch.ob.price.safeguard.VolatilityInterruptionGuard;
 import net.tinyexch.order.*;
 
 import java.util.*;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static net.tinyexch.ob.match.Match.State.ACCEPT;
@@ -29,7 +31,6 @@ import static net.tinyexch.order.ExecType.REJECTED;
  * @since 2014-12-23
  */
 // TODO (FRa) : (FRa) : consider TimeInForce for partial matching (e.g FOK, ...)
-// TODO (FRa) : (FRa) : introduce match loop
 public class ContinuousMatchEngine implements MatchEngine {
     private static final int NO_PRICE = -1;
 
@@ -48,10 +49,14 @@ public class ContinuousMatchEngine implements MatchEngine {
         OrderType orderType = order.getOrderType();
         final MatchCollector matchCollector;
         if ( orderType == OrderType.LIMIT ) {
-            matchCollector = matchLimit(order, otherSide, thisSide );
+            matchCollector = execute(order, otherSide,
+                                    () -> matchLimit(order, otherSide, thisSide),
+                                    () -> isLiquidityAvailable(otherSide, order.getPrice()) );
 
         } else if ( orderType == OrderType.MARKET ) {
-            matchCollector = matchMarket( order, otherSide );
+            matchCollector = execute( order, otherSide,
+                                    () -> matchMarket( order, otherSide),
+                                    () -> isLiquidityAvailable(otherSide) );
 
         } else if (orderType == OrderType.MARKET_TO_LIMIT ) {
             matchCollector = matchMarketToLimit( order, otherSide );
@@ -86,7 +91,9 @@ public class ContinuousMatchEngine implements MatchEngine {
         final MatchCollector collector;
         boolean hasLimitOrdersOnly = !otherSide.getLimitOrders().isEmpty() && otherSide.getMarketOrders().isEmpty();
         if ( hasLimitOrdersOnly ) {
-            collector = matchAgainstLimitOrders(order, otherSide );
+            collector = execute(order, otherSide,
+                () -> dequeueConditionally(otherSide.getLimitOrders(), order.getLeavesQty(), Order::getPrice),
+                () -> !otherSide.getLimitOrders().isEmpty() );
 
         } else {
             final Order buy, sell;
@@ -99,7 +106,7 @@ public class ContinuousMatchEngine implements MatchEngine {
             }
 
             Trade trade = Trade.of().setBuy(buy).setSell(sell).setExecType(REJECTED)
-                                .setOrderRejectReason(RejectReason.INSUFFICIENT_OB_CONSTELLATION.getMsg());
+                                    .setOrderRejectReason(RejectReason.INSUFFICIENT_OB_CONSTELLATION.getMsg());
             collector = new MatchCollector();
             collector.trades.add( trade );
         }
@@ -108,15 +115,16 @@ public class ContinuousMatchEngine implements MatchEngine {
     }
 
 
-    private MatchCollector matchAgainstLimitOrders( Order incomingOrder, OrderbookSide otherSide ) {
-        final MatchCollector collector = new MatchCollector();
+    private MatchCollector execute(Order incomingOrder, OrderbookSide otherSide,
+                                   Supplier<OrderRetrievalResult> executionStrategy,
+                                   BooleanSupplier liquidityDeterminator) {
 
+        final MatchCollector collector = new MatchCollector();
         int leavesQty = incomingOrder.getLeavesQty();
         boolean matchNext = true;
-        while ( leavesQty > 0 && matchNext && !otherSide.getLimitOrders().isEmpty() ) {
-            Side side = otherSide.getSide();
-            OrderRetrievalResult retrievalResult = dequeueConditionally(otherSide.getLimitOrders(), leavesQty, Order::getPrice);
-            int executedQty = addMatchResultToCollector(incomingOrder, collector, side, retrievalResult);
+        while ( leavesQty > 0 && matchNext && liquidityDeterminator.getAsBoolean() ) {
+            final OrderRetrievalResult retrievalResult = executionStrategy.get();
+            int executedQty = addMatchResultToCollector(incomingOrder, collector, otherSide.getSide(), retrievalResult);
             leavesQty -= executedQty;
             matchNext = retrievalResult.isValidMatch();
         }
@@ -125,76 +133,59 @@ public class ContinuousMatchEngine implements MatchEngine {
     }
 
 
-    private MatchCollector matchLimit(Order incomingLimitOrder, OrderbookSide otherSide, OrderbookSide thisSide) {
-        final MatchCollector collector = new MatchCollector();
+    private OrderRetrievalResult matchLimit(Order incomingLimitOrder,
+                                            OrderbookSide otherSide, OrderbookSide thisSide) {
+        Side side = otherSide.getSide();
+        boolean hasMarketOrders = !otherSide.getMarketOrders().isEmpty();
+        boolean hasLimitOrders = !otherSide.getLimitOrders().isEmpty();
         int leavesQty = incomingLimitOrder.getLeavesQty();
-        boolean matchNext = true;
-        while ( leavesQty > 0 && matchNext &&
-                isLiquidityAvailable(otherSide, incomingLimitOrder.getPrice()) ) {
 
-            Side side = otherSide.getSide();
-            boolean hasMarketOrders = !otherSide.getMarketOrders().isEmpty();
-            boolean hasLimitOrders = !otherSide.getLimitOrders().isEmpty();
+        final OrderRetrievalResult retrievalResult;
+        if (hasMarketOrders && hasLimitOrders) {
+            Order bestLimitOtherSide = otherSide.getLimitOrders().peek();
+            Order bestLimitThisSide = thisSide.getLimitOrders().peek();
+            double lowestAsk = getBestAskPrice(bestLimitThisSide, bestLimitOtherSide, incomingLimitOrder);
+            double highestBid = getBestBidPrice(bestLimitThisSide, bestLimitOtherSide, incomingLimitOrder);
+            double executionPrice = calcExecutionPrice(otherSide.getSide(), highestBid, lowestAsk);
+            retrievalResult = dequeueConditionally(otherSide.getMarketOrders(), leavesQty, order -> executionPrice);
 
-            final OrderRetrievalResult retrievalResult;
-            if ( hasMarketOrders && hasLimitOrders ) {
-                Order bestLimitOtherSide = otherSide.getLimitOrders().peek();
-                Order bestLimitThisSide = thisSide.getLimitOrders().peek();
-                double lowestAsk = getBestAskPrice(bestLimitThisSide, bestLimitOtherSide, incomingLimitOrder);
-                double highestBid = getBestBidPrice(bestLimitThisSide, bestLimitOtherSide, incomingLimitOrder);
-                double executionPrice = calcExecutionPrice( otherSide.getSide(), highestBid, lowestAsk );
-                retrievalResult = dequeueConditionally(otherSide.getMarketOrders(), leavesQty, order -> executionPrice);
+        } else if (!hasMarketOrders && hasLimitOrders) {
+            retrievalResult = dequeueConditionally(otherSide.getLimitOrders(), leavesQty, Order::getPrice);
 
-            } else if ( !hasMarketOrders && hasLimitOrders ) {
-                retrievalResult = dequeueConditionally(otherSide.getLimitOrders(), leavesQty, Order::getPrice);
+        } else if (hasMarketOrders && !hasLimitOrders) {
+            double executionPrice = calcExecutionPrice(side, incomingLimitOrder.getPrice());
+            retrievalResult = dequeueConditionally(otherSide.getMarketOrders(), leavesQty, order -> executionPrice);
 
-            } else if ( hasMarketOrders && !hasLimitOrders ) {
-                double executionPrice = calcExecutionPrice(side, incomingLimitOrder.getPrice());
-                retrievalResult = dequeueConditionally(otherSide.getMarketOrders(), leavesQty, order -> executionPrice );
-
-            } else {
-                throw new MatchException("Matching not implemented! incomingLimitOrder to match: " + incomingLimitOrder);
-            }
-
-            int executedQty = addMatchResultToCollector(incomingLimitOrder, collector, side, retrievalResult);
-            leavesQty -= executedQty;
-            matchNext = retrievalResult.isValidMatch();
+        } else {
+            throw new MatchException("Matching not implemented! incomingLimitOrder to match: " + incomingLimitOrder);
         }
 
-        return collector;
+        return retrievalResult;
     }
 
 
-    private MatchCollector matchMarket( Order incomingOrder, OrderbookSide otherSide ) {
-        final MatchCollector collector = new MatchCollector();
+    private OrderRetrievalResult matchMarket(Order incomingOrder, OrderbookSide otherSide) {
         int leavesQty = incomingOrder.getLeavesQty();
-        boolean matchNext = true;
-        while ( leavesQty > 0 && matchNext && isLiquidityAvailable(otherSide) ) {
-            Side side = otherSide.getSide();
-            boolean hasMarketOrders = !otherSide.getMarketOrders().isEmpty();
-            boolean hasLimitOrders = !otherSide.getLimitOrders().isEmpty();
-            final OrderRetrievalResult retrievalResult;
-            if ( hasMarketOrders && !hasLimitOrders ) {
-                retrievalResult = dequeueConditionally(otherSide.getMarketOrders(), leavesQty, order -> referencePrice);
+        Side side = otherSide.getSide();
+        boolean hasMarketOrders = !otherSide.getMarketOrders().isEmpty();
+        boolean hasLimitOrders = !otherSide.getLimitOrders().isEmpty();
+        final OrderRetrievalResult retrievalResult;
+        if ( hasMarketOrders && !hasLimitOrders ) {
+            retrievalResult = dequeueConditionally(otherSide.getMarketOrders(), leavesQty, order -> referencePrice);
 
-            } else if ( !hasMarketOrders && hasLimitOrders ) {
-                retrievalResult = dequeueConditionally(otherSide.getLimitOrders(), leavesQty, Order::getPrice);
+        } else if ( !hasMarketOrders && hasLimitOrders ) {
+            retrievalResult = dequeueConditionally(otherSide.getLimitOrders(), leavesQty, Order::getPrice);
 
-            } else if ( hasMarketOrders && hasLimitOrders ) {
-                double bestPriceOnOtherSide = otherSide.getLimitOrders().peek().getPrice();
-                double executionPrice = calcExecutionPrice(side, bestPriceOnOtherSide);
-                retrievalResult = dequeueConditionally(otherSide.getMarketOrders(), leavesQty, order -> executionPrice);
+        } else if ( hasMarketOrders && hasLimitOrders ) {
+            double bestPriceOnOtherSide = otherSide.getLimitOrders().peek().getPrice();
+            double executionPrice = calcExecutionPrice(side, bestPriceOnOtherSide);
+            retrievalResult = dequeueConditionally(otherSide.getMarketOrders(), leavesQty, order -> executionPrice);
 
-            } else {
-                throw new UnsupportedOperationException("Matching not implemented! order to match: " + incomingOrder);
-            }
-
-            int executedQty = addMatchResultToCollector(incomingOrder, collector, side, retrievalResult);
-            leavesQty -= executedQty;
-            matchNext = retrievalResult.isValidMatch();
+        } else {
+            throw new UnsupportedOperationException("Matching not implemented! order to match: " + incomingOrder);
         }
 
-        return collector;
+        return retrievalResult;
     }
 
 

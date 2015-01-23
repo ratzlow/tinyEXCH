@@ -2,5 +2,7 @@ out/
 tmp/
 build/
 .gradle/
-.idea/
+.idea/*.*
 docs/*.vpp~*
+hs_err_pid*.log
+./idea/workspace.xml
