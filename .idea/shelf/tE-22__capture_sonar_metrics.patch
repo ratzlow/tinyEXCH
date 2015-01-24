@@ -1,0 +1,41 @@
+Index: build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- build.gradle	(revision f4a322f880476f47b99e96e7239605c8703de3a1)
++++ build.gradle	(revision )
+@@ -1,8 +1,10 @@
+ apply plugin: 'java'
+ apply plugin: 'idea'
++
+ apply plugin: 'pmd'
+ apply plugin: 'findbugs'
+ apply plugin: 'jacoco'
++apply plugin: 'sonar-runner'
+ 
+ sourceCompatibility = 1.8
+ version = '0.5'
+@@ -23,8 +25,19 @@
+ 
+ tasks.withType(FindBugs) {
+     reports {
+-        xml.enabled = false
+-        html.enabled = true
++        xml.enabled = true
++        html.enabled = false
+         ignoreFailures = true
++    }
++}
++
++sonarRunner {
++    sonarProperties {
++        property 'sonar.host.url', 'http://localhost:9000'
++        property 'sonar.jdbc.url', 'jdbc:h2:tcp://localhost:9092/sonar'
++        property 'sonar.jdbc.driverClassName', 'org.h2.Driver'
++        property 'sonar.jacoco.reportMissing.force.zero', 'false'
++        property 'sonar.jacoco.reportPath', 'build/jacoco'
++        property 'sonar.junit.reportsPath', 'build/test-results'
+     }
+ }
+\ No newline at end of file
