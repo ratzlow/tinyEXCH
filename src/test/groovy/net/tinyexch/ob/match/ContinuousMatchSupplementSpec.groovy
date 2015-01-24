@@ -6,7 +6,10 @@ import net.tinyexch.exchange.event.produce.VolatilityInterruptionEventHandler
 import net.tinyexch.exchange.trading.form.continuous.ContinuousTrading
 import net.tinyexch.ob.Orderbook
 import net.tinyexch.ob.price.safeguard.VolatilityInterruptionGuard
+import net.tinyexch.order.ExecType
 import net.tinyexch.order.Order
+import net.tinyexch.order.OrderType
+import net.tinyexch.order.Trade
 import spock.lang.Specification
 
 import static net.tinyexch.ob.SubmitType.NEW
@@ -22,14 +25,91 @@ import static net.tinyexch.ob.match.OrderFactory.*
 // TODO (FRa) : (FRa) : clear volatility interruption on trading form
 class ContinuousMatchSupplementSpec extends Specification {
 
-    def referencePrice = 200.0;
+    def referencePrice = 200.0
+    def Orderbook ob
 
-    def "Partial match"() {
-        given: "The orderbook has standing liquidity and a reference price of $referencePrice"
-        def matchEngine = new ContinuousMatchEngine(referencePrice, VolatilityInterruptionGuard.NO_OP)
-        def ob = new Orderbook(matchEngine)
+    def setup() {
+        ob = new Orderbook( new ContinuousMatchEngine(referencePrice, VolatilityInterruptionGuard.NO_OP) )
         ob.open()
+    }
 
+    /**
+     * Any unexecuted part of a {@link net.tinyexch.order.OrderType#MARKET_TO_LIMIT} order is entered into the
+     * book with a limit equal to the price of the first partial execution.
+     */
+    def "unexecuted market order will remain in orderbook"() {
+        when: "When buy side orders are submitted to empty book"
+        def noStandingBuyOrders = 10
+        def bestBuyPrice = 100.0
+        for ( i in 0 .. noStandingBuyOrders-1 ) {
+            def price = bestBuyPrice - i
+            assert ob.submit(buyL(price, 1), NEW).trades.empty
+        }
+
+        then: "all orders are kept in the book"
+        def buyOrders = ob.buySide.orders
+        noStandingBuyOrders == buyOrders.size()
+
+        def totalBuyQty = buyOrders.sum {it.orderQty}
+        noStandingBuyOrders == totalBuyQty
+
+        def buyPrices = buyOrders.collect {it.price} as Set
+        buyPrices.size() == noStandingBuyOrders
+        buyOrders.each { assert it.price <= bestBuyPrice : "Lowest buy price is the start price!" }
+        ob.sellSide.orders.size() == 0
+
+        when: "Sell order is submitted to standing buy orders"
+        def sellQty = noStandingBuyOrders * 2
+        def incoming = sellMtoL(sellQty)
+
+        then: "All standing orders are executed!"
+        def trades = ob.submit(incoming, NEW).trades
+        trades.size() == noStandingBuyOrders
+
+        and: "first execution has best buy price"
+        def firstTrade = trades.first()
+        firstTrade.execType == ExecType.TRADE
+        firstTrade.executionQty == 1
+        firstTrade.price == bestBuyPrice
+
+        and: "All buy orders are executed"
+        ob.buySide.orders.empty
+
+        and: "Unexecuted part added as new LIMIT order"
+        ob.sellSide.orders.size() == 1
+        Order remainingOrder = ob.sellSide.limitOrders.peek()
+        remainingOrder.clientOrderID == incoming.clientOrderID
+        remainingOrder.orderType == OrderType.LIMIT
+        remainingOrder.price == bestBuyPrice
+    }
+
+
+    def "order with many partial executions"() {
+        int shareNo = 1_000;
+        given: "open orderbook with ref price of $referencePrice and $shareNo MKTs"
+        shareNo.times { ob.submit(buyM(1), NEW) }
+        def buyQty = ob.buySide.orders.sum { order -> order.orderQty }
+        assert buyQty == shareNo
+
+        when: "New big sell order meets standing buy orders"
+        def bigSellOrder = sellM(shareNo)
+        def trades = ob.submit(bigSellOrder, NEW).trades
+
+        then: "All orders are executed with $shareNo shares"
+        shareNo == trades.size()
+        ob.buySide.orders.empty
+        ob.sellSide.orders.empty
+        trades.each { trade ->
+            trade.executionQty == 1
+            trade.price == referencePrice
+            bigSellOrder.clientOrderID == trade.sell.clientOrderID
+        }
+        def executedBuyOrderIDs = trades.collect { it.buy.clientOrderID } as Set
+        executedBuyOrderIDs.size() == shareNo
+    }
+
+
+    def "partial match"() {
         when: "BUY side has: MKT:3000; MKT:3000"
         def buy_1 = buyM(3000, time("09:01:00"))
         def buy_2 = buyM(3000, time("09:02:00"))
