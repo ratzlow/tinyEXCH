@@ -8,9 +8,7 @@ import net.tinyexch.ob.price.safeguard.VolatilityInterruptionGuard;
 import net.tinyexch.order.*;
 
 import java.util.*;
-import java.util.function.BooleanSupplier;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.stream.Stream;
 
 import static net.tinyexch.ob.match.Match.State.ACCEPT;
@@ -43,31 +41,24 @@ public class ContinuousMatchEngine implements MatchEngine {
     }
 
     @Override
-    public Match match(Order order, OrderbookSide otherSide, OrderbookSide thisSide) {
-        Order remainingOrder = order;
-        State state = ACCEPT;
-        OrderType orderType = order.getOrderType();
+    public Match match(Order incoming, OrderbookSide otherSide, OrderbookSide thisSide) {
+        OrderType orderType = incoming.getOrderType();
         final MatchCollector matchCollector;
         if ( orderType == OrderType.LIMIT ) {
-            matchCollector = execute(order, otherSide,
-                                    () -> matchLimit(order, otherSide, thisSide),
-                                    () -> isLiquidityAvailable(otherSide, order.getPrice()) );
+            matchCollector = execute(incoming, otherSide,
+                                    () -> matchLimit(incoming, otherSide, thisSide),
+                                    () -> isLiquidityAvailable(otherSide, incoming.getPrice()) );
 
         } else if ( orderType == OrderType.MARKET ) {
-            matchCollector = execute( order, otherSide,
-                                    () -> matchMarket( order, otherSide),
+            matchCollector = execute( incoming, otherSide,
+                                    () -> matchMarket( incoming, otherSide),
                                     () -> isLiquidityAvailable(otherSide) );
 
-        } else if (orderType == OrderType.MARKET_TO_LIMIT ) {
-            matchCollector = matchMarketToLimit( order, otherSide );
-            List<Trade> trades = matchCollector.trades;
-            if (order.getLeavesQty() > 0 && !matchCollector.volatilityInterruption.isPresent() && !trades.isEmpty()) {
-                remainingOrder = createRemainingOrder(order, trades);
-            }
-            state = (trades.size() == 1 && trades.get(0).getExecType() == REJECTED) ? REJECT : ACCEPT;
+        } else if ( orderType == OrderType.MARKET_TO_LIMIT ) {
+            matchCollector = matchMarketToLimit( incoming, otherSide, thisSide );
 
         } else {
-            throw new MatchException("Incoming order has unmatchable order type for continuous trading: " + order);
+            throw new MatchException("Incoming order has unmatchable order type for continuous trading: " + incoming);
         }
 
         // update dyn reference price after incoming order was matched
@@ -76,33 +67,32 @@ public class ContinuousMatchEngine implements MatchEngine {
             Trade lastTrade = trades.get(trades.size() - 1);
             priceGuard.updateDynamicRefPrice( lastTrade );
         }
-
-        return new Match( remainingOrder, matchCollector.trades, state, matchCollector.volatilityInterruption );
+        
+        State state = (trades.size() == 1 && trades.get(0).getExecType() == REJECTED) ? REJECT : ACCEPT;
+        return new Match( incoming, matchCollector.trades, state, matchCollector.volatilityInterruption );
     }
 
 
-    private Order createRemainingOrder(Order unexecutedOrderPart, List<Trade> trades) {
-        Trade firstTrade = trades.get(0);
-        double newApplicableLimitPrice = firstTrade.getPrice();
-        return unexecutedOrderPart.setOrderType(OrderType.LIMIT).setPrice(newApplicableLimitPrice);
-    }
-
-    private MatchCollector matchMarketToLimit(Order order, OrderbookSide otherSide) {
+    private MatchCollector matchMarketToLimit(Order incoming, OrderbookSide otherSide, OrderbookSide thisSide) {
         final MatchCollector collector;
         boolean hasLimitOrdersOnly = !otherSide.getLimitOrders().isEmpty() && otherSide.getMarketOrders().isEmpty();
         if ( hasLimitOrdersOnly ) {
-            collector = execute(order, otherSide,
-                () -> dequeueConditionally(otherSide.getLimitOrders(), order.getLeavesQty(), Order::getPrice),
-                () -> !otherSide.getLimitOrders().isEmpty() );
 
+            double bestPriceOtherSide = otherSide.getLimitOrders().iterator().next().getPrice();
+            incoming.setPrice( bestPriceOtherSide );
+            incoming.setOrderType( OrderType.LIMIT );
+
+            collector = execute(incoming, otherSide,
+                    () -> matchLimit(incoming, otherSide, thisSide),
+                    () -> isLiquidityAvailable(otherSide, incoming.getPrice()) );
         } else {
             final Order buy, sell;
-            if (order.getSide() == Side.BUY) {
-                buy = order;
+            if (incoming.getSide() == Side.BUY) {
+                buy = incoming;
                 sell = null;
             } else {
                 buy = null;
-                sell = order;
+                sell = incoming;
             }
 
             Trade trade = Trade.of().setBuy(buy).setSell(sell).setExecType(REJECTED)
@@ -120,12 +110,10 @@ public class ContinuousMatchEngine implements MatchEngine {
                                    BooleanSupplier liquidityDeterminator) {
 
         final MatchCollector collector = new MatchCollector();
-        int leavesQty = incomingOrder.getLeavesQty();
         boolean matchNext = true;
-        while ( leavesQty > 0 && matchNext && liquidityDeterminator.getAsBoolean() ) {
+        while ( incomingOrder.getLeavesQty() > 0 && matchNext && liquidityDeterminator.getAsBoolean() ) {
             final OrderRetrievalResult retrievalResult = executionStrategy.get();
-            int executedQty = addMatchResultToCollector(incomingOrder, collector, otherSide.getSide(), retrievalResult);
-            leavesQty -= executedQty;
+            addMatchResultToCollector(incomingOrder, collector, otherSide.getSide(), retrievalResult);
             matchNext = retrievalResult.isValidMatch();
         }
 
@@ -210,6 +198,7 @@ public class ContinuousMatchEngine implements MatchEngine {
             executionQty = 0;
         }
 
+        incomingOrder.setCumQty( incomingOrder.getCumQty() + executionQty );
         return executionQty;
     }
 

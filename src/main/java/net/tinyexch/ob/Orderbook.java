@@ -135,7 +135,7 @@ public class Orderbook {
         Match match = matchEngine.match(order, otherSide, thisSide);
 
         // TODO (FRa) : (FRa) : check round/odd lots handling
-        boolean fullyMatched = order.getLeavesQty() - match.getExecutedQuantity() == 0;
+        boolean fullyMatched = order.getLeavesQty() == 0;
         if ( !fullyMatched && match.getState() == Match.State.ACCEPT ) {
             thisSide.add( order );
         }
