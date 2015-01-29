@@ -81,6 +81,10 @@ public class OrderFactory {
         return newOrder( Side.SELL, 0, qty, OrderType.MARKET ).setTimestamp(timestamp);
     }
 
+    public static Order sellLimitIceberg(double price, int qty, Instant timestamp, int displayQty) {
+        return newOrder( Side.SELL, price, qty, OrderType.LIMIT ).setTimestamp(timestamp).setDisplayQty(displayQty);
+    }
+
     public static Order newOrder(Side side, double price, int qty, OrderType type ) {
         return Order.of( Integer.toString(++clientOrderIdSequence), side ).setPrice(price)
                 .setOrderQty(qty).setOrderType(type);

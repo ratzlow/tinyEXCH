@@ -3,4 +3,4 @@ language: java
 jdk:
   - oraclejdk8
 
-script: gradle --info check clean
+script: gradle check clean

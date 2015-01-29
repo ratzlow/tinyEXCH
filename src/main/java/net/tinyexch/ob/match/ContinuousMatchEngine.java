@@ -41,7 +41,7 @@ public class ContinuousMatchEngine implements MatchEngine {
     }
 
     @Override
-    public Match match(Order incoming, OrderbookSide otherSide, OrderbookSide thisSide) {
+    public Match match(final Order incoming, OrderbookSide otherSide, OrderbookSide thisSide) {
         OrderType orderType = incoming.getOrderType();
         final MatchCollector matchCollector;
         if ( orderType == OrderType.LIMIT ) {
@@ -290,6 +290,10 @@ public class ContinuousMatchEngine implements MatchEngine {
         Order sell = otherSide == Side.SELL ? otherSideOrder.mutableClone() : order.mutableClone();
 
         int takeQty = Math.min(buy.getLeavesQty(), sell.getLeavesQty());
+        if ( takeQty < 1 ) {
+            throw new MatchException("Cannot create a trade if nothing matched!");
+        }
+
         buy.setCumQty( buy.getCumQty() + takeQty );
         sell.setCumQty( sell.getCumQty() + takeQty );
 

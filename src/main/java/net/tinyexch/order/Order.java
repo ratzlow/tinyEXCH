@@ -31,6 +31,16 @@ public class Order {
     /** @link FIX:14 */
     private int cumQty;
 
+    //----START: iceberg fields
+    /** @link FIX:1138 */
+    private int displayQty;
+
+    /** full qty of an iceberg at submit time */
+    private int icebergOrderQty;
+
+    /** done size of overall iceberg */
+    private int icebergCumQty;
+    //----END: iceberg fields
 
     /**
      * @link FIX:432:
@@ -73,7 +83,8 @@ public class Order {
     /** copy constructor */
     private Order(Instant timestamp, DiscretionLimitType discretionLimitType, TradingSessionSubID tradingSessionSubID,
                  String clientOrderID, Side side, int orderQty, int cumQty, LocalDateTime expirationDate,
-                 TimeInForce timeInForce, OrderType orderType, double price, double stopPrice) {
+                 TimeInForce timeInForce, OrderType orderType, double price, double stopPrice, int displayQty,
+                 int icebergOrderQty, int icebergCumQty) {
         this.timestamp = timestamp;
         this.discretionLimitType = discretionLimitType;
         this.tradingSessionSubID = tradingSessionSubID;
@@ -86,6 +97,9 @@ public class Order {
         this.orderType = orderType;
         this.price = price;
         this.stopPrice = stopPrice;
+        this.displayQty = displayQty;
+        this.icebergOrderQty = icebergOrderQty;
+        this.icebergCumQty = icebergCumQty;
     }
 
     //---------------------------------------------------------
@@ -160,8 +174,32 @@ public class Order {
     public Order setCumQty(int cumQty) {
         if ( cumQty > orderQty ) throw new IllegalArgumentException("Order is over executed!");
         this.cumQty = cumQty;
+
+        if ( isIceberg() ) {
+            if ( icebergCumQty < cumQty ) {
+                icebergCumQty = cumQty;
+            } else {
+                int doneSlices = icebergCumQty / displayQty;
+                icebergCumQty = doneSlices * displayQty + cumQty;
+            }
+
+            // expose new slice: either visible or remaining qty less than the visible size
+            if ( getLeavesQty() == 0 ) {
+                orderQty = Math.min( displayQty, icebergOrderQty - icebergCumQty );
+                this.cumQty = 0;
+            }
+        }
+
         return this;
     }
+
+    public Order setDisplayQty(int displayQty) {
+        this.displayQty = displayQty;
+        this.icebergOrderQty = orderQty;
+        this.orderQty = displayQty;
+        return this;
+    }
+
 
     public DiscretionLimitType getDiscretionLimitType() {
         return discretionLimitType;
@@ -198,26 +236,42 @@ public class Order {
         return this;
     }
 
+    public boolean isIceberg() {
+        return icebergOrderQty > 0;
+    }
+
+    public int getIcebergCumQty() {
+        return icebergCumQty;
+    }
+
+    public int getDisplayQty() {
+        return displayQty;
+    }
+
     public Order mutableClone() {
         return new Order(timestamp, discretionLimitType, tradingSessionSubID, clientOrderID, side, orderQty, cumQty,
-                expirationDate, timeInForce, orderType, price, stopPrice);
+                expirationDate, timeInForce, orderType, price, stopPrice, displayQty, icebergOrderQty, icebergCumQty );
     }
 
     @Override
     public String toString() {
-        return "Order{" +
-                "timestamp=" + timestamp +
-                ", discretionLimitType=" + discretionLimitType +
-                ", tradingSessionSubID=" + tradingSessionSubID +
-                ", clientOrderID='" + clientOrderID + '\'' +
-                ", side=" + side +
-                ", orderQty=" + orderQty +
-                ", cumQty=" + cumQty +
-                ", expirationDate=" + expirationDate +
-                ", timeInForce=" + timeInForce +
-                ", orderType=" + orderType +
-                ", price=" + price +
-                ", stopPrice=" + stopPrice +
-                '}';
+        final StringBuilder sb = new StringBuilder("Order{");
+        sb.append("timestamp=").append(timestamp);
+        sb.append(", discretionLimitType=").append(discretionLimitType);
+        sb.append(", tradingSessionSubID=").append(tradingSessionSubID);
+        sb.append(", clientOrderID='").append(clientOrderID).append('\'');
+        sb.append(", side=").append(side);
+        sb.append(", orderQty=").append(orderQty);
+        sb.append(", cumQty=").append(cumQty);
+        sb.append(", displayQty=").append(displayQty);
+        sb.append(", icebergOrderQty=").append(icebergOrderQty);
+        sb.append(", icebergCumQty=").append(icebergCumQty);
+        sb.append(", expirationDate=").append(expirationDate);
+        sb.append(", timeInForce=").append(timeInForce);
+        sb.append(", orderType=").append(orderType);
+        sb.append(", price=").append(price);
+        sb.append(", stopPrice=").append(stopPrice);
+        sb.append('}');
+        return sb.toString();
     }
 }
