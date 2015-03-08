@@ -126,7 +126,6 @@ public class ContinuousMatchEngine implements MatchEngine {
         Side side = otherSide.getSide();
         boolean hasMarketOrders = !otherSide.getMarketOrders().isEmpty();
         boolean hasLimitOrders = !otherSide.getLimitOrders().isEmpty();
-        int leavesQty = incomingLimitOrder.getLeavesQty();
 
         final OrderRetrievalResult retrievalResult;
         if (hasMarketOrders && hasLimitOrders) {
@@ -135,14 +134,14 @@ public class ContinuousMatchEngine implements MatchEngine {
             double lowestAsk = getBestAskPrice(bestLimitThisSide, bestLimitOtherSide, incomingLimitOrder);
             double highestBid = getBestBidPrice(bestLimitThisSide, bestLimitOtherSide, incomingLimitOrder);
             double executionPrice = calcExecutionPrice(otherSide.getSide(), highestBid, lowestAsk);
-            retrievalResult = dequeueConditionally(otherSide.getMarketOrders(), leavesQty, order -> executionPrice);
+            retrievalResult = dequeueConditionally(otherSide.getMarketOrders(), incomingLimitOrder, order -> executionPrice);
 
         } else if (!hasMarketOrders && hasLimitOrders) {
-            retrievalResult = dequeueConditionally(otherSide.getLimitOrders(), leavesQty, Order::getPrice);
+            retrievalResult = dequeueConditionally(otherSide.getLimitOrders(), incomingLimitOrder, Order::getPrice);
 
         } else if (hasMarketOrders && !hasLimitOrders) {
             double executionPrice = calcExecutionPrice(side, incomingLimitOrder.getPrice());
-            retrievalResult = dequeueConditionally(otherSide.getMarketOrders(), leavesQty, order -> executionPrice);
+            retrievalResult = dequeueConditionally(otherSide.getMarketOrders(), incomingLimitOrder, order -> executionPrice);
 
         } else {
             throw new MatchException("Matching not implemented! incomingLimitOrder to match: " + incomingLimitOrder);
@@ -153,21 +152,20 @@ public class ContinuousMatchEngine implements MatchEngine {
 
 
     private OrderRetrievalResult matchMarket(Order incomingOrder, OrderbookSide otherSide) {
-        int leavesQty = incomingOrder.getLeavesQty();
         Side side = otherSide.getSide();
         boolean hasMarketOrders = !otherSide.getMarketOrders().isEmpty();
         boolean hasLimitOrders = !otherSide.getLimitOrders().isEmpty();
         final OrderRetrievalResult retrievalResult;
         if ( hasMarketOrders && !hasLimitOrders ) {
-            retrievalResult = dequeueConditionally(otherSide.getMarketOrders(), leavesQty, order -> referencePrice);
+            retrievalResult = dequeueConditionally(otherSide.getMarketOrders(), incomingOrder, order -> referencePrice);
 
         } else if ( !hasMarketOrders && hasLimitOrders ) {
-            retrievalResult = dequeueConditionally(otherSide.getLimitOrders(), leavesQty, Order::getPrice);
+            retrievalResult = dequeueConditionally(otherSide.getLimitOrders(), incomingOrder, Order::getPrice);
 
         } else if ( hasMarketOrders && hasLimitOrders ) {
             double bestPriceOnOtherSide = otherSide.getLimitOrders().peek().getPrice();
             double executionPrice = calcExecutionPrice(side, bestPriceOnOtherSide);
-            retrievalResult = dequeueConditionally(otherSide.getMarketOrders(), leavesQty, order -> executionPrice);
+            retrievalResult = dequeueConditionally(otherSide.getMarketOrders(), incomingOrder, order -> executionPrice);
 
         } else {
             throw new UnsupportedOperationException("Matching not implemented! order to match: " + incomingOrder);
@@ -198,7 +196,7 @@ public class ContinuousMatchEngine implements MatchEngine {
             executionQty = 0;
         }
 
-        incomingOrder.setCumQty( incomingOrder.getCumQty() + executionQty );
+        incomingOrder.setCumQty( incomingOrder.getCumQty() + executionQty, incomingOrder.getTimestamp() );
         return executionQty;
     }
 
@@ -206,13 +204,13 @@ public class ContinuousMatchEngine implements MatchEngine {
      * Don't remove order from orderbook if it cannot be fully matched, just update it's open Qty.
      *
      * @param otherSideQueue the structure applicable for matching
-     * @param incomingOrderLeaveQty the qty to fill for the incoming order
+     * @param incomingOrder with the qty to fill for the incoming order
      * @return the order from other side, which will remain in the book with a reduced open size if it cannot be fully
      * matched otherwise it will be removed from the book OR a
      * {@link net.tinyexch.ob.price.safeguard.VolatilityInterruption} if the potential execution price left the predefined
      * price range
      */
-    private OrderRetrievalResult dequeueConditionally( Queue<Order> otherSideQueue, int incomingOrderLeaveQty,
+    private OrderRetrievalResult dequeueConditionally( Queue<Order> otherSideQueue, Order incomingOrder,
                                                        Function<Order, Double> getPotentialExecutionPrice ) {
         final OrderRetrievalResult result;
         if ( !otherSideQueue.isEmpty() ) {
@@ -222,9 +220,14 @@ public class ContinuousMatchEngine implements MatchEngine {
                     priceGuard.checkIndicativePrice(potentialExecutionPrice);
             if ( !volatilityInterruption.isPresent() ) {
                 Order tradedOrder;
-                if ( headOnQueue.getLeavesQty() > incomingOrderLeaveQty ) {
+                if ( isSurplusAvailable(headOnQueue, incomingOrder.getLeavesQty()) ) {
+                    // TODO (FRa) : (FRa) : rework this code as it is not very elegant and side effect based
                     tradedOrder = headOnQueue.mutableClone();
-                    headOnQueue.setCumQty( headOnQueue.getCumQty() + incomingOrderLeaveQty );
+                    updateCumQty( incomingOrder, headOnQueue );
+                    if ( headOnQueue.isIceberg() ) {
+                        tradedOrder.setTimestamp(headOnQueue.getTimestamp());
+                    }
+
                 } else {
                     tradedOrder = otherSideQueue.poll();
                 }
@@ -239,6 +242,30 @@ public class ContinuousMatchEngine implements MatchEngine {
         }
 
         return result;
+    }
+
+
+    private Order updateCumQty( Order incomingOrder, Order topOnBook) {
+        if ( topOnBook.isIceberg() ) {
+            int newCumQty = topOnBook.getCumQty() + Math.min(topOnBook.getLeavesQty(), incomingOrder.getLeavesQty());
+            topOnBook.setCumQty( newCumQty, incomingOrder.getTimestamp());
+        } else {
+            int newCumQty = topOnBook.getCumQty() + incomingOrder.getLeavesQty();
+            topOnBook.setCumQty(newCumQty);
+        }
+
+        return topOnBook;
+    }
+
+
+    private boolean isSurplusAvailable(Order o, int incomingOrderLeaveQty) {
+        final boolean surplus;
+        if ( o.isIceberg() ) {
+            surplus = o.getLeavesQty() + o.getIcebergOrderQty() - o.getCumQty() > incomingOrderLeaveQty;
+        } else {
+            surplus = o.getLeavesQty() > incomingOrderLeaveQty;
+        }
+        return surplus;
     }
 
 

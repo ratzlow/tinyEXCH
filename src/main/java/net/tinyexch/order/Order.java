@@ -1,5 +1,6 @@
 package net.tinyexch.order;
 
+import java.security.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 
@@ -171,9 +172,19 @@ public class Order {
         return cumQty;
     }
 
-    public Order setCumQty(int cumQty) {
-        if ( cumQty > orderQty ) throw new IllegalArgumentException("Order is over executed!");
+    public Order setCumQty( int cumQty ) {
+        if ( cumQty > orderQty ) {
+            String msg = String.format("Order is over executed! cumQty=%d orderQty=%d", cumQty, orderQty);
+            throw new IllegalArgumentException(msg);
+        }
+
         this.cumQty = cumQty;
+
+        return this;
+    }
+
+    public Order setCumQty( int cumQty, Instant ts ) {
+        setCumQty( cumQty );
 
         if ( isIceberg() ) {
             if ( icebergCumQty < cumQty ) {
@@ -187,17 +198,25 @@ public class Order {
             if ( getLeavesQty() == 0 ) {
                 orderQty = Math.min( displayQty, icebergOrderQty - icebergCumQty );
                 this.cumQty = 0;
+                this.timestamp = ts;
             }
         }
 
         return this;
     }
 
+
+
     public Order setDisplayQty(int displayQty) {
         this.displayQty = displayQty;
         this.icebergOrderQty = orderQty;
         this.orderQty = displayQty;
         return this;
+    }
+
+    /** @return qty of shares not yet exposed to the market of an iceberg order */
+    public int getHiddenQty() {
+        return getIcebergOrderQty() - getIcebergCumQty() - getLeavesQty();
     }
 
 
@@ -243,6 +262,8 @@ public class Order {
     public int getIcebergCumQty() {
         return icebergCumQty;
     }
+
+    public int getIcebergOrderQty() { return icebergOrderQty; }
 
     public int getDisplayQty() {
         return displayQty;
