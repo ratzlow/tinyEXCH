@@ -5,10 +5,8 @@ import net.tinyexch.ob.match.MatchEngine;
 import net.tinyexch.ob.match.Priorities;
 import net.tinyexch.order.Order;
 import net.tinyexch.order.Side;
-import net.tinyexch.order.Trade;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import static net.tinyexch.ob.SubmitType.*;
@@ -123,14 +121,12 @@ public class Orderbook {
     // internal operations
     //------------------------------------------------------------------------------------------------------------------
 
-    private Optional<Trade> cancel( Order order ) {
-        throw new UnsupportedOperationException("Not yet implemented!");
-    }
+    private void cancel(Order order) { sameSide(order.getSide()).cancel(order); }
 
     private Match match(Order order) {
         Side incomingSide = order.getSide();
-        OrderbookSide thisSide = incomingSide == Side.BUY ? buySide : sellSide;
-        OrderbookSide otherSide = incomingSide == Side.BUY ? sellSide : buySide;
+        OrderbookSide thisSide = sameSide(incomingSide);
+        OrderbookSide otherSide = oppositeSide(incomingSide);
 
         Match match = matchEngine.match(order, otherSide, thisSide);
 
@@ -141,6 +137,14 @@ public class Orderbook {
         }
 
         return match;
+    }
+
+    private OrderbookSide oppositeSide(Side incomingSide) {
+        return incomingSide == Side.BUY ? sellSide : buySide;
+    }
+
+    private OrderbookSide sameSide(Side incomingSide) {
+        return incomingSide == Side.BUY ? buySide : sellSide;
     }
 
     public OrderbookSide getBuySide() { return buySide; }

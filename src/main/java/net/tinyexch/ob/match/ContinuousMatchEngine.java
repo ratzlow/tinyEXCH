@@ -214,23 +214,12 @@ public class ContinuousMatchEngine implements MatchEngine {
                                                        Function<Order, Double> getPotentialExecutionPrice ) {
         final OrderRetrievalResult result;
         if ( !otherSideQueue.isEmpty() ) {
-            Order headOnQueue = otherSideQueue.peek();
-            double potentialExecutionPrice = getPotentialExecutionPrice.apply(headOnQueue);
+            Order topOnBook = otherSideQueue.peek();
+            double potentialExecutionPrice = getPotentialExecutionPrice.apply(topOnBook);
             Optional<VolatilityInterruption> volatilityInterruption =
                     priceGuard.checkIndicativePrice(potentialExecutionPrice);
             if ( !volatilityInterruption.isPresent() ) {
-                Order tradedOrder;
-                if ( isSurplusAvailable(headOnQueue, incomingOrder.getLeavesQty()) ) {
-                    // TODO (FRa) : (FRa) : rework this code as it is not very elegant and side effect based
-                    tradedOrder = headOnQueue.mutableClone();
-                    updateCumQty( incomingOrder, headOnQueue );
-                    if ( headOnQueue.isIceberg() ) {
-                        tradedOrder.setTimestamp(headOnQueue.getTimestamp());
-                    }
-
-                } else {
-                    tradedOrder = otherSideQueue.poll();
-                }
+                Order tradedOrder = retrieveTradedOrder(incomingOrder, otherSideQueue );
                 result = new OrderRetrievalResult( tradedOrder, potentialExecutionPrice, null );
 
             } else {
@@ -238,20 +227,28 @@ public class ContinuousMatchEngine implements MatchEngine {
             }
 
         } else {
-            result = new OrderRetrievalResult(null, NO_PRICE, null );
+            result = new OrderRetrievalResult( null, NO_PRICE, null );
         }
 
         return result;
     }
 
 
-    private Order updateCumQty( Order incomingOrder, Order topOnBook) {
-        if ( topOnBook.isIceberg() ) {
-            int newCumQty = topOnBook.getCumQty() + Math.min(topOnBook.getLeavesQty(), incomingOrder.getLeavesQty());
-            topOnBook.setCumQty( newCumQty, incomingOrder.getTimestamp());
-        } else {
-            int newCumQty = topOnBook.getCumQty() + incomingOrder.getLeavesQty();
-            topOnBook.setCumQty(newCumQty);
+    private Order retrieveTradedOrder(Order incomingOrder, Queue<Order> otherSide) {
+        Order topOnBook = otherSide.poll();
+        if ( isSurplusAvailable(topOnBook, incomingOrder.getLeavesQty()) ) {
+            // remove from data structure
+            Order modifiedOrder = topOnBook.mutableClone();
+            if ( topOnBook.isIceberg() ) {
+                int newCumQty = topOnBook.getCumQty() + Math.min(topOnBook.getLeavesQty(), incomingOrder.getLeavesQty());
+                modifiedOrder.setCumQty(newCumQty, incomingOrder.getTimestamp());
+
+            } else {
+                int newCumQty = topOnBook.getCumQty() + incomingOrder.getLeavesQty();
+                modifiedOrder.setCumQty( newCumQty );
+            }
+            // add new copy to DS
+            otherSide.add(modifiedOrder);
         }
 
         return topOnBook;
