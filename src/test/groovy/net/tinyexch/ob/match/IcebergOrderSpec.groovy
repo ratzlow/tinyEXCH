@@ -48,8 +48,30 @@ class IcebergOrderSpec extends Specification {
         and: "Another iceberg order is entered in the book"
         placeAnotherSellIcebergOrder()
 
-        and: "Bid market order is placed"
+        and: "Bid market order is placed and fully matched"
         placeBidMarketOrder()
+
+        and: "Ask sell limit order is placed but cannot be executed because of empty bid side"
+        placeSellLimitOrder()
+
+        and: "Submit a Bid market order which will be fully matched"
+        placeAnotherBidMarketOrder()
+    }
+
+    def placeAnotherBidMarketOrder() {
+        def buyMarket = buyM(23_000, time("09:15:00"))
+        def trades = ob.submit(buyMarket, NEW).trades
+        assert trades.sum {it.executionQty} == buyMarket.orderQty : "order is fully executed with 23000"
+
+        return true;
+    }
+
+    def placeSellLimitOrder() {
+        def sellLimit = sellL(201, 2000, time("09:13:13") )
+        def trades = ob.submit(sellLimit, NEW).trades
+        assert trades.empty
+
+        return true;
     }
 
     def placeBidMarketOrder() {
