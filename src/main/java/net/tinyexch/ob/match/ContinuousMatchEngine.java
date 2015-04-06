@@ -52,7 +52,7 @@ public class ContinuousMatchEngine implements MatchEngine {
         } else if ( orderType == OrderType.MARKET ) {
             matchCollector = execute( incoming, otherSide,
                                     () -> matchMarket( incoming, otherSide),
-                                    () -> isLiquidityAvailable(otherSide) );
+                                    () -> otherSide.isLiquidityAvailable() );
 
         } else if ( orderType == OrderType.MARKET_TO_LIMIT ) {
             matchCollector = matchMarketToLimit( incoming, otherSide, thisSide );
@@ -65,7 +65,7 @@ public class ContinuousMatchEngine implements MatchEngine {
         List<Trade> trades = matchCollector.trades;
         if ( !trades.isEmpty() ) {
             Trade lastTrade = trades.get(trades.size() - 1);
-            priceGuard.updateDynamicRefPrice( lastTrade );
+            priceGuard.updateDynamicRefPrice(lastTrade);
         }
         
         State state = (trades.size() == 1 && trades.get(0).getExecType() == REJECTED) ? REJECT : ACCEPT;
@@ -188,7 +188,7 @@ public class ContinuousMatchEngine implements MatchEngine {
         if (retrievalResult.order.isPresent()) {
             Order otherSideOrder = retrievalResult.order.get();
             double executionPrice = retrievalResult.executionPrice.getAsDouble();
-            Trade trade = createTrade( incomingOrder, otherSideOrder, otherSide, executionPrice);
+            Trade trade = createTrade(incomingOrder, otherSideOrder, otherSide, executionPrice);
             collector.trades.add( trade );
             executionQty = trade.getExecutionQty();
         } else {
@@ -212,25 +212,24 @@ public class ContinuousMatchEngine implements MatchEngine {
      */
     private OrderRetrievalResult dequeueConditionally( Queue<Order> otherSideQueue, Order incomingOrder,
                                                        Function<Order, Double> getPotentialExecutionPrice ) {
-        final OrderRetrievalResult result;
+        Order tradedOrder = null;
+        double potentialExecutionPrice = NO_PRICE;
+        VolatilityInterruption interruption = null;
+
         if ( !otherSideQueue.isEmpty() ) {
             Order topOnBook = otherSideQueue.peek();
-            double potentialExecutionPrice = getPotentialExecutionPrice.apply(topOnBook);
+            potentialExecutionPrice = getPotentialExecutionPrice.apply(topOnBook);
             Optional<VolatilityInterruption> volatilityInterruption =
                     priceGuard.checkIndicativePrice(potentialExecutionPrice);
             if ( !volatilityInterruption.isPresent() ) {
-                Order tradedOrder = retrieveTradedOrder(incomingOrder, otherSideQueue );
-                result = new OrderRetrievalResult( tradedOrder, potentialExecutionPrice, null );
+                tradedOrder = retrieveTradedOrder(incomingOrder, otherSideQueue );
 
             } else {
-                result = new OrderRetrievalResult( null, NO_PRICE, volatilityInterruption.get() );
+                interruption = volatilityInterruption.get();
             }
-
-        } else {
-            result = new OrderRetrievalResult( null, NO_PRICE, null );
         }
 
-        return result;
+        return new OrderRetrievalResult( tradedOrder, potentialExecutionPrice, interruption );
     }
 
 
@@ -248,7 +247,7 @@ public class ContinuousMatchEngine implements MatchEngine {
                 modifiedOrder.setCumQty( newCumQty );
             }
             // add new copy to DS
-            otherSide.add(modifiedOrder);
+            otherSide.offer(modifiedOrder);
         }
 
         return topOnBook;
@@ -322,17 +321,6 @@ public class ContinuousMatchEngine implements MatchEngine {
         sell.setCumQty( sell.getCumQty() + takeQty );
 
         return Trade.of().setBuy(buy).setSell(sell).setExecutionQty(takeQty).setPrice(price).setExecType(ExecType.TRADE);
-    }
-
-    /**
-     * @param otherSide all orders by their type on the other side
-     * @return true ... there is open liquidity on the other side that might be used for matching
-     */
-    private boolean isLiquidityAvailable(OrderbookSide otherSide) {
-        return !otherSide.getMarketOrders().isEmpty() ||
-                !otherSide.getLimitOrders().isEmpty() ||
-                !otherSide.getHiddenOrders().isEmpty() ||
-                !otherSide.getHiddenOrders().isEmpty();
     }
 
     /**

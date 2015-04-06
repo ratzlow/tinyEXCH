@@ -1,5 +1,6 @@
 package net.tinyexch.ob;
 
+import net.tinyexch.ob.match.Priorities;
 import net.tinyexch.order.Order;
 import net.tinyexch.order.OrderType;
 import net.tinyexch.order.Side;
@@ -27,13 +28,13 @@ public class OrderbookSide {
     // constructors
     //-----------------------------------------------------------------------------------------------
 
-    public OrderbookSide( Side side, Comparator<Order> byPrice, Comparator<Order> byTime, Comparator<Order> byTriggerPrice ) {
+    public OrderbookSide( Side side, Comparator<Order> priceTimeOrdering, Comparator<Order> byTriggerPrice ) {
         this.side = side;
-        this.priceTimeOrdering = byPrice.thenComparing(byTime);
+        this.priceTimeOrdering = priceTimeOrdering;
         this.ordersByType = new EnumMap<>(OrderType.class);
 
-        ordersByType.put(OrderType.STRIKE_MATCH, new PriorityQueue<>( byTriggerPrice) );
-        ordersByType.put(OrderType.MARKET, new PriorityQueue<>(byTime) );
+        ordersByType.put(OrderType.STRIKE_MATCH, new PriorityQueue<>(byTriggerPrice) );
+        ordersByType.put(OrderType.MARKET, new PriorityQueue<>(Priorities.TIME) );
         ordersByType.put(OrderType.LIMIT, new PriorityQueue<>(priceTimeOrdering) );
         ordersByType.put(OrderType.HIDDEN, new PriorityQueue<>(priceTimeOrdering) );
     }
@@ -47,7 +48,7 @@ public class OrderbookSide {
         OrderType orderType = order.getOrderType();
         Queue<Order> orders = ordersByType.get(orderType);
         if ( orders != null ) {
-            orders.add( order );
+            orders.offer( order );
         } else {
             String msg = "OrderType '" + order.getOrderType() + "' not considered for orderBook addition!";
             throw new OrderbookException(msg);
@@ -89,4 +90,11 @@ public class OrderbookSide {
     }
 
     public Side getSide() { return side; }
+
+    /**
+     * @return true ... there is open liquidity on the other side that might be used for matching
+     */
+    public boolean isLiquidityAvailable() {
+        return ordersByType.values().stream().flatMap(Collection::stream).findAny().isPresent();
+    }
 }

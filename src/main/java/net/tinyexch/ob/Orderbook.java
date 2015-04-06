@@ -27,6 +27,7 @@ import static net.tinyexch.ob.match.MatchEngine.*;
 public class Orderbook {
 
     private MatchEngine matchEngine = MatchEngine.NO_OP;
+    private long sequence = 0;
 
     //------------------------------------------------------------------------------------------------------------------
     // mutable state changing during runtime
@@ -38,13 +39,13 @@ public class Orderbook {
      * Contains all bid/buy orders
      */
     private final OrderbookSide buySide =
-            new OrderbookSide( Side.BUY, BUY_PRICE_ORDERING, Priorities.TIME, BUY_STOPPRICE_ORDERING );
+            new OrderbookSide( Side.BUY, MatchEngine.BUY_PRICE_TIME_ORDERING, BUY_STOPPRICE_ORDERING );
 
     /**
      * Contains all ask/sell orders
      */
     private final OrderbookSide sellSide =
-            new OrderbookSide( Side.SELL, SELL_PRICE_ORDERING, Priorities.TIME, SELL_STOPPRICE_ORDERING );
+            new OrderbookSide( Side.SELL, MatchEngine.SELL_PRICE_TIME_ORDERING, SELL_STOPPRICE_ORDERING );
 
 
     //------------------------------------------------------------------------------------------------------------------
@@ -133,7 +134,7 @@ public class Orderbook {
         // TODO (FRa) : (FRa) : check round/odd lots handling
         boolean fullyMatched = order.getLeavesQty() == 0;
         if ( !fullyMatched && match.getState() == Match.State.ACCEPT ) {
-            thisSide.add( order );
+            thisSide.add( order.setSubmitSequence( ++sequence ) );
         }
 
         return match;

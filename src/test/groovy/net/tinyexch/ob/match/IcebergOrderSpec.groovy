@@ -4,6 +4,7 @@ import net.tinyexch.ob.Orderbook
 import net.tinyexch.ob.OrderbookState
 import net.tinyexch.ob.price.safeguard.VolatilityInterruptionGuard
 import net.tinyexch.order.Order
+import net.tinyexch.order.Trade
 import spock.lang.Specification
 
 import static net.tinyexch.ob.SubmitType.NEW
@@ -22,6 +23,7 @@ class IcebergOrderSpec extends Specification {
     def iceberg_1 = sellLimitIceberg( 201, 50_000, time("09:05:00"), 10_000)
     def iceberg_2 = sellLimitIceberg( 201, 30_000, time("09:08:01"), 5_000)
     def standingSell_1 = sellL(203, 500, time("08:55:00"))
+    def standingSell_2 = sellL(201, 2000, time("09:13:13") )
     def standingBuy_1 = buyL(202, 6000, time("09:01:00"))
     def standingBuy_2 = buyL(201, 2000, time("09:02:00"))
 
@@ -58,17 +60,46 @@ class IcebergOrderSpec extends Specification {
         placeAnotherBidMarketOrder()
     }
 
-    def placeAnotherBidMarketOrder() {
-        def buyMarket = buyM(23_000, time("09:15:00"))
+    private def placeAnotherBidMarketOrder() {
+        def submitTime = time("09:15:00")
+        def buyMarket = buyM(23_000, submitTime)
         def trades = ob.submit(buyMarket, NEW).trades
-        assert trades.sum {it.executionQty} == buyMarket.orderQty : "order is fully executed with 23000"
+        assert trades.sum {it.executionQty} == buyMarket.orderQty : "order is fully executed with $buyMarket.orderQty"
+
+        assertTrade(trades[0], 8000, 201, iceberg_1.clientOrderID)
+        assertTrade(trades[1], 5000, 201, iceberg_2.clientOrderID)
+        assertTrade(trades[2], 2000, 201, standingSell_2.clientOrderID)
+        assertTrade(trades[3], 8000, 201, iceberg_1.clientOrderID)
+
+        def remainingFirstIceberg = ob.sellSide.orders.find {it.clientOrderID == iceberg_1.clientOrderID}
+        def remainingSecondIceberg = ob.sellSide.orders.find {it.clientOrderID == iceberg_2.clientOrderID}
+
+        assert ob.sellSide.orders.count {it.clientOrderID == standingSell_2.clientOrderID} == 0
+        assert ob.buySide.orders.empty : "buy side must be fully executed"
+        assert remainingFirstIceberg.leavesQty == 2000
+        assert remainingFirstIceberg.hiddenQty == 10_000
+        assert remainingFirstIceberg.timestamp == submitTime
+
+        assert remainingSecondIceberg.leavesQty == 5000
+        assert remainingSecondIceberg.hiddenQty == 15_000
+        assert remainingSecondIceberg.timestamp == submitTime
 
         return true;
     }
 
-    def placeSellLimitOrder() {
-        def sellLimit = sellL(201, 2000, time("09:13:13") )
-        def trades = ob.submit(sellLimit, NEW).trades
+    private def assertTrade(Trade trade, int expectedExecQty, double expectedPrice, String expectedClientOrderID ) {
+        assert trade.sell.clientOrderID == expectedClientOrderID
+        assert trade.executionQty == expectedExecQty
+        assert trade.price == expectedPrice
+    }
+
+    private def placeSellLimitOrder() {
+        def trades = ob.submit(standingSell_2, NEW).trades
+        List<Order> limitOrders = new ArrayList<>(ob.sellSide.limitOrders)
+        Collections.sort(limitOrders, MatchEngine.SELL_PRICE_TIME_ORDERING );
+        def idxInBook = limitOrders.findIndexOf {it.clientOrderID == standingSell_2.clientOrderID}
+
+        assert idxInBook == 2 : "according to price/time prio it is on 3rd idx"
         assert trades.empty
 
         return true;
@@ -96,21 +127,21 @@ class IcebergOrderSpec extends Specification {
         assert trades.sum {it.executionQty} == buyMarket.orderQty : "order is fully executed with 14000"
         assert trades.size() == 3
 
-        def firstTrade  = trades[0]
+        def firstTrade = trades[0]
         assert firstTrade.executionQty == 7000
         assert firstTrade.price == 201
         assert firstTrade.buy.clientOrderID == buyMarket.clientOrderID
         assert firstTrade.sell.clientOrderID == iceberg_1.clientOrderID
         assert firstTrade.sell.timestamp == time("09:07:00")
 
-        def secTrade    = trades[1]
+        def secTrade = trades[1]
         assert secTrade.executionQty == 5000
         assert secTrade.price == 201
         assert secTrade.buy.clientOrderID == buyMarket.clientOrderID
         assert secTrade.sell.clientOrderID == iceberg_2.clientOrderID
         assert secTrade.sell.timestamp == time("09:08:01")
 
-        def thirdTrade  = trades[2]
+        def thirdTrade = trades[2]
         assert thirdTrade.executionQty == 2000
         assert thirdTrade.price == 201
         assert thirdTrade.buy.clientOrderID == buyMarket.clientOrderID

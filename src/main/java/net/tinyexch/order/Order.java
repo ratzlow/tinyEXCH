@@ -1,6 +1,5 @@
 package net.tinyexch.order;
 
-import java.security.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 
@@ -13,6 +12,8 @@ import java.time.LocalDateTime;
  */
 // TODO (FRa) : (FRa) : provide immutable clone() result
 public class Order {
+
+    private long submitSequence = -1;
 
     private Instant timestamp = Instant.now();
 
@@ -82,10 +83,11 @@ public class Order {
     }
 
     /** copy constructor */
-    private Order(Instant timestamp, DiscretionLimitType discretionLimitType, TradingSessionSubID tradingSessionSubID,
+    private Order(long submitSequence, Instant timestamp, DiscretionLimitType discretionLimitType, TradingSessionSubID tradingSessionSubID,
                  String clientOrderID, Side side, int orderQty, int cumQty, LocalDateTime expirationDate,
                  TimeInForce timeInForce, OrderType orderType, double price, double stopPrice, int displayQty,
                  int icebergOrderQty, int icebergCumQty) {
+        this.submitSequence = submitSequence;
         this.timestamp = timestamp;
         this.discretionLimitType = discretionLimitType;
         this.tradingSessionSubID = tradingSessionSubID;
@@ -269,8 +271,17 @@ public class Order {
         return displayQty;
     }
 
+    public Order setSubmitSequence( long sequence ) {
+        this.submitSequence = sequence;
+        return this;
+    }
+
+    public long getSubmitSequence() {
+        return submitSequence;
+    }
+
     public Order mutableClone() {
-        return new Order(timestamp, discretionLimitType, tradingSessionSubID, clientOrderID, side, orderQty, cumQty,
+        return new Order(submitSequence, timestamp, discretionLimitType, tradingSessionSubID, clientOrderID, side, orderQty, cumQty,
                 expirationDate, timeInForce, orderType, price, stopPrice, displayQty, icebergOrderQty, icebergCumQty );
     }
 
@@ -278,6 +289,7 @@ public class Order {
     public String toString() {
         final StringBuilder sb = new StringBuilder("Order{");
         sb.append("timestamp=").append(timestamp);
+        sb.append(", submitSequence=").append(submitSequence);
         sb.append(", discretionLimitType=").append(discretionLimitType);
         sb.append(", tradingSessionSubID=").append(tradingSessionSubID);
         sb.append(", clientOrderID='").append(clientOrderID).append('\'');
