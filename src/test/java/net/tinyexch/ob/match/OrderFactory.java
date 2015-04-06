@@ -61,8 +61,13 @@ public class OrderFactory {
         return newOrder( Side.BUY, 0, qty, OrderType.MARKET ).setTimestamp(timestamp);
     }
 
-    public static Order buyH(double price, int qty) {
-        return newOrder(Side.BUY, price, qty, OrderType.HIDDEN);
+    public static Order buyH_Lim(double price, int qty) {
+        return newOrder(Side.BUY, price, qty, OrderType.LIMIT).setHidden(true);
+    }
+
+    public static Order buyH_Lim(double price, int qty, Instant timestamp ) {
+        return buyH_Lim( price, qty ).setTimestamp( timestamp );
+
     }
 
     public static Order sellM(int qty) {

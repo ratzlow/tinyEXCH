@@ -64,5 +64,13 @@ public enum Priorities implements Comparator<Order> {
     SUBMIT_SEQUENCE {
         @Override
         public int compare(Order o1, Order o2) { return Long.compare(o1.getSubmitSequence(), o2.getSubmitSequence()); }
+    },
+
+    /**
+     * None-hidden orders are preferred to hidden orders.
+     */
+    HIDDEN_FLAG {
+        @Override
+        public int compare(Order o1, Order o2) { return Boolean.compare(o1.isHidden(), o2.isHidden()); }
     }
 }

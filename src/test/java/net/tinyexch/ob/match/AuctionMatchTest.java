@@ -129,7 +129,7 @@ public class AuctionMatchTest {
      */
     @Test
     public void testNoLimitNoExecutableOrders_Ex7() {
-        Orderbook book = new Orderbook( new Order[]{ buyH(200, 80), buyL(199, 80)}, new Order[]{sellL(201, 80)} );
+        Orderbook book = new Orderbook( new Order[]{ buyH_Lim(200, 80), buyL(199, 80)}, new Order[]{sellL(201, 80)} );
 
         PriceDeterminationResult result = determinePrice(book);
         assertEquals("No matching ask qty expected!", 0, result.getMatchableAskQty(), ROUNDING_DELTA);

@@ -6,7 +6,6 @@ import net.tinyexch.order.OrderType;
 import net.tinyexch.order.Side;
 
 import java.util.*;
-import java.util.stream.Stream;
 
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.stream.Collectors.toList;
@@ -28,15 +27,14 @@ public class OrderbookSide {
     // constructors
     //-----------------------------------------------------------------------------------------------
 
-    public OrderbookSide( Side side, Comparator<Order> priceTimeOrdering, Comparator<Order> byTriggerPrice ) {
+    public OrderbookSide( Side side, Comparator<Order> byPriceThenTimeOrdering, Comparator<Order> byTriggerPrice ) {
         this.side = side;
-        this.priceTimeOrdering = priceTimeOrdering;
+        this.priceTimeOrdering = byPriceThenTimeOrdering.thenComparing(Priorities.SUBMIT_SEQUENCE);
         this.ordersByType = new EnumMap<>(OrderType.class);
 
-        ordersByType.put(OrderType.STRIKE_MATCH, new PriorityQueue<>(byTriggerPrice) );
-        ordersByType.put(OrderType.MARKET, new PriorityQueue<>(Priorities.TIME) );
+        ordersByType.put(OrderType.STRIKE_MATCH, new PriorityQueue<>(byTriggerPrice.thenComparing(Priorities.SUBMIT_SEQUENCE)) );
+        ordersByType.put(OrderType.MARKET, new PriorityQueue<>(Priorities.TIME.thenComparing(Priorities.SUBMIT_SEQUENCE)) );
         ordersByType.put(OrderType.LIMIT, new PriorityQueue<>(priceTimeOrdering) );
-        ordersByType.put(OrderType.HIDDEN, new PriorityQueue<>(priceTimeOrdering) );
     }
 
 
@@ -66,13 +64,14 @@ public class OrderbookSide {
     }
 
     /**
-     * Orders to consider if price needs to be derived.
+     * Orders to consider if price needs to be derived. Hidden orders are ignored!
      *
      * @return orders where best is on top of the book
      */
     public List<Order> getBest() {
-        List<Order> sortedOrders = Stream.of(ordersByType.get(OrderType.LIMIT), ordersByType.get(OrderType.HIDDEN))
-                                         .flatMap(Collection::stream).collect(toList());
+        List<Order> sortedOrders = new ArrayList<>(
+                ordersByType.get(OrderType.LIMIT).stream().filter(o -> !o.isHidden()).collect(toList())
+        );
         Collections.sort( sortedOrders, this.priceTimeOrdering );
         return Collections.unmodifiableList(sortedOrders);
     }
@@ -83,10 +82,6 @@ public class OrderbookSide {
 
     public Queue<Order> getLimitOrders() {
         return ordersByType.get(OrderType.LIMIT);
-    }
-
-    public Queue<Order> getHiddenOrders() {
-        return ordersByType.get(OrderType.HIDDEN);
     }
 
     public Side getSide() { return side; }

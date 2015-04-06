@@ -339,9 +339,7 @@ public class ContinuousMatchEngine implements MatchEngine {
         }
 
         return !otherSide.getMarketOrders().isEmpty() ||
-                hasExecutableLimitOrders ||
-                !otherSide.getHiddenOrders().isEmpty() ||
-                !otherSide.getHiddenOrders().isEmpty();
+                hasExecutableLimitOrders;
     }
 
     private boolean isCrossedPrice( double bid, double ask ) {

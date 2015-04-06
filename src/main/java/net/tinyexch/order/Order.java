@@ -17,6 +17,12 @@ public class Order {
 
     private Instant timestamp = Instant.now();
 
+    /**
+     * true ... the order is not shown to the participants
+     * @link FIX:1138 -> use this flag and set displayQty := 0 to completely hide the order
+     */
+    private boolean hidden = false;
+
     private DiscretionLimitType discretionLimitType;
 
     private TradingSessionSubID tradingSessionSubID;
@@ -83,12 +89,13 @@ public class Order {
     }
 
     /** copy constructor */
-    private Order(long submitSequence, Instant timestamp, DiscretionLimitType discretionLimitType, TradingSessionSubID tradingSessionSubID,
+    private Order(long submitSequence, Instant timestamp, boolean hidden, DiscretionLimitType discretionLimitType, TradingSessionSubID tradingSessionSubID,
                  String clientOrderID, Side side, int orderQty, int cumQty, LocalDateTime expirationDate,
                  TimeInForce timeInForce, OrderType orderType, double price, double stopPrice, int displayQty,
                  int icebergOrderQty, int icebergCumQty) {
         this.submitSequence = submitSequence;
         this.timestamp = timestamp;
+        this.hidden = hidden;
         this.discretionLimitType = discretionLimitType;
         this.tradingSessionSubID = tradingSessionSubID;
         this.clientOrderID = clientOrderID;
@@ -207,8 +214,6 @@ public class Order {
         return this;
     }
 
-
-
     public Order setDisplayQty(int displayQty) {
         this.displayQty = displayQty;
         this.icebergOrderQty = orderQty;
@@ -280,8 +285,17 @@ public class Order {
         return submitSequence;
     }
 
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public Order setHidden(boolean hidden) {
+        this.hidden = hidden;
+        return this;
+    }
+
     public Order mutableClone() {
-        return new Order(submitSequence, timestamp, discretionLimitType, tradingSessionSubID, clientOrderID, side, orderQty, cumQty,
+        return new Order(submitSequence, timestamp, hidden, discretionLimitType, tradingSessionSubID, clientOrderID, side, orderQty, cumQty,
                 expirationDate, timeInForce, orderType, price, stopPrice, displayQty, icebergOrderQty, icebergCumQty );
     }
 
@@ -290,6 +304,7 @@ public class Order {
         final StringBuilder sb = new StringBuilder("Order{");
         sb.append("timestamp=").append(timestamp);
         sb.append(", submitSequence=").append(submitSequence);
+        sb.append(", hidden=").append(hidden);
         sb.append(", discretionLimitType=").append(discretionLimitType);
         sb.append(", tradingSessionSubID=").append(tradingSessionSubID);
         sb.append(", clientOrderID='").append(clientOrderID).append('\'');

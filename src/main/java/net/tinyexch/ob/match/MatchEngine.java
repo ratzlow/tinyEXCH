@@ -13,18 +13,14 @@ import java.util.Comparator;
  */
 public interface MatchEngine {
 
-    public static final Comparator<Order> SELL_PRICE_ORDERING = Priorities.PRICE;
-    public static final Comparator<Order> BUY_PRICE_ORDERING = Priorities.PRICE.reversed();
+    static final Comparator<Order> SELL_PRICE_ORDERING = Priorities.PRICE.thenComparing(Priorities.HIDDEN_FLAG);
+    static final Comparator<Order> BUY_PRICE_ORDERING = Priorities.PRICE.reversed().thenComparing(Priorities.HIDDEN_FLAG);
 
-    public static final Comparator<Order> SELL_STOPPRICE_ORDERING =
-            Priorities.STOP_PRICE.thenComparing(Priorities.SUBMIT_SEQUENCE);
-    public static final Comparator<Order> BUY_STOPPRICE_ORDERING =
-            Priorities.STOP_PRICE.reversed().thenComparing(Priorities.SUBMIT_SEQUENCE);
+    static final Comparator<Order> SELL_STOPPRICE_ORDERING = Priorities.STOP_PRICE.thenComparing(Priorities.HIDDEN_FLAG);
+    static final Comparator<Order> BUY_STOPPRICE_ORDERING = Priorities.STOP_PRICE.reversed().thenComparing(Priorities.HIDDEN_FLAG);
 
-    public static final Comparator<Order> SELL_PRICE_TIME_ORDERING =
-            SELL_PRICE_ORDERING.thenComparing(Priorities.TIME).thenComparing(Priorities.SUBMIT_SEQUENCE);
-    public static final Comparator<Order> BUY_PRICE_TIME_ORDERING =
-            BUY_PRICE_ORDERING.thenComparing(Priorities.TIME).thenComparing(Priorities.SUBMIT_SEQUENCE);
+    static final Comparator<Order> SELL_PRICE_TIME_ORDERING = SELL_PRICE_ORDERING.thenComparing(Priorities.TIME);
+    static final Comparator<Order> BUY_PRICE_TIME_ORDERING = BUY_PRICE_ORDERING.thenComparing(Priorities.TIME);
 
     static final MatchEngine NO_OP = (order, otherOrderbookSide, thisOrderbookSide ) -> Match.NO_MATCH;
 

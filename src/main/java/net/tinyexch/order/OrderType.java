@@ -29,8 +29,6 @@ public enum OrderType {
     MARKET_TO_LIMIT,
 
     STOP,
-    ICEBERG,
-    HIDDEN,
     MIDPOINT,
 
     /** http://www.fixtradingcommunity.org/pg/discussions/topicpost/165920/xetra-ets-top-of-book */
