@@ -23,6 +23,12 @@ public class Order {
      */
     private boolean hidden = false;
 
+    /**
+     * true ... the order is not shown to the participants
+     * @link FIX:1094 PegPriceType -> 2=Mid-price ... indicates it is a midpoint order (FIX 5.x)
+     */
+    private boolean midpoint = false;
+
     private DiscretionLimitType discretionLimitType;
 
     private TradingSessionSubID tradingSessionSubID;
@@ -92,7 +98,7 @@ public class Order {
     private Order(long submitSequence, Instant timestamp, boolean hidden, DiscretionLimitType discretionLimitType, TradingSessionSubID tradingSessionSubID,
                  String clientOrderID, Side side, int orderQty, int cumQty, LocalDateTime expirationDate,
                  TimeInForce timeInForce, OrderType orderType, double price, double stopPrice, int displayQty,
-                 int icebergOrderQty, int icebergCumQty) {
+                 int icebergOrderQty, int icebergCumQty, boolean midpoint) {
         this.submitSequence = submitSequence;
         this.timestamp = timestamp;
         this.hidden = hidden;
@@ -110,6 +116,7 @@ public class Order {
         this.displayQty = displayQty;
         this.icebergOrderQty = icebergOrderQty;
         this.icebergCumQty = icebergCumQty;
+        this.midpoint = midpoint;
     }
 
     //---------------------------------------------------------
@@ -294,9 +301,16 @@ public class Order {
         return this;
     }
 
+    public boolean isMidpoint() { return midpoint; }
+
+    public Order setMidpoint(boolean midpoint) {
+        this.midpoint = midpoint;
+        return this;
+    }
+
     public Order mutableClone() {
         return new Order(submitSequence, timestamp, hidden, discretionLimitType, tradingSessionSubID, clientOrderID, side, orderQty, cumQty,
-                expirationDate, timeInForce, orderType, price, stopPrice, displayQty, icebergOrderQty, icebergCumQty );
+                expirationDate, timeInForce, orderType, price, stopPrice, displayQty, icebergOrderQty, icebergCumQty, midpoint );
     }
 
     @Override
@@ -319,6 +333,7 @@ public class Order {
         sb.append(", orderType=").append(orderType);
         sb.append(", price=").append(price);
         sb.append(", stopPrice=").append(stopPrice);
+        sb.append(", midpoint=").append(midpoint);
         sb.append('}');
         return sb.toString();
     }

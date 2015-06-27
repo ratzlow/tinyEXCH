@@ -95,7 +95,7 @@ public class VolatilityInterruptionGuard {
     }
 
     private boolean isApplicable( Order order ) {
-        return order == null || order.getOrderType() != OrderType.MIDPOINT;
+        return order == null || !order.isMidpoint();
     }
 
     private void update( double newRefPrice, Consumer<PriceRange> rangeSetter,

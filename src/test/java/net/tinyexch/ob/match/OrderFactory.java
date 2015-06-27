@@ -38,11 +38,11 @@ public class OrderFactory {
      * @param timestamp #TIME_PATTERN
      */
     public static Order buyL(double price, int qty, Instant timestamp ) {
-        return newOrder( Side.BUY, price, qty, OrderType.LIMIT ).setTimestamp(timestamp);
+        return newOrder(Side.BUY, price, qty, OrderType.LIMIT).setTimestamp(timestamp);
     }
 
     public static Order sellL(double price, int qty) {
-        return newOrder( Side.SELL, price, qty, OrderType.LIMIT );
+        return newOrder(Side.SELL, price, qty, OrderType.LIMIT);
     }
 
     public static Order sellL(double price, int qty, Instant timestamp) {
@@ -50,7 +50,7 @@ public class OrderFactory {
     }
 
     public static Order buyM(int qty) {
-        return newOrder( Side.BUY, 0, qty, OrderType.MARKET );
+        return newOrder(Side.BUY, 0, qty, OrderType.MARKET);
     }
 
     public static Order buyMtoL(int qty) {
@@ -66,8 +66,19 @@ public class OrderFactory {
     }
 
     public static Order buyH_Lim(double price, int qty, Instant timestamp ) {
-        return buyH_Lim( price, qty ).setTimestamp( timestamp );
+        return buyH_Lim(price, qty).setTimestamp(timestamp);
+    }
 
+    public static Order buyMid_Lim(double price, int qty, Instant timestamp ) {
+        return buyL(price, qty, timestamp).setMidpoint(true);
+    }
+
+    public static Order sellMid_Lim(double price, int qty ) {
+        return sellL(price, qty).setMidpoint(true);
+    }
+
+    public static Order sellMid_Lim(double price, int qty, Instant timestamp ) {
+        return sellMid_Lim( price, qty ).setTimestamp(timestamp);
     }
 
     public static Order sellM(int qty) {
@@ -103,4 +114,6 @@ public class OrderFactory {
         TemporalAccessor temporalAccessor = DATE_TIME_FORMATTER.parse(TODAY + " " + time);
         return LocalDateTime.from(temporalAccessor).toInstant(ZoneOffset.UTC);
     }
+
+
 }

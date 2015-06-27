@@ -29,7 +29,6 @@ public enum OrderType {
     MARKET_TO_LIMIT,
 
     STOP,
-    MIDPOINT,
 
     /** http://www.fixtradingcommunity.org/pg/discussions/topicpost/165920/xetra-ets-top-of-book */
     STRIKE_MATCH,
