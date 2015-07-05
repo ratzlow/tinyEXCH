@@ -292,8 +292,9 @@ public class ContinuousMatchEngine implements MatchEngine {
             double bid = side == Side.BUY ? incomingOrder.getPrice() : otherSidePrice;
             double ask = side == Side.SELL ? incomingOrder.getPrice() : otherSidePrice;
             boolean betterThanMidpointPrice = bid >= midpointPrice && ask <= midpointPrice;
+            boolean midpointPriceInPriceRanges = !priceGuard.checkIndicativePrice(midpointPrice).isPresent();
 
-            if ( isCrossedPrice(bid, ask) && betterThanMidpointPrice ) {
+            if ( betterThanMidpointPrice && midpointPriceInPriceRanges && isCrossedPrice(bid, ask) ) {
                 potentialExecutionPrice = midpointPrice;
                 tradedOrder = retrieveTradedOrder(incomingOrder, otherSideQueue);
             }

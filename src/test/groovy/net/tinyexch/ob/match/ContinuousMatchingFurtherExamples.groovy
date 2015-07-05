@@ -81,7 +81,6 @@ class ContinuousMatchingFurtherExamples extends Specification {
     def "raise volatility interruption in continuous trading as incoming order exceeds static price range"() {
 
         given: "we are running in continuous trading"
-        // TODO (FRa) : (FRa) : add check interruption was raised
         def notificationListener = new DefaultNotificationListener()
         boolean volatilityInterruptionFired = false
         def trades = []

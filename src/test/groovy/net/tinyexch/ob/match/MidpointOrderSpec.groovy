@@ -1,5 +1,9 @@
 package net.tinyexch.ob.match
 
+import net.tinyexch.exchange.event.DefaultNotificationListener
+import net.tinyexch.exchange.event.produce.NewTradeEventHandler
+import net.tinyexch.exchange.event.produce.VolatilityInterruptionEventHandler
+import net.tinyexch.exchange.trading.form.continuous.ContinuousTrading
 import net.tinyexch.ob.Orderbook
 import net.tinyexch.ob.OrderbookState
 import net.tinyexch.ob.price.safeguard.VolatilityInterruptionGuard
@@ -14,6 +18,7 @@ import static net.tinyexch.ob.match.OrderFactory.*
  *
  * @author ratzlow@gmail.com
  * @since 2015-04-07
+ * @link 13.2.4
  */
 class MidpointOrderSpec extends Specification {
 
@@ -102,5 +107,42 @@ class MidpointOrderSpec extends Specification {
         and: "orderbook has remaining on sell side"
         def remainingSell = ob.sellSideMidpoint.orders.first()
         remainingSell.leavesQty == 2000
+    }
+
+    /**
+     * The highest bid limit exceeds the Xetra midpoint (199.50) and is higher than the lowest ask limit, with the
+     * latter being below the Xetra midpoint. The order book is crossed at the midpoint of the currently available
+     * bid/ask spread. However, the potential execution price of € 199.50 would trigger a volatility interruption.
+     * Therefore, the incoming midpoint order is entered in the order book and no execution takes place.
+     * No volatility interruption is triggered.
+     */
+    def "price range exceeded but no volatility interruption triggered and nothing executed_Ex4"() {
+        def notificationListener = new DefaultNotificationListener()
+        boolean volatilityInterruptionFired = false
+        def trades = []
+        notificationListener.volatilityInterruptionEventHandler =
+                { volatilityInterruptionFired = true } as VolatilityInterruptionEventHandler
+        notificationListener.newTradeEventHandler =
+                { trades << it } as NewTradeEventHandler
+
+        def referencePrice = 210.0
+        def guard = new VolatilityInterruptionGuard(180D, 5F, 185D, 5F)
+        def matchEngine = new ContinuousMatchEngine(referencePrice, guard, startingMidpointPrice)
+        def continuousTrading = new ContinuousTrading( notificationListener, matchEngine )
+        def ob = continuousTrading.orderbook
+        ob.open()
+
+        when: "one standing midpoint buy limit order is in the book"
+        def standingBuyMid_Lim = buyMid_Lim(200, 6000, time("09:01:00"))
+        continuousTrading.submit( standingBuyMid_Lim, NEW)
+
+        then: "6000 executed @ 199.50. 2000 remaining incoming ask midpoint order entered in book"
+        def sellMid_Lim = sellMid_Lim( 199, 6000, time("09:05:00") )
+        continuousTrading.submit( sellMid_Lim, NEW )
+        trades.empty
+        !volatilityInterruptionFired
+        ob.sellSideMidpoint.orders.collect { it.clientOrderID == sellMid_Lim.clientOrderID}.size() == 1
+        ob.buySideMidpoint.orders.collect { it.clientOrderID == standingBuyMid_Lim.clientOrderID}.size() == 1
+        matchEngine.midpointPrice == startingMidpointPrice
     }
 }
