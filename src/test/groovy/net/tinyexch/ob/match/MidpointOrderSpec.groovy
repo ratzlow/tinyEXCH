@@ -3,27 +3,32 @@ package net.tinyexch.ob.match
 import net.tinyexch.ob.Orderbook
 import net.tinyexch.ob.OrderbookState
 import net.tinyexch.ob.price.safeguard.VolatilityInterruptionGuard
-import spock.lang.Ignore
 import spock.lang.Specification
 
 import static net.tinyexch.ob.SubmitType.NEW
 import static net.tinyexch.ob.match.OrderFactory.*
 
 /**
- * Number of scenarios reflecting OB situations with Midpoint orders.
+ * Number of scenarios reflecting OB situations with Midpoint orders. Midpoint orders execute at middle of bid/ask
+ * spread and can have a MAQ ... Minimum Acceptable Quantity. Matching precedence is by volume/time priority
  *
  * @author ratzlow@gmail.com
  * @since 2015-04-07
  */
 class MidpointOrderSpec extends Specification {
 
+    def startingMidpointPrice = 199.5D
     Orderbook ob
+    ContinuousMatchEngine continuousMatchEngine
+
 
     def setup() {
         def referencePrice = 200.0
-        ob = new Orderbook( new ContinuousMatchEngine(referencePrice, VolatilityInterruptionGuard.NO_OP) )
+        continuousMatchEngine = new ContinuousMatchEngine(referencePrice, VolatilityInterruptionGuard.NO_OP, startingMidpointPrice)
+        ob = new Orderbook(continuousMatchEngine)
         ob.open()
         assert ob.state == OrderbookState.OPEN
+        assert continuousMatchEngine.midpointPrice == startingMidpointPrice
     }
 
     /**
@@ -40,8 +45,10 @@ class MidpointOrderSpec extends Specification {
         then: "adding midpoint sell limit will not execute since ask price is too high"
         def sellMid_Lim = sellMid_Lim( 203, 6000, time("09:05:00") )
         ob.submit( sellMid_Lim, NEW ).trades.empty
-        ob.sellSide.orders.collect { it.clientOrderID == sellMid_Lim.clientOrderID}.size() == 1
-        ob.buySide.orders.collect { it.clientOrderID == standingBuyMid_Lim.clientOrderID}.size() == 1
+        ob.sellSideMidpoint.orders.collect { it.clientOrderID == sellMid_Lim.clientOrderID}.size() == 1
+        ob.buySideMidpoint.orders.collect { it.clientOrderID == standingBuyMid_Lim.clientOrderID}.size() == 1
+        ob.buySideMidpoint.orders.collect { it.clientOrderID == standingBuyMid_Lim.clientOrderID}.size() == 1
+        continuousMatchEngine.midpointPrice == 201.5D
     }
 
 
@@ -54,7 +61,6 @@ class MidpointOrderSpec extends Specification {
      * The incoming ask midpoint order is entered in the order book. No orders are executed. There are crossed midpoint
      * orders which, however, are not executable at the midpoint of the currently available bid/ask spread
      */
-    @Ignore("No matching strategy yet implemented")
     def "limited midpoint orders cross but not at midpoint - no execution_Ex2"() {
         when: "one standing midpoint buy limit order is in the book"
         def standingBuyMid_Lim = buyMid_Lim(198, 6000, time("09:01:00"))
@@ -63,8 +69,9 @@ class MidpointOrderSpec extends Specification {
         then: "Although the highest bid limit is higher than the lowest ask limit, it does not exceed the midpoint"
         def sellMid_Lim = sellMid_Lim( 197, 6000, time("09:05:00") )
         ob.submit( sellMid_Lim, NEW ).trades.empty
-        ob.sellSide.orders.collect { it.clientOrderID == sellMid_Lim.clientOrderID}.size() == 1
-        ob.buySide.orders.collect { it.clientOrderID == standingBuyMid_Lim.clientOrderID}.size() == 1
+        ob.sellSideMidpoint.orders.collect { it.clientOrderID == sellMid_Lim.clientOrderID}.size() == 1
+        ob.buySideMidpoint.orders.collect { it.clientOrderID == standingBuyMid_Lim.clientOrderID}.size() == 1
+        continuousMatchEngine.midpointPrice == 197.5D
     }
 
 
@@ -75,10 +82,7 @@ class MidpointOrderSpec extends Specification {
      *
      * The order book is crossed at the midpoint of the currently available bid/ask spread
      */
-    @Ignore("No matching strategy yet implemented")
     def "limited midpoint order meets limited midpoint on other side and is executable_Ex3"() {
-        def midpointBidAskSpread = 199.5
-
         when: "one standing midpoint buy limit order is in the book"
         def standingBuyMid_Lim = buyMid_Lim(200, 6000, time("09:01:00"))
         assert ob.submit( standingBuyMid_Lim, NEW).trades.empty
@@ -89,14 +93,14 @@ class MidpointOrderSpec extends Specification {
 
         trades.size() == 1
         def trade = trades.first()
-        trade.price.toDouble() == midpointBidAskSpread
+        trade.price == startingMidpointPrice
         trade.executionQty == 6000
 
         and: "orderbook empty on buy side"
-        ob.buySide.orders.empty
+        ob.buySideMidpoint.orders.empty
 
         and: "orderbook has remaining on sell side"
-        def remainingSell = ob.sellSide.orders.first()
+        def remainingSell = ob.sellSideMidpoint.orders.first()
         remainingSell.leavesQty == 2000
     }
 }

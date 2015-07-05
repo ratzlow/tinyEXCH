@@ -25,6 +25,8 @@ public class Order {
 
     /**
      * true ... the order is not shown to the participants
+     * 
+     * @link http://www.fixtradingcommunity.org/pg/discussions/topicpost/167716/midpoint-orders-in-fix-protocol
      * @link FIX:1094 PegPriceType -> 2=Mid-price ... indicates it is a midpoint order (FIX 5.x)
      */
     private boolean midpoint = false;

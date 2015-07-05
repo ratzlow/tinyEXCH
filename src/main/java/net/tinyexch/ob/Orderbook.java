@@ -21,13 +21,12 @@ import static net.tinyexch.ob.match.MatchEngine.*;
  */
 // TODO (FRa) : (FRa) : impl. partial cancel, expiration at close, removal of transient orders
 // TODO (FRa) : (FRa) : form proper Notif Msg e.g. NewAck, CancelAcc, CancelRej
-// TODO (FRa) : (FRa) : impl 2PC and commmit match only if price checks succeeded; check if this should be drawn into OB to be more efficient
+// TODO (FRa) : (FRa) : impl 2PC and commit match only if price checks succeeded; check if this should be drawn into OB to be more efficient
 // TODO (FRa) : (FRa) : use persistent/functional data structures - if possible
 // TODO (FRa) : (FRa) : cancel(): remove from OB and produce CXL-ACK (check FIX what is the response)
 public class Orderbook {
 
     private MatchEngine matchEngine = MatchEngine.NO_OP;
-    private long sequence = 0;
 
     //------------------------------------------------------------------------------------------------------------------
     // mutable state changing during runtime
@@ -35,17 +34,30 @@ public class Orderbook {
 
     private OrderbookState state = OrderbookState.CLOSED;
 
+    //------------------------------------------------------------------------------------------------------------------
     /**
      * Contains all bid/buy orders
      */
-    private final OrderbookSide buySide =
-            new OrderbookSide( Side.BUY, MatchEngine.BUY_PRICE_TIME_ORDERING, BUY_STOPPRICE_ORDERING );
+    private final OrderbookSide buySide = new OrderbookSide( Side.BUY,
+            MatchEngine.BUY_PRICE_TIME_ORDERING.thenComparing(Priorities.SUBMIT_SEQUENCE),
+            BUY_STOPPRICE_ORDERING.thenComparing(Priorities.SUBMIT_SEQUENCE) );
 
     /**
      * Contains all ask/sell orders
      */
-    private final OrderbookSide sellSide =
-            new OrderbookSide( Side.SELL, MatchEngine.SELL_PRICE_TIME_ORDERING, SELL_STOPPRICE_ORDERING );
+    private final OrderbookSide sellSide = new OrderbookSide( Side.SELL,
+            MatchEngine.SELL_PRICE_TIME_ORDERING.thenComparing(Priorities.SUBMIT_SEQUENCE),
+            SELL_STOPPRICE_ORDERING.thenComparing(Priorities.SUBMIT_SEQUENCE) );
+    //------------------------------------------------------------------------------------------------------------------
+
+    private final OrderbookSide midpointBuySide =
+            new OrderbookSide( Side.BUY, MatchEngine.VOLUME_TIME_ORDERING.thenComparing(Priorities.SUBMIT_SEQUENCE),
+                    // TODO (FRa) : (FRa) : rm last comparator as it is not applicable for midpointorders
+                    BUY_STOPPRICE_ORDERING );
+
+    private final OrderbookSide midpointSellSide =
+            new OrderbookSide( Side.SELL, MatchEngine.VOLUME_TIME_ORDERING.thenComparing(Priorities.SUBMIT_SEQUENCE),
+                    SELL_STOPPRICE_ORDERING );
 
 
     //------------------------------------------------------------------------------------------------------------------
@@ -59,7 +71,7 @@ public class Orderbook {
         Objects.requireNonNull(sells, "No sell orders specified!");
 
         Stream.of(buys).forEach( buySide::add );
-        Stream.of(sells).forEach( sellSide::add );
+        Stream.of(sells).forEach(sellSide::add);
     }
 
     public Orderbook( MatchEngine matchEngine ) {
@@ -118,37 +130,40 @@ public class Orderbook {
 
     public OrderbookState getState() { return state; }
 
+    public OrderbookSide getBuySide() { return getBuySide(false); }
+    public OrderbookSide getBuySideMidpoint() { return getBuySide(true); }
+
+    public OrderbookSide getSellSide() { return getSellSide(false); }
+    public OrderbookSide getSellSideMidpoint() { return getSellSide(true); }
+
+
     //------------------------------------------------------------------------------------------------------------------
     // internal operations
     //------------------------------------------------------------------------------------------------------------------
 
-    private void cancel(Order order) { sameSide(order.getSide()).cancel(order); }
+    private void cancel(Order order) { sameSide(order.getSide(), order.isMidpoint()).cancel(order); }
 
     private Match match(Order order) {
         Side incomingSide = order.getSide();
-        OrderbookSide thisSide = sameSide(incomingSide);
-        OrderbookSide otherSide = oppositeSide(incomingSide);
+        OrderbookSide thisSide = sameSide(incomingSide, order.isMidpoint());
+        OrderbookSide otherSide = oppositeSide(incomingSide, order.isMidpoint());
 
-        Match match = matchEngine.match(order, otherSide, thisSide);
-
-        // TODO (FRa) : (FRa) : check round/odd lots handling
-        boolean fullyMatched = order.getLeavesQty() == 0;
-        if ( !fullyMatched && match.getState() == Match.State.ACCEPT ) {
-            thisSide.add( order.setSubmitSequence( ++sequence ) );
-        }
-
-        return match;
+        return matchEngine.match(order, otherSide, thisSide);
     }
 
-    private OrderbookSide oppositeSide(Side incomingSide) {
-        return incomingSide == Side.BUY ? sellSide : buySide;
+    private OrderbookSide oppositeSide(Side incomingSide, boolean isMidpoint) {
+        return incomingSide == Side.BUY ? getSellSide(isMidpoint) : getBuySide(isMidpoint);
     }
 
-    private OrderbookSide sameSide(Side incomingSide) {
-        return incomingSide == Side.BUY ? buySide : sellSide;
+    private OrderbookSide sameSide(Side incomingSide, boolean isMidpoint) {
+        return incomingSide == Side.BUY ? getBuySide(isMidpoint) : getSellSide(isMidpoint);
     }
 
-    public OrderbookSide getBuySide() { return buySide; }
+    private OrderbookSide getBuySide( boolean isMidpoint ) {
+        return isMidpoint ? midpointBuySide : buySide;
+    }
 
-    public OrderbookSide getSellSide() { return sellSide; }
+    private OrderbookSide getSellSide( boolean isMidpoint ) {
+        return isMidpoint ? midpointSellSide : sellSide;
+    }
 }

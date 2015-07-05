@@ -72,5 +72,13 @@ public enum Priorities implements Comparator<Order> {
     HIDDEN_FLAG {
         @Override
         public int compare(Order o1, Order o2) { return Boolean.compare(o1.isHidden(), o2.isHidden()); }
+    },
+
+    /**
+     * Highest volume OrderQty
+     */
+    VOLUME {
+        @Override
+        public int compare(Order o1, Order o2) { return Integer.compare(o1.getOrderQty(), o2.getOrderQty()); }
     }
 }

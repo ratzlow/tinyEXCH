@@ -13,6 +13,8 @@ import java.util.Comparator;
  */
 public interface MatchEngine {
 
+    static final int NO_PRICE = -1;
+
     static final Comparator<Order> SELL_PRICE_ORDERING = Priorities.PRICE.thenComparing(Priorities.HIDDEN_FLAG);
     static final Comparator<Order> BUY_PRICE_ORDERING = Priorities.PRICE.reversed().thenComparing(Priorities.HIDDEN_FLAG);
 
@@ -21,6 +23,8 @@ public interface MatchEngine {
 
     static final Comparator<Order> SELL_PRICE_TIME_ORDERING = SELL_PRICE_ORDERING.thenComparing(Priorities.TIME);
     static final Comparator<Order> BUY_PRICE_TIME_ORDERING = BUY_PRICE_ORDERING.thenComparing(Priorities.TIME);
+
+    static final Comparator<Order> VOLUME_TIME_ORDERING = Priorities.VOLUME.thenComparing(Priorities.TIME);
 
     static final MatchEngine NO_OP = (order, otherOrderbookSide, thisOrderbookSide ) -> Match.NO_MATCH;
 

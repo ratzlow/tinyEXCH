@@ -19,7 +19,7 @@ import static java.util.stream.Collectors.toList;
  */
 public class OrderbookSide {
 
-    private final Map<OrderType, Queue<Order>> ordersByType;
+    private final Map<OrderType, Queue<Order>> ordersByType = new EnumMap<>(OrderType.class);
     private final Comparator<Order> priceTimeOrdering;
     private final Side side;
 
@@ -27,13 +27,13 @@ public class OrderbookSide {
     // constructors
     //-----------------------------------------------------------------------------------------------
 
-    public OrderbookSide( Side side, Comparator<Order> byPriceThenTimeOrdering, Comparator<Order> byTriggerPrice ) {
+    public OrderbookSide( Side side, Comparator<Order> limitOrdering, Comparator<Order> strikeMatchOrdering ) {
         this.side = side;
-        this.priceTimeOrdering = byPriceThenTimeOrdering.thenComparing(Priorities.SUBMIT_SEQUENCE);
-        this.ordersByType = new EnumMap<>(OrderType.class);
+        this.priceTimeOrdering = limitOrdering;
+        Comparator<Order> marketComparator = Priorities.TIME.thenComparing(Priorities.SUBMIT_SEQUENCE);
 
-        ordersByType.put(OrderType.STRIKE_MATCH, new PriorityQueue<>(byTriggerPrice.thenComparing(Priorities.SUBMIT_SEQUENCE)) );
-        ordersByType.put(OrderType.MARKET, new PriorityQueue<>(Priorities.TIME.thenComparing(Priorities.SUBMIT_SEQUENCE)) );
+        ordersByType.put(OrderType.STRIKE_MATCH, new PriorityQueue<>(strikeMatchOrdering));
+        ordersByType.put(OrderType.MARKET, new PriorityQueue<>(marketComparator) );
         ordersByType.put(OrderType.LIMIT, new PriorityQueue<>(priceTimeOrdering) );
     }
 
