@@ -7,9 +7,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.DoublePredicate;
 import java.util.stream.Collectors;
@@ -81,52 +79,5 @@ public class AlgosTest {
 
         Assert.assertEquals(200, worstMatchableBidPrice, ROUNDING_DELTA);
         Assert.assertEquals(200, worstMatchableAskPrice, ROUNDING_DELTA);
-    }
-
-
-    @Deprecated // TODO (FRa) : (FRa) : use proper impl
-    double binarySearchClosest( double bestPrice, double[] prices,  boolean preferLowerPrice ) {
-        Objects.requireNonNull(prices, "Prices must not be empty!");
-        LOGGER.debug("bestPrice={} inputPrices={}", bestPrice, Arrays.toString(prices));
-        if (prices.length == 1) return prices[0];
-
-        // deviation from bestPrice increases
-        boolean evenElems = prices.length % 2 == 0;
-        int halfLength = prices.length / 2;
-
-        int leftLowerIdx = 0;
-        int leftUpperIdx = evenElems ? halfLength - 1 : halfLength;
-        int rightLowerIdx = evenElems ? halfLength : halfLength + 1;
-        int rightUpperIdx = prices.length;
-
-        double distanceLeft  = Math.abs(bestPrice - prices[leftUpperIdx]);
-        double distanceRight = Math.abs(bestPrice - prices[rightLowerIdx]);
-
-        LOGGER.debug("1.) distanceLeft={} distanceRight={}", distanceLeft, distanceRight);
-
-        final double closestPrice;
-
-        // left direction
-        if ( distanceLeft < distanceRight ) {
-            LOGGER.debug("2.) <-- [{}]-[{}]", leftLowerIdx, leftUpperIdx);
-            closestPrice = binarySearchClosest(bestPrice, Arrays.copyOfRange(prices, leftLowerIdx, leftUpperIdx+1), preferLowerPrice );
-
-            // right direction
-        } else if (distanceLeft > distanceRight) {
-            LOGGER.debug("3.) --> [{}]-[{}]", rightLowerIdx, rightUpperIdx);
-            closestPrice = binarySearchClosest(bestPrice, Arrays.copyOfRange(prices, rightLowerIdx, rightUpperIdx), preferLowerPrice);
-
-            // 2 mid numbers are same
-        } else {
-            LOGGER.debug("4.) --> leftUpperPrice={} rightLowerPrice={}", prices[leftUpperIdx], prices[rightLowerIdx]);
-
-            if (preferLowerPrice) {
-                closestPrice = binarySearchClosest(bestPrice, Arrays.copyOfRange(prices, leftLowerIdx, leftUpperIdx+1), preferLowerPrice );
-            } else {
-                closestPrice = binarySearchClosest(bestPrice, Arrays.copyOfRange(prices, rightLowerIdx, rightUpperIdx), preferLowerPrice);
-            }
-        }
-
-        return closestPrice;
     }
 }

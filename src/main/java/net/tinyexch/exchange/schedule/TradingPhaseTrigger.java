@@ -21,7 +21,7 @@ public final class TradingPhaseTrigger {
     /**
      * Specifies how to interpret this trigger in relation to it is predecessor
      */
-    public static enum InitiatorType {
+    public enum InitiatorType {
         /** Kick off only after a given state change occurred as a signal */
         WAIT_FOR_STATECHANGE,
 
@@ -99,13 +99,12 @@ public final class TradingPhaseTrigger {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("TradingPhaseTrigger{");
-        sb.append("changeStateEvent=").append(changeStateEvent);
-        sb.append(", initiatorType=").append(initiatorType);
-        sb.append(", fixedTime=").append(fixedTime);
-        sb.append(", waitFor=").append(waitFor);
-        sb.append(", tradingFormRunType=").append(tradingFormRunType);
-        sb.append('}');
-        return sb.toString();
+        return "TradingPhaseTrigger{" +
+                "changeStateEvent=" + changeStateEvent +
+                ", initiatorType=" + initiatorType +
+                ", fixedTime=" + fixedTime +
+                ", waitFor=" + waitFor +
+                ", tradingFormRunType=" + tradingFormRunType +
+                '}';
     }
 }

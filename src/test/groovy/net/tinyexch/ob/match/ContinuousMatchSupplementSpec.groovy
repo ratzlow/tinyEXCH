@@ -43,7 +43,7 @@ class ContinuousMatchSupplementSpec extends Specification {
         ob.sellSide.orders.empty
         trades.each { trade ->
             trade.executionQty == 1
-            trade.price == referencePrice
+            trade.price == referencePrice.doubleValue()
             bigSellOrder.clientOrderID == trade.sell.clientOrderID
         }
         def executedBuyOrderIDs = trades.collect { it.buy.clientOrderID } as Set
@@ -71,7 +71,7 @@ class ContinuousMatchSupplementSpec extends Specification {
         trades_3.size() == 1
         def trade = trades_3.first()
         trade.executionQty == sell_1.orderQty
-        trade.price == referencePrice
+        trade.price == referencePrice.doubleValue()
         trade.buy.clientOrderID == buy_1.clientOrderID
         trade.sell.clientOrderID == sell_1.clientOrderID
     }

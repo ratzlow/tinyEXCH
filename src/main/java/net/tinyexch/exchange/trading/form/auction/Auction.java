@@ -39,7 +39,7 @@ public class Auction extends TradingForm<AuctionState> implements OrderReceiver 
     public Auction( NotificationListener notificationListener ) {
         super( notificationListener );
         callPhase = order -> LOGGER.info("Accepted order: {}", order);
-        priceDeterminationPhase = () -> new PriceDeterminationResult();
+        priceDeterminationPhase = PriceDeterminationResult::new;
         orderbookBalancingPhase = () -> {};
     }
 

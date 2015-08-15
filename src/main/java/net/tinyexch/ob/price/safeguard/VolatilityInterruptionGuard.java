@@ -1,7 +1,6 @@
 package net.tinyexch.ob.price.safeguard;
 
 import net.tinyexch.order.Order;
-import net.tinyexch.order.OrderType;
 import net.tinyexch.order.Trade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

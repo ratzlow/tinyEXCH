@@ -43,12 +43,11 @@ public class PriceRange {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("PriceRange{");
-        sb.append("lower=").append(lower);
-        sb.append(", upper=").append(upper);
-        sb.append(", refPrice=").append(refPrice);
-        sb.append(", priceDeviationPerc=").append(priceDeviationPerc);
-        sb.append('}');
-        return sb.toString();
+        return "PriceRange{" +
+                "lower=" + lower +
+                ", upper=" + upper +
+                ", refPrice=" + refPrice +
+                ", priceDeviationPerc=" + priceDeviationPerc +
+                '}';
     }
 }

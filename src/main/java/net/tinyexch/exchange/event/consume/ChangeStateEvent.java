@@ -36,10 +36,6 @@ public class ChangeStateEvent {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("ChangeStateEvent{");
-        sb.append(", targetState=").append(targetState);
-        sb.append(", tradingFormRunType=").append(tradingFormRunType);
-        sb.append('}');
-        return sb.toString();
+        return "ChangeStateEvent{" + ", targetState=" + targetState + ", tradingFormRunType=" + tradingFormRunType + '}';
     }
 }

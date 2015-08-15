@@ -148,18 +148,17 @@ public final class Trade {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("Trade{");
-        sb.append("executionTime=").append(executionTime);
-        sb.append(", execID='").append(execID).append('\'');
-        sb.append(", price=").append(price);
-        sb.append(", executionQty=").append(executionQty);
-        sb.append(", buy=").append(buy);
-        sb.append(", sell=").append(sell);
-        sb.append(", roundLots=").append(roundLots);
-        sb.append(", oddLots=").append(oddLots);
-        sb.append(", execType=").append(execType);
-        sb.append(", orderRejectReason=").append(orderRejectReason);
-        sb.append('}');
-        return sb.toString();
+        return "Trade{" +
+                "executionTime=" + executionTime +
+                ", execID='" + execID + '\'' +
+                ", price=" + price +
+                ", executionQty=" + executionQty +
+                ", execType=" + execType +
+                ", orderRejectReason='" + orderRejectReason + '\'' +
+                ", buy=" + buy +
+                ", sell=" + sell +
+                ", roundLots=" + roundLots +
+                ", oddLots=" + oddLots +
+                '}';
     }
 }

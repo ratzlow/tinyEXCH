@@ -15,5 +15,5 @@ public enum TradingSessionSubID {
     ClosingOrClosingAuction,
     PostTrading,
     IntradayAuction,
-    Quiescent;
+    Quiescent
 }

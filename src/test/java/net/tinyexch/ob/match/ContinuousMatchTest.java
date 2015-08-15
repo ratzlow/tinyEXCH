@@ -528,7 +528,7 @@ public class ContinuousMatchTest {
 
     private void submitLimitOrder(Order incoming, double expectedExecutionPrice, Order ... standingOrders ) {
         Runnable postMatchCheck = this::assertEmptyOrderbook;
-        submitLimitOrder( incoming, expectedExecutionPrice, postMatchCheck, standingOrders );
+        submitLimitOrder(incoming, expectedExecutionPrice, postMatchCheck, standingOrders);
     }
 
     private void submitLimitOrder(Order incoming, double expectedExecutionPrice,
@@ -558,7 +558,7 @@ public class ContinuousMatchTest {
         assertEquals( expectedBuyCount, ob.getBuySide().getOrders().size() );
         Order remainingBuy = remainingOrderExtractor.apply(ob);
         assertEquals( standingLimit.getClientOrderID(), remainingBuy.getClientOrderID() );
-        assertEquals( standingLimit.getLeavesQty(), remainingBuy.getLeavesQty() );
+        assertEquals(standingLimit.getLeavesQty(), remainingBuy.getLeavesQty());
     }
 
     private void assertEmptyOrderbook() {
@@ -610,7 +610,7 @@ public class ContinuousMatchTest {
         assertEquals(ORDER_QTY, trade.getExecutionQty() );
         assertEquals( "The market order has precedence to be executed",
                         standingMarket.getClientOrderID(), trade.getSell().getClientOrderID() );
-        assertEquals( incomingOrder.getClientOrderID(), trade.getBuy().getClientOrderID() );
+        assertEquals(incomingOrder.getClientOrderID(), trade.getBuy().getClientOrderID());
     }
 
 
@@ -626,6 +626,10 @@ public class ContinuousMatchTest {
         assertEquals( 1, ob.getBuySide().getOrders().size() );
         assertEquals( 0, ob.getSellSide().getOrders().size());
 
+        assertStandingMarketAndLimitOrders(expectedExecutionPrice, standingMarket, incomingOrder, trades);
+    }
+
+    private void assertStandingMarketAndLimitOrders(double expectedExecutionPrice, Order standingMarket, Order incomingOrder, List<Trade> trades) {
         Trade trade = trades.get(0);
         assertEquals( expectedExecutionPrice, trade.getPrice(), TestConstants.ROUNDING_DELTA );
         assertEquals(ORDER_QTY, trade.getExecutionQty() );

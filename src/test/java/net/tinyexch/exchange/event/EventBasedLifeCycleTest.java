@@ -2,7 +2,10 @@ package net.tinyexch.exchange.event;
 
 import net.tinyexch.exchange.event.produce.StateChangedEvent;
 import net.tinyexch.exchange.event.produce.StateChangedEventHandler;
-import net.tinyexch.exchange.schedule.*;
+import net.tinyexch.exchange.schedule.AuctionSchedule;
+import net.tinyexch.exchange.schedule.ContinuousTradingSchedule;
+import net.tinyexch.exchange.schedule.TradingCalendar;
+import net.tinyexch.exchange.schedule.TradingPhaseTrigger;
 import net.tinyexch.exchange.trading.form.auction.Auction;
 import net.tinyexch.exchange.trading.form.auction.AuctionState;
 import net.tinyexch.exchange.trading.form.continuous.ContinuousTrading;
@@ -29,11 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static net.tinyexch.exchange.trading.form.auction.AuctionState.*;
-import static net.tinyexch.exchange.trading.form.auction.AuctionState.ORDERBOOK_BALANCING_RUNNING;
-import static net.tinyexch.exchange.trading.form.auction.AuctionState.ORDERBOOK_BALANCING_STOPPED;
-import static net.tinyexch.exchange.trading.model.TradingFormRunType.CLOSING_AUCTION;
-import static net.tinyexch.exchange.trading.model.TradingFormRunType.INTRADAY_AUCTION;
-import static net.tinyexch.exchange.trading.model.TradingFormRunType.OPENING_AUCTION;
+import static net.tinyexch.exchange.trading.model.TradingFormRunType.*;
 
 /**
  * Control the switching in the life cycle vie events and listeners.
@@ -132,8 +131,8 @@ public class EventBasedLifeCycleTest {
         stateChangedEventHandler.latch.await(1, TimeUnit.SECONDS);
         marketRunner.stop();
 
-        List<Enum> actualStateChanges = stateChangedEventHandler.getStateChangedEvents().stream().map(
-                state -> state.getCurrent()).collect(Collectors.toList());
+        List<Enum> actualStateChanges = stateChangedEventHandler.getStateChangedEvents().stream()
+                .map(StateChangedEvent::getCurrent).collect(Collectors.toList());
         Assert.assertArrayEquals("Expected: " + allExpectedStates + " actual: " + actualStateChanges,
                 allExpectedStates.toArray(),
                 actualStateChanges.toArray());
@@ -194,8 +193,8 @@ public class EventBasedLifeCycleTest {
         stateChangedEventHandler.latch.await();
         marketRunner.stop();
 
-        List<Enum> actualStateChanges = stateChangedEventHandler.getStateChangedEvents().stream().map(
-                state -> state.getCurrent()).collect(Collectors.toList());
+        List<Enum> actualStateChanges = stateChangedEventHandler.getStateChangedEvents().stream()
+                .map(StateChangedEvent::getCurrent).collect(Collectors.toList());
 
         Assert.assertArrayEquals("Recorded state changes: " + actualStateChanges,
                 expectedStateChanges.toArray(),

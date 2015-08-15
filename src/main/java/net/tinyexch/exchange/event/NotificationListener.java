@@ -14,7 +14,7 @@ public interface NotificationListener {
     /**
      * Default do nothing listener.
      */
-    public static final NotificationListener NO_OP = new NotificationListener() {
+    NotificationListener NO_OP = new NotificationListener() {
         @Override
         public void init(MarketRunner marketRunner, TradingCalendar tradingCalendar) { }
 
