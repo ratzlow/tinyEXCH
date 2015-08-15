@@ -50,9 +50,8 @@ class MidpointOrderSpec extends Specification {
         then: "adding midpoint sell limit will not execute since ask price is too high"
         def sellMid_Lim = sellMid_Lim( 203, 6000, time("09:05:00") )
         ob.submit( sellMid_Lim, NEW ).trades.empty
+        ob.buySideMidpoint.orders.collect { it.clientOrderID == standingBuyMid_Lim.clientOrderID}.size() == 1
         ob.sellSideMidpoint.orders.collect { it.clientOrderID == sellMid_Lim.clientOrderID}.size() == 1
-        ob.buySideMidpoint.orders.collect { it.clientOrderID == standingBuyMid_Lim.clientOrderID}.size() == 1
-        ob.buySideMidpoint.orders.collect { it.clientOrderID == standingBuyMid_Lim.clientOrderID}.size() == 1
         continuousMatchEngine.midpointPrice == 201.5D
     }
 
@@ -144,5 +143,41 @@ class MidpointOrderSpec extends Specification {
         ob.sellSideMidpoint.orders.collect { it.clientOrderID == sellMid_Lim.clientOrderID}.size() == 1
         ob.buySideMidpoint.orders.collect { it.clientOrderID == standingBuyMid_Lim.clientOrderID}.size() == 1
         matchEngine.midpointPrice == startingMidpointPrice
+    }
+
+
+    /**
+     * In order to release the order book crossed at the midpoint, strict volume/time priority is disregarded.
+     * Execution takes place at the midpoint.
+     * To optimize the executable volume, the incoming ask midpoint order is executed against the MAQ (3000 shares) of
+     * the bid midpoint order with lower priority and against 3000 shares of the bid midpoint order with higher priority
+     */
+    def "Crossing with MAQ involved"() {
+        when: "Limited midpoints standing with MAQ"
+        def standingBuyMid_Lim = buyMid_Lim(201, 5000, time("09:01:00"))
+        def standingBuyMid_LimMAQ = buyMid_LimMAQ(200, 4000, time("09:02:00"), 3000)
+        ob.submit( standingBuyMid_Lim, NEW ).trades.empty
+        ob.submit( standingBuyMid_LimMAQ, NEW ).trades.empty
+
+        then: "both buys are standing liquidity"
+        ob.buySideMidpoint.orders.size() == 2
+
+        when: "ask order is submitted with MAQ against standing liquidity"
+        def sellMid_LimMAQ = sellMid_LimMAQ(199, 6000, time("09:02:00"), 6000)
+        def trades = ob.submit(sellMid_LimMAQ, NEW).trades
+
+        then: "2 trades are generated to maximize executable volume"
+        trades.size() == 2
+        ob.buySideMidpoint.orders.size() == 2
+        ob.sellSideMidpoint.orders.size() == 0
+
+        and: "the trades are created by volume-time priority"
+        def firstTrade = trades[0]
+        firstTrade.buy.clientOrderID == standingBuyMid_Lim.clientOrderID
+        firstTrade.executionQty == 3000
+
+        def secondTrade = trades[1]
+        secondTrade.buy.clientOrderID == standingBuyMid_LimMAQ.clientOrderID
+        secondTrade.executionQty == 3000
     }
 }

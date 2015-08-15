@@ -13,20 +13,22 @@ import java.util.Comparator;
  */
 public interface MatchEngine {
 
-    static final int NO_PRICE = -1;
+    int NO_PRICE = -1;
 
-    static final Comparator<Order> SELL_PRICE_ORDERING = Priorities.PRICE.thenComparing(Priorities.HIDDEN_FLAG);
-    static final Comparator<Order> BUY_PRICE_ORDERING = Priorities.PRICE.reversed().thenComparing(Priorities.HIDDEN_FLAG);
+    Comparator<Order> SELL_PRICE_ORDERING = Priorities.PRICE.thenComparing(Priorities.HIDDEN_FLAG);
+    Comparator<Order> BUY_PRICE_ORDERING = Priorities.PRICE.reversed().thenComparing(Priorities.HIDDEN_FLAG);
 
-    static final Comparator<Order> SELL_STOPPRICE_ORDERING = Priorities.STOP_PRICE.thenComparing(Priorities.HIDDEN_FLAG);
-    static final Comparator<Order> BUY_STOPPRICE_ORDERING = Priorities.STOP_PRICE.reversed().thenComparing(Priorities.HIDDEN_FLAG);
+    Comparator<Order> SELL_STOPPRICE_ORDERING = Priorities.STOP_PRICE.thenComparing(Priorities.HIDDEN_FLAG);
+    Comparator<Order> BUY_STOPPRICE_ORDERING = Priorities.STOP_PRICE.reversed().thenComparing(Priorities.HIDDEN_FLAG);
 
-    static final Comparator<Order> SELL_PRICE_TIME_ORDERING = SELL_PRICE_ORDERING.thenComparing(Priorities.TIME);
-    static final Comparator<Order> BUY_PRICE_TIME_ORDERING = BUY_PRICE_ORDERING.thenComparing(Priorities.TIME);
+    Comparator<Order> SELL_PRICE_TIME_ORDERING = SELL_PRICE_ORDERING.thenComparing(Priorities.TIME);
+    Comparator<Order> BUY_PRICE_TIME_ORDERING = BUY_PRICE_ORDERING.thenComparing(Priorities.TIME);
 
-    static final Comparator<Order> VOLUME_TIME_ORDERING = Priorities.VOLUME.thenComparing(Priorities.TIME);
+    Comparator<Order> VOLUME_TIME_ORDERING = Priorities.VOLUME.reversed().thenComparing(Priorities.TIME);
+    Comparator<Order> MIDPOINT_COMPARATOR = VOLUME_TIME_ORDERING.thenComparing(Priorities.SUBMIT_SEQUENCE);
 
-    static final MatchEngine NO_OP = (order, otherOrderbookSide, thisOrderbookSide ) -> Match.NO_MATCH;
+
+    MatchEngine NO_OP = (order, otherOrderbookSide, thisOrderbookSide ) -> Match.NO_MATCH;
 
     Match match(Order order, OrderbookSide otherSide, OrderbookSide thisSide);
 }

@@ -3,6 +3,7 @@ package net.tinyexch.ob.match;
 import net.tinyexch.ob.OrderbookSide;
 import net.tinyexch.ob.RejectReason;
 import net.tinyexch.ob.match.Match.State;
+import net.tinyexch.ob.match.midpoint.MidpointMatcher;
 import net.tinyexch.ob.price.safeguard.VolatilityInterruption;
 import net.tinyexch.ob.price.safeguard.VolatilityInterruptionGuard;
 import net.tinyexch.order.*;
@@ -13,6 +14,8 @@ import java.util.stream.Stream;
 
 import static net.tinyexch.ob.match.Match.State.ACCEPT;
 import static net.tinyexch.ob.match.Match.State.REJECT;
+import static net.tinyexch.ob.match.TradeFactory.createTrade;
+import static net.tinyexch.ob.match.TradeFactory.isCrossedPrice;
 import static net.tinyexch.order.ExecType.REJECTED;
 
 /**
@@ -67,14 +70,17 @@ public class ContinuousMatchEngine implements MatchEngine {
         }
 
         final MatchCollector matchCollector;
-        if ( orderType == OrderType.LIMIT ) {
-            matchCollector = execute(incoming, otherSide,
-                                    () -> matchLimit(incoming, otherSide, thisSide),
+        if ( incoming.isMidpoint() ) {
+            matchCollector = matchMidpoint(incoming, otherSide );
+
+        } else if (orderType == OrderType.LIMIT ) {
+            matchCollector = execute(incoming,
+                    () -> matchLimit(incoming, otherSide, thisSide),
                                     () -> isLiquidityAvailable(otherSide, incoming.getPrice()) );
 
         } else if ( orderType == OrderType.MARKET ) {
-            matchCollector = execute( incoming, otherSide,
-                                    () -> matchMarket( incoming, otherSide),
+            matchCollector = execute(incoming,
+                    () -> matchMarket(incoming, otherSide),
                                     otherSide::isLiquidityAvailable);
 
         } else if ( orderType == OrderType.MARKET_TO_LIMIT ) {
@@ -85,14 +91,14 @@ public class ContinuousMatchEngine implements MatchEngine {
         }
 
         // update dyn reference price after incoming order was matched
-        List<Trade> trades = matchCollector.trades;
+        List<Trade> trades = matchCollector.getTrades();
         if ( !trades.isEmpty() ) {
             Trade lastTrade = trades.get(trades.size() - 1);
             priceGuard.updateDynamicRefPrice(lastTrade);
         }
         
         State state = (trades.size() == 1 && trades.get(0).getExecType() == REJECTED) ? REJECT : ACCEPT;
-        Match match = new Match(incoming, matchCollector.trades, state, matchCollector.volatilityInterruption);
+        Match match = new Match(incoming, matchCollector.getTrades(), state, matchCollector.getVolatilityInterruption());
 
 
         // TODO (FRa) : (FRa) : check round/odd lots handling
@@ -107,6 +113,7 @@ public class ContinuousMatchEngine implements MatchEngine {
 
         return match;
     }
+
 
     public double getMidpointPrice() {
         return midpointPrice;
@@ -125,30 +132,23 @@ public class ContinuousMatchEngine implements MatchEngine {
             incoming.setPrice( bestPriceOtherSide );
             incoming.setOrderType( OrderType.LIMIT );
 
-            collector = execute(incoming, otherSide,
+            collector = execute(incoming,
                     () -> matchLimit(incoming, otherSide, thisSide),
                     () -> isLiquidityAvailable(otherSide, incoming.getPrice()) );
         } else {
-            final Order buy, sell;
-            if (incoming.getSide() == Side.BUY) {
-                buy = incoming;
-                sell = null;
-            } else {
-                buy = null;
-                sell = incoming;
-            }
-
+            final Order buy = incoming.getSide() == Side.BUY ? incoming : null;
+            final Order sell = incoming.getSide() == Side.SELL ? incoming : null;
             Trade trade = Trade.of().setBuy(buy).setSell(sell).setExecType(REJECTED)
                                     .setOrderRejectReason(RejectReason.INSUFFICIENT_OB_CONSTELLATION.getMsg());
             collector = new MatchCollector();
-            collector.trades.add( trade );
+            collector.getTrades().add(trade);
         }
 
         return collector;
     }
 
 
-    private MatchCollector execute(Order incomingOrder, OrderbookSide otherSide,
+    private MatchCollector execute(Order incomingOrder,
                                    Supplier<OrderRetrievalResult> executionStrategy,
                                    BooleanSupplier liquidityDeterminator) {
 
@@ -156,7 +156,7 @@ public class ContinuousMatchEngine implements MatchEngine {
         boolean matchNext = true;
         while ( incomingOrder.getLeavesQty() > 0 && matchNext && liquidityDeterminator.getAsBoolean() ) {
             final OrderRetrievalResult retrievalResult = executionStrategy.get();
-            addMatchResultToCollector(incomingOrder, collector, otherSide.getSide(), retrievalResult);
+            addMatchResultToCollector( incomingOrder, collector, retrievalResult );
             matchNext = retrievalResult.isValidMatch();
         }
 
@@ -164,20 +164,19 @@ public class ContinuousMatchEngine implements MatchEngine {
     }
 
 
-    private OrderRetrievalResult matchLimit(Order incomingLimitOrder,
-                                            OrderbookSide otherSide, OrderbookSide thisSide) {
+    private MatchCollector matchMidpoint( Order incoming, OrderbookSide otherSide ) {
+        MidpointMatcher matcher = new MidpointMatcher( midpointPrice, priceGuard );
+        return matcher.matchMidpoint( incoming, otherSide );
+    }
+
+
+    private OrderRetrievalResult matchLimit(Order incomingLimitOrder, OrderbookSide otherSide, OrderbookSide thisSide) {
         Side side = otherSide.getSide();
         boolean hasMarketOrders = !otherSide.getMarketOrders().isEmpty();
         boolean hasLimitOrders = !otherSide.getLimitOrders().isEmpty();
 
         final OrderRetrievalResult retrievalResult;
-
-        if ( incomingLimitOrder.isMidpoint() ) {
-            retrievalResult = dequeueConditionally( otherSide.getLimitOrders(), incomingLimitOrder );
-            // make sure the price is adjusted as liquidity is exhausted
-            this.midpointPrice = calcMidpointPrice(thisSide, otherSide);
-
-        } else if (hasMarketOrders && hasLimitOrders) {
+        if (hasMarketOrders && hasLimitOrders) {
             Order bestLimitOtherSide = otherSide.getLimitOrders().peek();
             Order bestLimitThisSide = thisSide.getLimitOrders().peek();
             double lowestAsk = getBestAskPrice(bestLimitThisSide, bestLimitOtherSide, incomingLimitOrder);
@@ -227,21 +226,22 @@ public class ContinuousMatchEngine implements MatchEngine {
     /**
      * @param incomingOrder to be executed against other side
      * @param collector collecting all trades or interruption for this incoming order
-     * @param otherSide of #incomingOrder
      * @param retrievalResult either matched order for incoming Order of other side or interruption
      * @return executed Qty
      */
-    private int addMatchResultToCollector(Order incomingOrder, MatchCollector collector, Side otherSide,
+    private int addMatchResultToCollector(Order incomingOrder, MatchCollector collector,
                                           OrderRetrievalResult retrievalResult) {
         final int executionQty;
-        if (retrievalResult.order.isPresent()) {
-            Order otherSideOrder = retrievalResult.order.get();
+        if (retrievalResult.tradedOrder.isPresent()) {
+            Order otherSideOrder = retrievalResult.tradedOrder.get();
             double executionPrice = retrievalResult.executionPrice.getAsDouble();
-            Trade trade = createTrade(incomingOrder, otherSideOrder, otherSide, executionPrice);
-            collector.trades.add( trade );
+
+            Trade trade = createTrade(incomingOrder, otherSideOrder, executionPrice,
+                    (Order buy, Order sell) -> Math.min(buy.getLeavesQty(), sell.getLeavesQty()));
+            collector.getTrades().add(trade);
             executionQty = trade.getExecutionQty();
         } else {
-            collector.volatilityInterruption = retrievalResult.volatilityInterruption;
+            collector.setVolatilityInterruption( retrievalResult.volatilityInterruption );
             executionQty = 0;
         }
 
@@ -282,28 +282,6 @@ public class ContinuousMatchEngine implements MatchEngine {
     }
 
 
-    private OrderRetrievalResult dequeueConditionally( Queue<Order> otherSideQueue, Order incomingOrder ) {
-        Order tradedOrder = null;
-        double potentialExecutionPrice = NO_PRICE;
-
-        if ( !otherSideQueue.isEmpty() ) {
-            double otherSidePrice = otherSideQueue.peek().getPrice();
-            Side side = incomingOrder.getSide();
-            double bid = side == Side.BUY ? incomingOrder.getPrice() : otherSidePrice;
-            double ask = side == Side.SELL ? incomingOrder.getPrice() : otherSidePrice;
-            boolean betterThanMidpointPrice = bid >= midpointPrice && ask <= midpointPrice;
-            boolean midpointPriceInPriceRanges = !priceGuard.checkIndicativePrice(midpointPrice).isPresent();
-
-            if ( betterThanMidpointPrice && midpointPriceInPriceRanges && isCrossedPrice(bid, ask) ) {
-                potentialExecutionPrice = midpointPrice;
-                tradedOrder = retrieveTradedOrder(incomingOrder, otherSideQueue);
-            }
-        }
-
-        return new OrderRetrievalResult( tradedOrder, potentialExecutionPrice, null );
-    }
-
-
     private Order retrieveTradedOrder(Order incomingOrder, Queue<Order> otherSide) {
         Order topOnBook = otherSide.poll();
         if ( isSurplusAvailable(topOnBook, incomingOrder.getLeavesQty()) ) {
@@ -325,6 +303,16 @@ public class ContinuousMatchEngine implements MatchEngine {
     }
 
 
+    private boolean isSurplusAvailable(Order o, int incomingOrderLeaveQty) {
+        final boolean surplus;
+        if ( o.isIceberg() ) {
+            surplus = o.getLeavesQty() + o.getIcebergOrderQty() - o.getCumQty() > incomingOrderLeaveQty;
+        } else {
+            surplus = o.getLeavesQty() > incomingOrderLeaveQty;
+        }
+        return surplus;
+    }
+
     /**
      * @return the price as min(bid,ask) + (bestBid - bestAsk) / 2 if liquidity is available - otherwise Optional.empty()
      */
@@ -340,16 +328,6 @@ public class ContinuousMatchEngine implements MatchEngine {
         } else { price = midpointPrice; }
 
         return price;
-    }
-
-    private boolean isSurplusAvailable(Order o, int incomingOrderLeaveQty) {
-        final boolean surplus;
-        if ( o.isIceberg() ) {
-            surplus = o.getLeavesQty() + o.getIcebergOrderQty() - o.getCumQty() > incomingOrderLeaveQty;
-        } else {
-            surplus = o.getLeavesQty() > incomingOrderLeaveQty;
-        }
-        return surplus;
     }
 
 
@@ -396,21 +374,6 @@ public class ContinuousMatchEngine implements MatchEngine {
     }
 
 
-    private Trade createTrade(Order order, Order otherSideOrder, Side otherSide, double price ) {
-        Order buy = otherSide == Side.BUY ? otherSideOrder.mutableClone() : order.mutableClone();
-        Order sell = otherSide == Side.SELL ? otherSideOrder.mutableClone() : order.mutableClone();
-
-        int takeQty = Math.min(buy.getLeavesQty(), sell.getLeavesQty());
-        if ( takeQty < 1 ) {
-            throw new MatchException("Cannot create a trade if nothing matched!");
-        }
-
-        buy.setCumQty( buy.getCumQty() + takeQty );
-        sell.setCumQty( sell.getCumQty() + takeQty );
-
-        return Trade.of().setBuy(buy).setSell(sell).setExecutionQty(takeQty).setPrice(price).setExecType(ExecType.TRADE);
-    }
-
     /**
      * @param otherSide orderbook side with orders to match against
      * @param limitPrice of this side order to check if we are in the market (against the other side best limit)
@@ -430,10 +393,6 @@ public class ContinuousMatchEngine implements MatchEngine {
                 hasExecutableLimitOrders;
     }
 
-    private boolean isCrossedPrice( double bid, double ask ) {
-        return bid >= ask;
-    }
-
     private double getBestAskPrice( Order bestThisSide, Order bestOtherSide, Order incoming ) {
         return getBestPrice(bestThisSide, bestOtherSide, incoming, Side.SELL, SELL_PRICE_ORDERING);
     }
@@ -448,24 +407,21 @@ public class ContinuousMatchEngine implements MatchEngine {
                 .sorted(bestFirst).findFirst().get().getPrice();
     }
 
+
     private static class OrderRetrievalResult {
-        final Optional<Order> order;
+        /** Matched against the incoming order */
+        final Optional<Order> tradedOrder;
         final OptionalDouble executionPrice;
         final Optional<VolatilityInterruption> volatilityInterruption;
 
-        public OrderRetrievalResult(Order order, double executionPrice, VolatilityInterruption volatilityInterruption) {
-            this.order = Optional.ofNullable(order);
+        public OrderRetrievalResult(Order tradedOrder, double executionPrice, VolatilityInterruption volatilityInterruption) {
+            this.tradedOrder = Optional.ofNullable(tradedOrder);
             this.volatilityInterruption = Optional.ofNullable(volatilityInterruption);
             this.executionPrice = executionPrice < 0 ? OptionalDouble.empty() : OptionalDouble.of(executionPrice);
         }
 
-        boolean isValidMatch() {
-            return order.isPresent() && executionPrice.isPresent() && !volatilityInterruption.isPresent();
+        public boolean isValidMatch() {
+            return tradedOrder.isPresent() && executionPrice.isPresent() && !volatilityInterruption.isPresent();
         }
-    }
-
-    private static final class MatchCollector {
-        final List<Trade> trades = new ArrayList<>();
-        Optional<VolatilityInterruption> volatilityInterruption = Optional.empty();
     }
 }

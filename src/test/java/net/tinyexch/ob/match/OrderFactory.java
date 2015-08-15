@@ -73,12 +73,20 @@ public class OrderFactory {
         return buyL(price, qty, timestamp).setMidpoint(true);
     }
 
+    public static Order buyMid_LimMAQ(double price, int qty, Instant timestamp, int minQty ) {
+        return buyMid_Lim( price, qty, timestamp ).setMinQty( minQty );
+    }
+
     public static Order sellMid_Lim(double price, int qty ) {
         return sellL(price, qty).setMidpoint(true);
     }
 
     public static Order sellMid_Lim(double price, int qty, Instant timestamp ) {
         return sellMid_Lim( price, qty ).setTimestamp(timestamp);
+    }
+
+    public static Order sellMid_LimMAQ(double price, int qty, Instant timestamp, int minQty ) {
+        return sellMid_Lim( price, qty, timestamp ).setMinQty( minQty );
     }
 
     public static Order sellM(int qty) {
@@ -114,6 +122,4 @@ public class OrderFactory {
         TemporalAccessor temporalAccessor = DATE_TIME_FORMATTER.parse(TODAY + " " + time);
         return LocalDateTime.from(temporalAccessor).toInstant(ZoneOffset.UTC);
     }
-
-
 }

@@ -70,6 +70,21 @@ public class PrioritiesTest {
     }
 
 
+    @Test
+    public void testVolumeTimePrio() {
+        Order o_1 = sellL(201, 5000, time("09:10:41")).setSubmitSequence(1);
+        Order o_2 = sellL(201, 9000, time("09:10:40")).setSubmitSequence(2);
+        Order o_3 = sellL(201, 5000, time("09:10:42")).setSubmitSequence(3);
+
+        PriorityQueue<Order> queue = new PriorityQueue<>(MatchEngine.VOLUME_TIME_ORDERING);
+        queue.addAll( Arrays.asList(o_1, o_2, o_3) );
+
+        Assert.assertEquals( queue.poll().getClientOrderID(), o_2.getClientOrderID());
+        Assert.assertEquals( queue.poll().getClientOrderID(), o_1.getClientOrderID());
+        Assert.assertEquals( queue.poll().getClientOrderID(), o_3.getClientOrderID());
+    }
+
+
     private List<Order> createUnsortedOrders(Side side) {
         Order o1 = Order.of("1", side).setPrice(87).setOrderType(OrderType.LIMIT).setOrderQty(18)
                 .setTimestamp(newTS(1));

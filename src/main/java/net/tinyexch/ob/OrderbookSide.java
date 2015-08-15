@@ -27,6 +27,10 @@ public class OrderbookSide {
     // constructors
     //-----------------------------------------------------------------------------------------------
 
+    public OrderbookSide( Side side, Comparator<Order> limitOrdering ) {
+        this( side, limitOrdering, null );
+    }
+
     public OrderbookSide( Side side, Comparator<Order> limitOrdering, Comparator<Order> strikeMatchOrdering ) {
         this.side = side;
         this.priceTimeOrdering = limitOrdering;

@@ -47,6 +47,9 @@ public class Order {
     /** @link FIX:14 */
     private int cumQty;
 
+    /** @link FIX:110 */
+    private int minQty;
+
     //----START: iceberg fields
     /** @link FIX:1138 */
     private int displayQty;
@@ -97,10 +100,11 @@ public class Order {
     }
 
     /** copy constructor */
-    private Order(long submitSequence, Instant timestamp, boolean hidden, DiscretionLimitType discretionLimitType, TradingSessionSubID tradingSessionSubID,
+    private Order(long submitSequence, Instant timestamp, boolean hidden, DiscretionLimitType discretionLimitType,
+                  TradingSessionSubID tradingSessionSubID,
                  String clientOrderID, Side side, int orderQty, int cumQty, LocalDateTime expirationDate,
                  TimeInForce timeInForce, OrderType orderType, double price, double stopPrice, int displayQty,
-                 int icebergOrderQty, int icebergCumQty, boolean midpoint) {
+                 int icebergOrderQty, int icebergCumQty, boolean midpoint, int minQty ) {
         this.submitSequence = submitSequence;
         this.timestamp = timestamp;
         this.hidden = hidden;
@@ -119,6 +123,7 @@ public class Order {
         this.icebergOrderQty = icebergOrderQty;
         this.icebergCumQty = icebergCumQty;
         this.midpoint = midpoint;
+        this.minQty = minQty;
     }
 
     //---------------------------------------------------------
@@ -310,33 +315,42 @@ public class Order {
         return this;
     }
 
+    public int getMinQty() {
+        return minQty;
+    }
+
+    public Order setMinQty(int minQty) {
+        this.minQty = minQty;
+        return this;
+    }
+
     public Order mutableClone() {
         return new Order(submitSequence, timestamp, hidden, discretionLimitType, tradingSessionSubID, clientOrderID, side, orderQty, cumQty,
-                expirationDate, timeInForce, orderType, price, stopPrice, displayQty, icebergOrderQty, icebergCumQty, midpoint );
+                expirationDate, timeInForce, orderType, price, stopPrice, displayQty, icebergOrderQty, icebergCumQty, midpoint, minQty );
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("Order{");
-        sb.append("timestamp=").append(timestamp);
-        sb.append(", submitSequence=").append(submitSequence);
-        sb.append(", hidden=").append(hidden);
-        sb.append(", discretionLimitType=").append(discretionLimitType);
-        sb.append(", tradingSessionSubID=").append(tradingSessionSubID);
-        sb.append(", clientOrderID='").append(clientOrderID).append('\'');
-        sb.append(", side=").append(side);
-        sb.append(", orderQty=").append(orderQty);
-        sb.append(", cumQty=").append(cumQty);
-        sb.append(", displayQty=").append(displayQty);
-        sb.append(", icebergOrderQty=").append(icebergOrderQty);
-        sb.append(", icebergCumQty=").append(icebergCumQty);
-        sb.append(", expirationDate=").append(expirationDate);
-        sb.append(", timeInForce=").append(timeInForce);
-        sb.append(", orderType=").append(orderType);
-        sb.append(", price=").append(price);
-        sb.append(", stopPrice=").append(stopPrice);
-        sb.append(", midpoint=").append(midpoint);
-        sb.append('}');
-        return sb.toString();
+        return "Order{" +
+                "submitSequence=" + submitSequence +
+                ", timestamp=" + timestamp +
+                ", hidden=" + hidden +
+                ", midpoint=" + midpoint +
+                ", discretionLimitType=" + discretionLimitType +
+                ", tradingSessionSubID=" + tradingSessionSubID +
+                ", clientOrderID='" + clientOrderID + '\'' +
+                ", side=" + side +
+                ", orderQty=" + orderQty +
+                ", cumQty=" + cumQty +
+                ", minQty=" + minQty +
+                ", displayQty=" + displayQty +
+                ", icebergOrderQty=" + icebergOrderQty +
+                ", icebergCumQty=" + icebergCumQty +
+                ", expirationDate=" + expirationDate +
+                ", timeInForce=" + timeInForce +
+                ", orderType=" + orderType +
+                ", price=" + price +
+                ", stopPrice=" + stopPrice +
+                '}';
     }
 }

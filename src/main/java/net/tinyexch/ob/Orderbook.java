@@ -50,14 +50,8 @@ public class Orderbook {
             SELL_STOPPRICE_ORDERING.thenComparing(Priorities.SUBMIT_SEQUENCE) );
     //------------------------------------------------------------------------------------------------------------------
 
-    private final OrderbookSide midpointBuySide =
-            new OrderbookSide( Side.BUY, MatchEngine.VOLUME_TIME_ORDERING.thenComparing(Priorities.SUBMIT_SEQUENCE),
-                    // TODO (FRa) : (FRa) : rm last comparator as it is not applicable for midpointorders
-                    BUY_STOPPRICE_ORDERING );
-
-    private final OrderbookSide midpointSellSide =
-            new OrderbookSide( Side.SELL, MatchEngine.VOLUME_TIME_ORDERING.thenComparing(Priorities.SUBMIT_SEQUENCE),
-                    SELL_STOPPRICE_ORDERING );
+    private final OrderbookSide midpointBuySide = new OrderbookSide( Side.BUY, MIDPOINT_COMPARATOR );
+    private final OrderbookSide midpointSellSide = new OrderbookSide( Side.SELL, MIDPOINT_COMPARATOR );
 
 
     //------------------------------------------------------------------------------------------------------------------
